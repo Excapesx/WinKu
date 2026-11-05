@@ -3,6 +3,9 @@
 > **状态：未完成（WIP）** — 正在重建中。目前只有 Android 能跑，其余平台只有骨架。
 > 接口、目录、数据格式都还会变。
 
+> **来源**：Android 端衍生自 [jackwener/DSH-Android](https://github.com/jackwener/DSH-Android)（Apache-2.0），
+> 并非从零编写。详见文末 [来源声明](#来源声明)。
+
 面向大学生的个性化移动端 AI Agent。
 
 WinKu 希望围绕大学生的课程学习、学科竞赛和个人成长，将 AI 能力与内置 Skills、任务流程和移动端交互结合，
@@ -118,17 +121,45 @@ js/build-engine.sh              # 引擎包 engine.zip
 所以 Android 与桌面是「带引擎的客户端」，iOS 是「纯客户端」，
 能力集是 Android 的子集：聊天、拍照、文件、日历，没有跨 App 自动化。
 
-## 与上游的关系
+## 来源声明
 
-Android 端 fork 自 [jackwener/DSH-Android](https://github.com/jackwener/DSH-Android)（Apache-2.0），
-保留 `upstream` remote 以便同步上游改动：
+**Android 端并非从零编写。** 它源自以下开源项目：
+
+| | |
+|---|---|
+| 上游项目 | [jackwener/DSH-Android](https://github.com/jackwener/DSH-Android) |
+| 上游作者 | jackwener 及 [贡献者](https://github.com/jackwener/DSH-Android/graphs/contributors) |
+| 开源协议 | Apache License 2.0 |
+| 本项目与它的关系 | 衍生作品（derivative work），在其基础上做了大幅修改 |
+
+上游做的事：把 DeepSeek Harness（dsh）打包进安卓 App——Node 交叉编译成 `libnode.so`、
+JNI 起独立引擎进程、Kotlin 实现设备能力并通过 socket 桥接给引擎。这台机器是整个项目的地基，
+本仓库沿用并改动了它。
+
+### 本仓库相对上游的改动
+
+- 界面与品牌重做（WinKu 配色、图标、字标）
+- **移除 DeepSeek 账号登录体系**，模型接入只保留 API Key 与第三方服务商
+- 引擎包内移除 `plugin-account` 插件，关闭 OAuth 模型路由
+- 新增学生向的交互内容渲染（图表、公式、流程图、测验）
+- 仓库重构为多端结构（`apps/android`，另有 web / ios / desktop 的规划）
+
+### 关于 Git 历史
+
+为了得到一个干净的起点，本仓库做了**压缩提交**：上游的提交记录与贡献者署名
+不体现在本仓库的 git 历史里。这是历史展示上的简化，不改变代码的来源与授权。
+需要对照上游时，请直接访问上面的仓库链接，或：
 
 ```bash
-git fetch upstream && git merge upstream/main
+git remote add upstream https://github.com/jackwener/DSH-Android.git
+git fetch upstream
+git diff upstream/main -- apps/android
 ```
 
-引擎侧的补丁与插件改动较多（见 `apps/android/js/`），合并时注意冲突。
+**注意**：不要把 `upstream` 直接 merge 进来——那会把上游历史重新带回来，压缩后的历史就白做了。
+需要上游的某个修复时，用 `git diff` / `git show` 挑那一段手动搬。
 
 ## 许可
 
-Apache-2.0。内置的第三方组件（Node.js、dsh、Shizuku、ripgrep 等）遵循各自许可证。
+Apache-2.0（见 [LICENSE](LICENSE)），保留上游的版权与许可声明。
+内置的第三方组件（Node.js、dsh、Shizuku、ripgrep 等）遵循各自许可证。
