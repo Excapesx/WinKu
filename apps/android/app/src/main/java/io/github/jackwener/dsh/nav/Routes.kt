@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
  * navigation"). Home is the fixed start destination; every full-screen page (own title + back
  * arrow) is a type-safe route; a page opens its sub-pages with a plain navigate, and its toolbar
  * arrow is the same popBackStack system / predictive Back does. Links from outside the page tree
- * (intents, the drawer, error rows, the sign-in dialog) go through [openSettings], which builds
+ * (intents, the drawer, error rows) go through [openSettings], which builds
  * the same stack navigating there by hand would have: home → 设置 → section.
  */
 
@@ -23,8 +23,6 @@ sealed interface Route
 
 /** First run without a credential (pushed over home, which it replaces as the root). */
 @Serializable data object OnboardingRoute : Route
-/** Onboarding's 使用 API Key step (the key card expanded). */
-@Serializable data object OnboardingKeyRoute : Route
 /** Optional 增强能力 step after onboarding, over home (Back = 跳过). */
 @Serializable data object EnhanceRoute : Route
 
@@ -70,7 +68,7 @@ fun NavController.onboardingOnStack() = has { it.destination.hasRoute(Onboarding
 
 /**
  * Opens 设置 at [section] from anywhere (EXTRA_SECTION intents, share → 扩展, the drawer, error
- * rows, the sign-in dialog) with the stack manual navigation builds: home → 设置 → section. Whatever
+ * rows) with the stack manual navigation builds: home → 设置 → section. Whatever
  * was above home is replaced (so no stale section survives a new link); already there, nothing
  * changes. false during onboarding (home is not on the stack yet): the link is ignored, as before.
  */

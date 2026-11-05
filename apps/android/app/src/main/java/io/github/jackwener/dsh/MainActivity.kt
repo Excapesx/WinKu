@@ -36,7 +36,6 @@ import io.github.jackwener.dsh.core.designsystem.DshTheme
 import io.github.jackwener.dsh.feature.conversation.HomeViewModel
 import io.github.jackwener.dsh.feature.settings.SettingsSection
 import io.github.jackwener.dsh.nav.HomeRoute
-import io.github.jackwener.dsh.nav.OnboardingKeyRoute
 import io.github.jackwener.dsh.nav.dshGraph
 import io.github.jackwener.dsh.nav.onboardingOnStack
 import io.github.jackwener.dsh.nav.startOnboarding

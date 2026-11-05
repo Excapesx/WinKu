@@ -106,14 +106,6 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Account sign-in completion page (engine loopback) opened in another browser, from the
-                 copied sign-in link, returns here; the in-app sign-in screen intercepts it itself. -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="dsh-android" android:host="account" />
-            </intent-filter>
         </activity>
 
         <!-- 分享到 DSH → 安装为扩展: a plugin package (.tgz / .zip), a SKILL.md, or a link / name / mcpServers

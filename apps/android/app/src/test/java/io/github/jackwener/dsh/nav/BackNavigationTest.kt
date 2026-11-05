@@ -40,7 +40,7 @@ class BackNavigationTest {
         nav.graph = nav.createGraph(startDestination = HomeRoute) { dshGraph(nav) { error("not composed in tests") } }
     }
 
-    private val routeClasses = listOf(HomeRoute::class, OnboardingRoute::class, OnboardingKeyRoute::class, EnhanceRoute::class,
+    private val routeClasses = listOf(HomeRoute::class, OnboardingRoute::class, EnhanceRoute::class,
         AutomationRoute::class, RuleRoute::class, SettingsRoute::class, SectionRoute::class, ProviderRoute::class, ModeRoute::class, PluginRoute::class,
         MarketEntryRoute::class, IndexesRoute::class, McpRoute::class, AppNotesRoute::class, AppNotesGroupRoute::class, NotifAppsRoute::class)
 
@@ -147,19 +147,14 @@ class BackNavigationTest {
         assertEquals(listOf(OnboardingRoute), pages())
         assertFalse(nav.openSettings("Model"))
         assertEquals(listOf(OnboardingRoute), pages())
-        nav.navigate(OnboardingKeyRoute) { launchSingleTop = true }
-        nav.navigate(OnboardingKeyRoute) { launchSingleTop = true }
-        assertEquals(listOf(OnboardingRoute, OnboardingKeyRoute), pages())
-        assertTrue("Back on the API key step returns to the choice", back())
-        assertEquals(listOf(OnboardingRoute), pages())
         assertFalse("Back on the first onboarding screen leaves the app", back())
     }
 
     @Test fun finishingOnboardingLeavesHomeUnderTheNextStep() {
-        nav.startOnboarding(); nav.navigate(OnboardingKeyRoute)
+        nav.startOnboarding()
         nav.finishOnboarding(EnhanceRoute)
         assertEquals(home + EnhanceRoute, pages())
-        nav.finishOnboarding(EnhanceRoute) // a second 完成 (signed-in effect) is a no-op
+        nav.finishOnboarding(EnhanceRoute) // a second completion is a no-op
         assertEquals(home + EnhanceRoute, pages())
         assertTrue(back()); assertEquals(home, pages())
 

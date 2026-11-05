@@ -45,8 +45,7 @@ import io.github.jackwener.dsh.feature.settings.shellAccessOf
 fun NavGraphBuilder.dshGraph(nav: NavHostController, home: () -> HomeViewModel) {
     val open: (Route) -> Unit = { nav.navigate(it) }
     composable<HomeRoute> { HomeScreen(home(), onSettings = { nav.openSettings(it) }, onAutomation = { nav.navigate(AutomationRoute) }) }
-    composable<OnboardingRoute> { e -> OnboardingPage(nav, e, keyStep = false) }
-    composable<OnboardingKeyRoute> { e -> OnboardingPage(nav, e, keyStep = true) }
+    composable<OnboardingRoute> { OnboardingPage(nav) }
     composable<EnhanceRoute> { e -> EnhanceStep(onDone = { nav.up(e) }) }
     composable<AutomationRoute> { e ->
         AutomationScreen(onBack = { nav.up(e) }, onNew = { prefill -> home().newSession(prefill); nav.toHome() }, onOpenRule = { open(RuleRoute(it.toString())) })
@@ -75,9 +74,9 @@ fun NavGraphBuilder.dshGraph(nav: NavHostController, home: () -> HomeViewModel) 
     }
 }
 
-/** Onboarding's credential choice, and its 使用 API Key step (the same screen with the key card open). */
+/** First-run setup opens the shared model configuration page. */
 @Composable
-private fun OnboardingPage(nav: NavHostController, e: NavBackStackEntry, keyStep: Boolean) {
+private fun OnboardingPage(nav: NavHostController) {
     Onboarding(onConfigureModels = { nav.finishOnboarding(SectionRoute(SettingsSection.Model)) })
 }
 
