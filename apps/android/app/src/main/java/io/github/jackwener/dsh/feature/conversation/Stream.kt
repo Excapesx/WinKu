@@ -287,7 +287,8 @@ private fun ErrorRow(e: TurnError, onRetry: (TurnError) -> Unit, onOpenSettings:
     // The account has not enabled the model (js patch 18): not the key, not the network.
     val unavailable = remember(e) { NetDiagnose.modelUnavailableOf(e.code, e.message) }
     val title = when {
-        needsSignIn -> stringResource(R.string.acct_model_sign_in_required)
+        needsSignIn -> stringResource(R.string.err_no_key_title)
+        e.kind == "model_config" -> stringResource(R.string.model_config_title)
         net != null -> stringResource(R.string.net_title)
         unavailable != null -> stringResource(R.string.err_model_unavailable_title)
         e.kind == "engine" -> stringResource(R.string.err_engine_title)
@@ -317,7 +318,7 @@ private fun ErrorRow(e: TurnError, onRetry: (TurnError) -> Unit, onOpenSettings:
                     needsSignIn -> {
                         DButton(stringResource(R.string.acct_add_api_key), { onOpenSettings("Model") }, size = BtnSize.Sm)
                     }
-                    unavailable != null -> {
+                    unavailable != null || e.kind == "model_config" -> {
                         DButton(stringResource(R.string.err_open_model_settings), { onOpenSettings("Model") }, size = BtnSize.Sm)
                         DButton(stringResource(R.string.retry), { onRetry(e) }, size = BtnSize.Sm, variant = BtnVariant.Outline, icon = R.drawable.dsw_refresh_outline)
                     }

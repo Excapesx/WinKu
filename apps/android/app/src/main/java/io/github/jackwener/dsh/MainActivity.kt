@@ -54,10 +54,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(settings: SettingsRepository, secrets: SecretStore) : ViewModel() {
-    private val deepSeek = secrets.read() != null
     /** null = still loading (keeps the splash up). Second: a model credential exists — a DeepSeek API key
      *  or an enabled provider. */
-    val boot = settings.settings.map { it.theme to (deepSeek || it.providers.any { p -> p.enabled }) }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    val boot = settings.settings.map { st ->
+        st.theme to st.providers.any { p -> p.models.any { m ->
+            io.github.jackwener.dsh.core.provider.ModelChoice(p, m).validate(secrets::read) == null
+        } }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 }
 
 /**

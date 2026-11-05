@@ -75,13 +75,13 @@ class ModelReasoningTest {
 
     @Test fun selectionIsPerProviderAndModel() {
         val choices = withChoice(withChoice(emptyMap(), "kimi", "kimi-k3", "low"), "kimi", "kimi-k2.6", "disabled")
-        val st = Settings(provider = "kimi", model = "kimi-k3", providers = listOf(kimi, gw), reasoningChoices = choices, reasoningCatalog = catalog)
+        val st = Settings(provider = "kimi", model = "kimi-k3", providers = listOf(deepSeekProvider(), kimi, gw), reasoningChoices = choices, reasoningCatalog = catalog)
         assertEquals("low", st.reasoningEffort)
         // Switching models applies that model's own saved level.
         assertEquals("disabled", st.copy(model = "kimi-k2.6").reasoningEffort)
         assertNull(st.copy(provider = "custom", model = "my-org/model").reasoningEffort)
         // DeepSeek keeps its own Effort setting; the per-model map does not apply.
-        assertNull(st.copy(provider = "", model = "deepseek-flash").reasoningEffort)
+        assertEquals(st.effort.id, st.copy(provider = DEEPSEEK_PROVIDER, model = "deepseek-flash").reasoningEffort)
         // A saved level the model no longer offers (engine update, new declaration) is not sent.
         assertNull(st.copy(reasoningChoices = withChoice(choices, "kimi", "kimi-k3", "xhigh")).reasoningEffort)
         // Unknown until the engine has answered once: nothing is sent.

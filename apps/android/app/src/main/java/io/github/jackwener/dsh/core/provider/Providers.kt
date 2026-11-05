@@ -86,10 +86,10 @@ const val OPENCODE_SESSION_HEADER = "x-opencode-session"
 
 fun presetOf(id: String?): ProviderPreset? = PRESETS.firstOrNull { it.id == id }
 
-/** One configured provider = one engine route (`id`), all its models on Chat Completions. */
+/** Shared configuration for a native DeepSeek route or an OpenAI-compatible route. */
 @Serializable
 data class ProviderConfig(
-    /** Route id: the preset id, `-2`, `-3`… for repeats. Never a DeepSeek route name. */
+    /** Stable route id. [DEEPSEEK_PROVIDER] uses dsh's native adapter; other ids use llm-service-lite. */
     val id: String,
     val preset: String,
     val name: String,
@@ -114,8 +114,10 @@ data class ProviderConfig(
      */
     val sessionHeader: String? = null,
 ) {
-    /** `apiKeyEnv` the engine resolves per request; set in the `:engine` environment only. */
-    val keyEnv: String get() = keyEnvOf(id)
+    val isNativeDeepSeek: Boolean get() = id == DEEPSEEK_PROVIDER
+    val keyRequired: Boolean get() = isNativeDeepSeek || presetOf(preset)?.keyOptional == false
+    /** Adapter credential variable, set only in the `:engine` environment. */
+    val keyEnv: String get() = if (isNativeDeepSeek) "DEEPSEEK_API_KEY" else keyEnvOf(id)
     val secretName: String get() = "provider-$id"
     /** SecretStore name of a secret header's value. */
     fun headerSecretName(header: String) = "provider-$id-h-" + header.lowercase().filter { it.isLetterOrDigit() || it == '-' || it == '_' }
@@ -305,32 +307,60 @@ fun ProviderConfig.limitsOf(model: String): EffectiveLimits = ThirdParty.resolve
 /** Whether [model] gets images (the engine declaration in [renderProfilePatch]; the composer's notice). */
 fun ProviderConfig.acceptsImages(model: String): Boolean = ModelVision.resolve(model, limits[model]).first
 
-/** What the composer / engine route resolves to. `provider == null` is DeepSeek. */
-data class ModelChoice(val provider: ProviderConfig?, val model: String) {
-    val isDeepSeek get() = provider == null
+/** The saved selection, including an unavailable one. Never substitutes another provider or model. */
+data class ModelChoice(val provider: ProviderConfig?, val model: String, val providerId: String = provider?.id ?: DEEPSEEK_PROVIDER) {
+    val isDeepSeek get() = providerId == DEEPSEEK_PROVIDER
     /** Third-party limits; null for DeepSeek. */
-    val limits: EffectiveLimits? get() = provider?.limitsOf(model)
-    val contextWindow get() = limits?.contextWindow ?: DEEPSEEK_CONTEXT
+    val limits: EffectiveLimits? get() = provider?.takeUnless { isDeepSeek }?.limitsOf(model)
+    val contextWindow get() = limits?.contextWindow ?: if (isDeepSeek) DEEPSEEK_CONTEXT else ThirdParty.DEFAULT_CONTEXT_WINDOW
     /** Where [contextWindow] came from; null for DeepSeek (a fixed fact). */
     val contextSource get() = limits?.contextSource
     /** Images reach the model (else the engine sends a text placeholder): DeepSeek per model (V4.1-Flash sees, V4-Pro does not). */
-    val acceptsImages: Boolean get() = provider?.acceptsImages(model) ?: ModelVision.engineDefault(model)
+    val acceptsImages: Boolean get() = if (isDeepSeek) ModelVision.engineDefault(model) else provider?.acceptsImages(model) ?: false
+    val problem: ModelConfigProblem? get() = when {
+        provider == null -> ModelConfigProblem.ProviderMissing
+        !provider.enabled -> ModelConfigProblem.ProviderDisabled
+        model !in provider.models -> ModelConfigProblem.ModelMissing
+        !isProviderUrl(provider.baseUrl) -> ModelConfigProblem.InvalidUrl
+        else -> null
+    }
+
+    /** Check the actual encrypted slot; a stale hasKey flag must never produce an unauthenticated request. */
+    fun validate(readSecret: (String) -> String?): ModelConfigProblem? = problem ?: provider?.let { p ->
+        if ((p.keyRequired || p.hasKey) && readSecret(p.secretName).isNullOrBlank()) ModelConfigProblem.KeyMissing else null
+    }
     companion object { const val DEEPSEEK_CONTEXT = 1_000_000L }
 }
 
 val DEEPSEEK_MODELS = listOf("deepseek-flash" to "DeepSeek-V4.1-Flash", "deepseek-v4-pro" to "DeepSeek-V4-Pro")
 const val DEFAULT_DEEPSEEK_MODEL = "deepseek-flash"
+const val DEEPSEEK_PROVIDER = "deepseek-official"
+
+fun deepSeekProvider(hasKey: Boolean = false) = ProviderConfig(
+    DEEPSEEK_PROVIDER, "deepseek", "DeepSeek", "https://api.deepseek.com", DEEPSEEK_MODELS.map { it.first }, hasKey = hasKey,
+)
+
+enum class ModelConfigProblem(val messageRes: Int) {
+    ProviderMissing(R.string.model_config_provider_missing),
+    ProviderDisabled(R.string.model_config_provider_disabled),
+    ModelMissing(R.string.model_config_model_missing),
+    InvalidUrl(R.string.model_config_url_invalid),
+    KeyMissing(R.string.model_config_key_missing),
+}
+
+fun isProviderUrl(value: String): Boolean = runCatching {
+    val uri = URI(value.trim())
+    uri.scheme?.lowercase() in setOf("http", "https") && !uri.host.isNullOrBlank() &&
+        uri.rawUserInfo == null && uri.rawQuery == null && uri.rawFragment == null
+}.getOrDefault(false)
 
 /**
- * Resolve the saved selection: a third-party (provider, model) only while that provider exists, is
- * enabled and still lists the model; otherwise DeepSeek (the saved DeepSeek model, or flash).
+ * Empty provider ids are the legacy spelling of DeepSeek. Missing/disabled selections remain
+ * selected so the caller can explain the problem rather than silently call another model.
  */
 fun resolveChoice(provider: String, model: String, providers: List<ProviderConfig>): ModelChoice {
-    if (provider.isNotEmpty()) {
-        val p = providers.firstOrNull { it.id == provider && it.enabled }
-        if (p != null && model in p.models) return ModelChoice(p, model)
-    }
-    return ModelChoice(null, model.takeIf { m -> DEEPSEEK_MODELS.any { it.first == m } } ?: DEFAULT_DEEPSEEK_MODEL)
+    val id = provider.ifEmpty { DEEPSEEK_PROVIDER }
+    return ModelChoice(providers.firstOrNull { it.id == id }, model, id)
 }
 
 /**
@@ -339,11 +369,10 @@ fun resolveChoice(provider: String, model: String, providers: List<ProviderConfi
  * secret, only `apiKeyEnv` names. Values are JSON (a YAML subset), so no quoting rules apply.
  *
  * @param userAgent product token the engine puts in front of its User-Agent (`DSH-Android/<version>`).
- * @param webSearch false turns off the `web_search` tool (it needs a DeepSeek credential: the
- *   API key, or the account login only while the conversation uses the account route).
+ * @param webSearch false turns off `web_search`, which currently requires a DeepSeek API key.
  */
 fun renderProfilePatch(providers: List<ProviderConfig>, webSearch: Boolean, userAgent: String? = null): String {
-    val active = providers.filter { it.enabled && it.models.isNotEmpty() && it.baseUrl.isNotBlank() }
+    val active = providers.filter { !it.isNativeDeepSeek && it.enabled && it.models.isNotEmpty() && isProviderUrl(it.baseUrl) }
     val json = Json { prettyPrint = false }
     val sb = StringBuilder()
     sb.append("# Generated by DSH-Android (设置 → 模型服务). Rewritten before every engine start; edits here are lost.\n")

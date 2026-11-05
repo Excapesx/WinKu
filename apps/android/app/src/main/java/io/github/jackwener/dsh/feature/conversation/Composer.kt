@@ -367,12 +367,10 @@ fun Composer(
                     Chevron(Modifier.padding(start = 2.dp), size = 12.dp)
                 }
                 DMenu(modelOpen, { modelOpen = false }) {
-                    MenuSectionTitle("DeepSeek")
-                    Models.forEach { (id, label) -> MenuItem(label, { modelOpen = false; onModel("", id) }, R.drawable.dsw_data_outline, selected = model.isDeepSeek && id == model.model) }
-                    providers.filter { it.enabled && it.models.isNotEmpty() }.forEach { p ->
-                        MenuDivider()
+                    providers.filter { it.enabled && it.models.isNotEmpty() }.forEachIndexed { i, p ->
+                        if (i > 0) MenuDivider()
                         MenuSectionTitle(p.name)
-                        p.models.forEach { m -> MenuItem(m, { modelOpen = false; onModel(p.id, m) }, R.drawable.dsw_data_outline, selected = model.provider?.id == p.id && model.model == m) }
+                        p.models.forEach { m -> MenuItem(if (p.isNativeDeepSeek) modelLabel(m) else m, { modelOpen = false; onModel(p.id, m) }, R.drawable.dsw_data_outline, selected = model.providerId == p.id && model.model == m) }
                     }
                     if (model.isDeepSeek) {
                         MenuDivider()

@@ -31,7 +31,9 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val Context.store by preferencesDataStore("settings")
+private val Context.store by preferencesDataStore("settings", produceMigrations = { context ->
+    listOf(ModelSettingsMigration { !SecretStore(context).read().isNullOrBlank() })
+})
 
 enum class ThemeMode { System, Light, Dark }
 
@@ -51,8 +53,8 @@ enum class Effort(val id: String, val label: String) {
 }
 
 data class Settings(
-    /** Selected route: "" = DeepSeek (key or account), else a third-party provider's route id ([providers]). */
-    val provider: String = "",
+    /** Selected route id from [providers]. */
+    val provider: String = io.github.jackwener.dsh.core.provider.DEEPSEEK_PROVIDER,
     val model: String = DEFAULT_MODEL,
     val effort: Effort = Effort.High,
     /** Device tool groups the user switched off (everything else is offered to the agent). */
@@ -76,8 +78,8 @@ data class Settings(
     val agentScreen: Boolean = true,
     /** 任务结束后自动总结经验: after a turn that worked in an app, one short model call distills App 经验 notes. */
     val reflectExperience: Boolean = true,
-    /** Third-party OpenAI-compatible providers (keys live in SecretStore, never here). */
-    val providers: List<ProviderConfig> = emptyList(),
+    /** All configured model providers; keys live in SecretStore, never here. */
+    val providers: List<ProviderConfig> = listOf(io.github.jackwener.dsh.core.provider.deepSeekProvider()),
     /** Third-party 推理强度 per route + model ([ReasoningLevels.key] → level id); absent = the model's default. */
     val reasoningChoices: Map<String, String> = emptyMap(),
     /** Each third-party model's levels as the engine last reported them (refreshed at every engine start). */
@@ -99,15 +101,15 @@ data class Settings(
     fun mode(id: String?): SessionMode = SessionModes.resolve(id, modes)
 
     val enabledGroups: Set<ToolGroup> get() = ToolGroup.entries.toSet() - disabledGroups
-    /** The effective selection (falls back to DeepSeek when the provider/model is gone or disabled). */
+    /** The saved selection, even when it is missing or disabled. */
     val choice: ModelChoice get() = resolveChoice(provider, model, providers)
 
     /** The selected third-party model's reasoning selector (null for DeepSeek, or while unknown). */
-    val reasoning: ModelReasoning? get() = choice.provider?.let { ReasoningLevels.of(it, choice.model, reasoningCatalog) }
+    val reasoning: ModelReasoning? get() = choice.provider?.takeUnless { it.isNativeDeepSeek }?.let { ReasoningLevels.of(it, choice.model, reasoningCatalog) }
     /** The saved 推理强度 of the selected third-party model, null = its default. */
     val reasoningChoice: String? get() = choice.provider?.let { reasoningChoices[ReasoningLevels.key(it.id, choice.model)] }
     /** The level the selected third-party route sends: the saved one while the model offers it, else none. */
-    val reasoningEffort: String? get() = ReasoningLevels.effective(reasoning, reasoningChoice)
+    val reasoningEffort: String? get() = if (choice.isDeepSeek) effort.id else ReasoningLevels.effective(reasoning, reasoningChoice)
 
     companion object { const val DEFAULT_MODEL = "deepseek-flash" }
 }
@@ -155,7 +157,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     suspend fun current(): Settings = settings.first()
 
     private fun Preferences.toSettings() = Settings(
-        provider = this[K.provider] ?: "",
+        provider = this[K.provider] ?: io.github.jackwener.dsh.core.provider.DEEPSEEK_PROVIDER,
         providers = this[K.providers]?.let { runCatching { json.decodeFromString(providerList, it) }.getOrNull() } ?: emptyList(),
         modes = decodeModes(this[K.modes]),
         model = this[K.model] ?: Settings.DEFAULT_MODEL,
@@ -183,8 +185,10 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         autoUpdateCheck = this[K.autoUpdateCheck] ?: true,
     )
 
-    /** [provider] "" = DeepSeek. */
-    suspend fun setModel(provider: String, model: String) = context.store.edit { it[K.provider] = provider; it[K.model] = model }
+    /** Accept the old empty DeepSeek id at the boundary, but always persist an explicit route id. */
+    suspend fun setModel(provider: String, model: String) = context.store.edit {
+        it[K.provider] = provider.ifEmpty { io.github.jackwener.dsh.core.provider.DEEPSEEK_PROVIDER }; it[K.model] = model
+    }
     suspend fun saveProvider(p: ProviderConfig) = context.store.edit {
         val cur = it[K.providers]?.let { s -> runCatching { json.decodeFromString(providerList, s) }.getOrNull() } ?: emptyList()
         val next = if (cur.any { c -> c.id == p.id }) cur.map { c -> if (c.id == p.id) p else c } else cur + p
@@ -198,7 +202,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     suspend fun deleteProvider(id: String) = context.store.edit {
         val cur = it[K.providers]?.let { s -> runCatching { json.decodeFromString(providerList, s) }.getOrNull() } ?: emptyList()
         it[K.providers] = json.encodeToString(providerList, cur.filter { c -> c.id != id })
-        if (it[K.provider] == id) { it[K.provider] = ""; it[K.model] = Settings.DEFAULT_MODEL }
+        // Keep the saved selection: a deleted provider is reported, never replaced without a choice.
         // A later provider may get the same route id: it starts from its models' defaults.
         it[K.reasoningChoices] = json.encodeToString(choiceMap, decodeChoices(it[K.reasoningChoices]).filterKeys { k -> !k.startsWith("$id/") })
     }

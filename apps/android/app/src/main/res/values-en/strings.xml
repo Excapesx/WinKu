@@ -674,8 +674,8 @@
     <string name="web_sign_in_title">Sign in to DeepSeek</string>
     <string name="web_platform_title">DeepSeek Platform</string>
     <string name="web_load_failed">Could not load the page. Check your network and try again.</string>
-    <string name="prov_group">Third-party providers</string>
-    <string name="prov_group_desc">OpenAI-compatible endpoints. API keys are encrypted on this device and only handed to the engine to call the model.</string>
+    <string name="prov_group">Model providers</string>
+    <string name="prov_group_desc">Manage all model connections. API keys are encrypted on this device. Unavailable models report a configuration error.</string>
     <string name="prov_add">Add provider</string>
     <string name="prov_choose">Choose a provider</string>
     <string name="prov_title">Provider</string>
@@ -900,4 +900,14 @@
     <string name="upd_res_skipped">Skipped %1$s</string>
     <string name="upd_res_failed">Check failed: %1$s</string>
     <string name="upd_view">View</string>
+    <string name="model_config_title">Check model configuration</string>
+    <string name="model_config_key_saved">API key saved</string>
+    <string name="model_config_key_optional">API key optional</string>
+    <string name="model_config_provider_missing">Provider %1$s was removed or does not exist. Choose a model in settings.</string>
+    <string name="model_config_provider_disabled">Provider %1$s is disabled. Enable it or choose another model.</string>
+    <string name="model_config_model_missing">Provider %1$s no longer lists %2$s. Choose another model.</string>
+    <string name="model_config_url_invalid">Provider %1$s has an invalid API address. Check model settings.</string>
+    <string name="model_config_key_missing">The API key for %1$s is missing or unreadable. Enter it again.</string>
+    <string name="model_config_busy">Model settings changed. Wait for the current task to finish before sending.</string>
+    <string name="model_config_init_failed">Cannot use %1$s / %2$s: %3$s</string>
 </resources>

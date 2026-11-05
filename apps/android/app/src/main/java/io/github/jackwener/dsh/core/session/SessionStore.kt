@@ -19,7 +19,7 @@ import io.github.jackwener.dsh.core.engine.JsonRpcPeer
 import io.github.jackwener.dsh.core.engine.TurnWakeLock
 import io.github.jackwener.dsh.core.engine.EngineStartException
 import io.github.jackwener.dsh.core.engine.JsonRpcException
-import io.github.jackwener.dsh.core.engine.NoCredentialsException
+import io.github.jackwener.dsh.core.engine.RouteUnavailableException
 import io.github.jackwener.dsh.core.engine.RpcJson
 import io.github.jackwener.dsh.core.model.PermissionPreset
 import io.github.jackwener.dsh.core.model.Risk
@@ -347,8 +347,8 @@ class SessionStore @Inject constructor(
                     images.forEach { (mime, data) -> addJsonObject { put("type", "image"); put("mimeType", mime); put("data", data) } }
                 }
             })
-        } catch (e: NoCredentialsException) {
-            fail(sessionId, "no_credentials", e.message ?: "", null, retryText)
+        } catch (e: RouteUnavailableException) {
+            fail(sessionId, "model_config", e.message ?: "", null, retryText)
         } catch (e: EngineBackgroundStartException) {
             // Android 12+ refused the engine's foreground service from the background (e.g. battery
             // optimization re-enabled): degrade to a notification that runs the task when tapped.

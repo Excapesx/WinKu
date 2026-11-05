@@ -77,10 +77,7 @@ open class ConversationController(
      */
     val modelChangePending: StateFlow<Boolean> = combine(engine.route, settings, store.status) { route, st, status ->
         val want = st.choice
-        val differs = route != null && when (val p = want.provider) {
-            null -> !route.provider.startsWith("deepseek-") || route.model != want.model || route.effort != st.effort.id
-            else -> route.provider != p.id || route.model != want.model || route.effort != st.reasoningEffort.orEmpty()
-        }
+        val differs = route != null && (route.provider != want.providerId || route.model != want.model || route.effort != st.reasoningEffort.orEmpty())
         differs && status.values.any { it != RowStatus.Idle }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 

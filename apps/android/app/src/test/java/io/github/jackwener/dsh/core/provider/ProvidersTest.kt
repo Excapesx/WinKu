@@ -65,12 +65,16 @@ class ProvidersTest {
         assertFalse(off.contains("llm-service-lite"))
     }
 
-    @Test fun choiceFallsBackToDeepSeek() {
+    @Test fun unavailableChoiceIsPreservedAndReported() {
         assertEquals("kimi-k3", resolveChoice("kimi", "kimi-k3", listOf(kimi)).model)
         assertEquals(kimi, resolveChoice("kimi", "kimi-k3", listOf(kimi)).provider)
-        assertNull(resolveChoice("kimi", "kimi-k3", listOf(kimi.copy(enabled = false))).provider)
-        assertNull(resolveChoice("kimi", "gone", listOf(kimi)).provider)
-        assertEquals(DEFAULT_DEEPSEEK_MODEL, resolveChoice("kimi", "kimi-k3", emptyList()).model)
+        assertEquals(ModelConfigProblem.ProviderDisabled, resolveChoice("kimi", "kimi-k3", listOf(kimi.copy(enabled = false))).problem)
+        assertEquals(ModelConfigProblem.ModelMissing, resolveChoice("kimi", "gone", listOf(kimi)).problem)
+        val removed = resolveChoice("kimi", "kimi-k3", listOf(deepSeekProvider(hasKey = true)))
+        assertEquals("kimi-k3", removed.model)
+        assertEquals("kimi", removed.providerId)
+        assertFalse(removed.isDeepSeek)
+        assertEquals(ModelConfigProblem.ProviderMissing, removed.problem)
         assertEquals("deepseek-v4-pro", resolveChoice("", "deepseek-v4-pro", listOf(kimi)).model)
         assertEquals(ThirdParty.DEFAULT_CONTEXT_WINDOW, resolveChoice("kimi", "kimi-k3", listOf(kimi)).contextWindow)
     }

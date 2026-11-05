@@ -116,7 +116,8 @@ fun ProvidersCard(vm: SettingsViewModel, onOpen: (String) -> Unit) {
     val check by vm.modelCheck.collectAsStateWithLifecycle()
     SettingsCard {
         s.providers.forEachIndexed { i, p ->
-            SettingsRow(p.name, stringResource(R.string.prov_models_count, p.models.size) + " · " + (Uri.parse(p.baseUrl).host ?: p.baseUrl),
+            SettingsRow(p.name, stringResource(R.string.prov_models_count, p.models.size) + " · " +
+                stringResource(if (p.hasKey) R.string.model_config_key_saved else if (!p.keyRequired) R.string.model_config_key_optional else R.string.key_missing),
                 onClick = { onOpen(p.id) }, divider = i > 0,
                 trailing = { DSwitch(p.enabled, { vm.setProviderEnabled(p, it) }) })
             // The main model of this provider has not passed the connection test (never tested, or failed): offer a retest.
@@ -150,17 +151,17 @@ fun DefaultModelCard(vm: SettingsViewModel) {
     val choice = s.choice
     SettingsGroupTitle(stringResource(R.string.set_default_model))
     SettingsCard {
-        DEEPSEEK_MODELS.forEachIndexed { i, (id, label) ->
-            SettingsRow(label, stringResource(if (id == "deepseek-flash") R.string.model_flash_desc else R.string.model_pro_desc),
-                onClick = { vm.setModel("", id) }, divider = i > 0,
-                trailing = { if (choice.isDeepSeek && choice.model == id) DIcon(R.drawable.dsw_check_outline, size = 16.dp, tint = c.labelPrimary) })
+        choice.problem?.let { problem ->
+            SettingsRow(stringResource(R.string.model_config_title), stringResource(problem.messageRes, choice.provider?.name ?: choice.providerId, choice.model),
+                divider = false, titleColor = c.error)
         }
         val check by vm.modelCheck.collectAsStateWithLifecycle()
         s.providers.filter { it.enabled }.forEach { p ->
             p.models.forEach { m ->
                 val mine = check?.takeIf { it.provider == p.id && it.model == m }
                 // Picking an untested model tests it first (ModelVerify.kt); a verified one switches at once.
-                SettingsRow(m, p.name, onClick = { vm.checkModel(p, m, select = true) },
+                SettingsRow(if (p.isNativeDeepSeek) DEEPSEEK_MODELS.firstOrNull { it.first == m }?.second ?: m else m,
+                    p.name, onClick = { vm.checkModel(p, m, select = true) },
                     trailing = {
                         if (mine?.busy == true) Spinner(14.dp)
                         else if (choice.provider?.id == p.id && choice.model == m) DIcon(R.drawable.dsw_check_outline, size = 16.dp, tint = c.labelPrimary)
@@ -179,6 +180,10 @@ fun DefaultModelCard(vm: SettingsViewModel) {
 fun ProviderPage(vm: SettingsViewModel, target: String, presetId: String?, onPreset: (String) -> Unit, onDone: () -> Unit) {
     val s by vm.settings.collectAsStateWithLifecycle()
     val existing = s.providers.firstOrNull { it.id == target }
+    if (existing?.isNativeDeepSeek == true) {
+        DeepSeekKeyCard(vm)
+        return
+    }
     val preset = presetOf(presetId ?: existing?.preset)
     if (existing == null && preset == null) {
         // Step 1: pick a preset.
@@ -527,4 +532,4 @@ private fun ReasoningControlEditor(decl: ReasoningDecl?, onChange: (ReasoningDec
 }
 
 /** https:// for cloud services, or plain http:// for a gateway on the user's own LAN (#5). */
-private fun isHttpUrl(url: String) = url.startsWith("https://", ignoreCase = true) || url.startsWith("http://", ignoreCase = true)
+private fun isHttpUrl(url: String) = io.github.jackwener.dsh.core.provider.isProviderUrl(url)

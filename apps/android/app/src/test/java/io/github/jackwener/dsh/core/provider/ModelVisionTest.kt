@@ -13,7 +13,7 @@ import java.io.File
 class ModelVisionTest {
     @Test fun engineTableMirrorMatchesTheVendoredAdapter() {
         // llm-service-lite MODEL_DEFAULT_RULES: family order, match patterns, and whether `modalities` names image.
-        val js = File("../js/packages/llm-service-lite/lib/index.js").readText()
+        val js = File("../js/packages/llm-service-lite/lib/index.js").readText().replace("\r\n", "\n")
         val table = js.substringAfter("const MODEL_DEFAULT_RULES = [").substringBefore("\n];")
         val rules = table.split(Regex("""\n\t\{\n""")).drop(1).map { rule ->
             // Up to the array's own `],` (a character class's `]` is followed by `/`, never by `,` + newline).

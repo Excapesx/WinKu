@@ -23,7 +23,9 @@ import javax.inject.Singleton
 class SecretStore @Inject constructor(@ApplicationContext context: Context) {
     private val dir = context.noBackupFilesDir
     private val file = File(dir, "deepseek.key")
-    private fun named(name: String) = File(dir, "secret-" + name.filter { it.isLetterOrDigit() || it == '-' || it == '_' } + ".key")
+    // Alias the native provider to the legacy slot: no copy/delete window and no key re-entry on upgrade.
+    private fun named(name: String) = if (name == "provider-deepseek-official") file else
+        File(dir, "secret-" + name.filter { it.isLetterOrDigit() || it == '-' || it == '_' } + ".key")
 
     fun read(): String? = read(file)
     fun write(value: String) = write(file, value)

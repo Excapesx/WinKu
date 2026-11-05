@@ -46,8 +46,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
 import javax.inject.Inject
 
 data class DoctorCheck(val title: String, val ok: Boolean?, val detail: String, val fix: Intent? = null)
@@ -75,7 +73,10 @@ class SettingsViewModel @Inject constructor(
 
     val hasKey get() = secrets.read() != null
     val hasKeyFlow = MutableStateFlow(secrets.read() != null)
-    fun clearKey() = viewModelScope.launch { secrets.clear(); hasKeyFlow.value = false; sessions.restartEngine() }
+    fun clearKey() = viewModelScope.launch {
+        secrets.clear(); hasKeyFlow.value = false
+        repo.updateProvider(io.github.jackwener.dsh.core.provider.DEEPSEEK_PROVIDER) { it.copy(hasKey = false, verified = emptyList()) }
+    }
     val maskedKey get() = secrets.read()?.let { it.take(5) + "…" + it.takeLast(4) }
 
     fun setGroup(g: ToolGroup, on: Boolean) = viewModelScope.launch { repo.setGroupEnabled(g, on) }
@@ -101,7 +102,7 @@ class SettingsViewModel @Inject constructor(
             plan?.write?.forEach { (name, value) -> secrets.write(name, value) }
             plan?.clear?.forEach { secrets.clear(it) }
         }
-        repo.saveProvider(p.copy(hasKey = p.hasKey || k.isNotEmpty(), headers = plan?.headers ?: p.headers))
+        repo.saveProvider(p.copy(hasKey = !secrets.read(p.secretName).isNullOrBlank(), headers = plan?.headers ?: p.headers))
     }
     fun deleteProvider(p: ProviderConfig) = viewModelScope.launch {
         withContext(Dispatchers.IO) { secrets.clear(p.secretName); p.headers.filter { it.secret }.forEach { secrets.clear(p.headerSecretName(it.name)) } }
@@ -113,12 +114,12 @@ class SettingsViewModel @Inject constructor(
     fun setProviderEnabled(p: ProviderConfig, on: Boolean) = viewModelScope.launch { repo.saveProvider(p.copy(enabled = on)) }
     /** `GET {baseUrl}/models` with [key] (or the stored key of [existing]); also the connection test. */
     suspend fun fetchModels(baseUrl: String, key: String?, existing: ProviderConfig?, headerRows: List<HeaderRow>? = null, sessionHeader: String? = existing?.sessionHeader): Result<io.github.jackwener.dsh.core.provider.FetchedModels<io.github.jackwener.dsh.core.provider.RemoteModel>> = withContext(Dispatchers.IO) {
-        val k = key?.trim()?.takeIf { it.isNotEmpty() } ?: existing?.takeIf { it.hasKey }?.let { secrets.read(it.secretName) }
+        val k = keyFor(existing, key)
         val headers = requestHeaders(existing, headerRows, sessionHeader)
         io.github.jackwener.dsh.core.provider.fetchModelsResolving(baseUrl, k) { u, kk -> io.github.jackwener.dsh.core.provider.fetchModels(u, kk, headers) }
     }
     private fun keyFor(existing: ProviderConfig?, typed: String?): String? =
-        typed?.trim()?.takeIf { it.isNotEmpty() } ?: existing?.takeIf { it.hasKey }?.let { secrets.read(it.secretName) }
+        typed?.trim()?.takeIf { it.isNotEmpty() } ?: existing?.let { secrets.read(it.secretName) }
 
     /** 测试并保存: real chat requests with a tool, [candidates] in order (ModelVerify.kt). [onTesting] runs on an IO thread. */
     suspend fun verifyModels(baseUrl: String, key: String?, existing: ProviderConfig?, candidates: List<String>, onTesting: (String) -> Unit,
@@ -146,6 +147,10 @@ class SettingsViewModel @Inject constructor(
      */
     fun checkModel(p: ProviderConfig, model: String, select: Boolean) = viewModelScope.launch {
         if (modelCheck.value?.busy == true) return@launch
+        io.github.jackwener.dsh.core.provider.ModelChoice(p, model).validate(secrets::read)?.let { problem ->
+            modelCheck.value = ModelCheck(p.id, model, busy = false, message = context.getString(problem.messageRes, p.name, model))
+            return@launch
+        }
         if (select && model in p.verified) { modelCheck.value = null; repo.setModel(p.id, model); return@launch }
         modelCheck.value = ModelCheck(p.id, model, busy = true)
         val f = withContext(Dispatchers.IO) { probeModel(p.baseUrl, keyFor(p, null), model, requestHeaders(p, null, p.sessionHeader)) }
@@ -204,7 +209,7 @@ class SettingsViewModel @Inject constructor(
             roles += "main model" to (choice.provider?.let { p -> "${p.id} / ${choice.model}" + if (choice.model in p.verified) " (passed test)" else " (not tested)" }
                 ?.let { it + ", effort ${st.reasoningEffort ?: "default"}" }
                 ?: "DeepSeek / ${choice.model}, effort ${st.effort.id}")
-            if (st.provider.isNotEmpty() && choice.isDeepSeek) roles += "saved selection" to "${st.provider} / ${st.model} (unavailable, DeepSeek used instead)"
+            choice.validate(secrets::read)?.let { roles += "selection problem" to it.name }
             val runs = runCatching { sessionDao.recentRunEnds(DiagnosticsReport.RUNS) }.getOrDefault(emptyList())
                 .mapNotNull { DiagnosticsReport.outcomeOf(it.type, it.time, it.json) }
             DiagnosticsReport.build(DiagnosticsInput(
@@ -236,12 +241,20 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    /** Validates against DeepSeek's /models before saving. Returns null on success, else the error. */
+    /** Native adapter credentials use the same real chat/tool probe as the other providers. */
     suspend fun saveKey(key: String): String? {
         keyStatus.value = "checking"
-        val err = validateKey(key.trim())
+        if (key.isBlank()) return context.getString(R.string.prov_err_key).also { keyStatus.value = it }
+        val p = repo.current().providers.firstOrNull { it.isNativeDeepSeek }
+            ?: io.github.jackwener.dsh.core.provider.deepSeekProvider()
+        val model = repo.current().choice.takeIf { it.isDeepSeek && it.model in p.models }?.model ?: p.models.first()
+        val failure = withContext(Dispatchers.IO) { probeModel(p.baseUrl, key.trim(), model, requestHeaders(p, null, null)) }
+        val err = failure?.let { describeFailure(context, it) }
         keyStatus.value = err
-        if (err == null) { secrets.write(key.trim()); hasKeyFlow.value = true; sessions.restartEngine() }
+        if (err == null) {
+            saveProvider(p.copy(verified = (p.verified + model).distinct()), key)
+            hasKeyFlow.value = true
+        }
         return err
     }
 
@@ -267,12 +280,11 @@ class SettingsViewModel @Inject constructor(
         checks += DoctorCheck("Shizuku", if (shell == io.github.jackwener.dsh.core.platform.ShellState.NotInstalled) null else shell.ready,
             listOfNotNull(shellStateLabel(context, shell), shellStateHint(context, shell)).joinToString(" · "), shellFixIntent(shizuku.access, shell, shizukuInstaller.bundled))
         agentScreen.lastCreateError?.let { checks += DoctorCheck(context.getString(R.string.agent_screen_doctor), false, context.getString(R.string.agent_screen_create_failed, it)) }
-        val third = settings.value.choice.provider
-        checks += DoctorCheck(if (zh) "模型凭据" else "Model credential", hasKey || third != null, when {
-            third != null -> third.name + " / " + settings.value.choice.model
-            hasKey -> "API Key " + (maskedKey ?: "")
-            else -> if (zh) "未设置 API Key" else "No API key"
-        })
+        val selected = settings.value.choice
+        val problem = selected.validate(secrets::read)
+        checks += DoctorCheck(if (zh) "模型配置" else "Model configuration", problem == null,
+            problem?.let { context.getString(it.messageRes, selected.provider?.name ?: selected.providerId, selected.model) }
+                ?: "${selected.provider?.name} / ${selected.model}")
         val engineDetail = when (val s = engine.state.value) {
             EngineState.Ready -> (if (zh) "运行中，启动用时 " else "Running, started in ") + "${engine.startupMillis} ms"
             is EngineState.Failed -> s.message
@@ -283,17 +295,6 @@ class SettingsViewModel @Inject constructor(
             "${context.filesDir.usableSpace / 1_000_000} MB free")
         checks += withContext(Dispatchers.IO) { ReliabilityDoctor.checks(context, zh) }
         doctor.value = checks
-    }
-
-    private suspend fun validateKey(key: String): String? = withContext(Dispatchers.IO) {
-        if (key.length < 20) return@withContext "too short"
-        runCatching {
-            val c = URL("https://api.deepseek.com/models").openConnection() as HttpURLConnection
-            c.setRequestProperty("Authorization", "Bearer $key"); c.connectTimeout = 10_000; c.readTimeout = 10_000
-            val code = c.responseCode
-            c.disconnect()
-            if (code == 200) null else "HTTP $code"
-        }.getOrElse { it.message ?: "network error" }
     }
 
     /** DSH holds the assistant role (默认数字助理). */

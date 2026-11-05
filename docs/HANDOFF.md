@@ -85,6 +85,10 @@ $adb="<repo>\apps\android\toolchains\local\android-sdk\platform-tools\adb.exe"
 
 编译 → 装机 → 截图 → 看图。不看图不算改完（除非改的是纯逻辑）。
 
+模型配置统一（2026-11-05）的验证：服务商与迁移相关 67 项单元测试、3 项 Android 设备测试通过，预览包和 arm64 包均构建成功，模型设置与停用错误状态已截图检查。
+全量 386 项单元测试中，4 项 `ShellFilesTest` 在 Windows 临时目录路径上失败，该文件模块本次未修改。
+设备测试使用隔离的 Android Keystore 槽位和本机 HTTP 测试服务；通过 dsh 引擎调用真实模型仍需 arm64 真机与有效 API Key 验证。
+
 ## 4. 代码地图（`apps/android/`）
 
 | 位置 | 责任 |
@@ -103,7 +107,10 @@ $adb="<repo>\apps\android\toolchains\local\android-sdk\platform-tools\adb.exe"
 
 - **DeepSeek 账号登录整体移除**：`core/account`、`feature/account` 已删，引擎里
   `plugin-account` 已从 `engine.zip` 和 `cordis.patch.yml` 移除，`llm-deepseek-account` 路由已 disabled
-- 模型接入只剩两条路：DeepSeek API Key（内置路由 `deepseek-official`）、第三方 OpenAI 兼容服务商
+- 模型配置统一存在 `Settings.providers`，DeepSeek 也是列表中的一项；底层继续分别使用 dsh 原生适配器（`deepseek-official`）与 OpenAI 兼容适配器
+- 首次升级通过 `ModelSettingsMigration` 把旧的空 provider id 迁为 `deepseek-official`，保留模型、推理等级和其他服务商配置；原 `deepseek.key` 直接作为命名密钥槽位的别名，无需重新填 key
+- 服务商停用、删除或移除所选模型时保留原选择并报错；初始化失败也不会回退到其他模型。更换密钥会更新配置指纹，下次空闲调用重新启动引擎
+- `EngineManager.control()` 可在未配置模型时启动控制通道供扩展管理使用，模型初始化延迟到 `sdk()` 首次发送前
 - `platform.deepseek.com` 的充值与用量页面全删
 
 ## 6. 下一步（按 ROADMAP P1）

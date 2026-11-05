@@ -271,6 +271,12 @@ private fun GeneralSection(vm: SettingsViewModel) {
 
 @Composable
 private fun ModelSection(vm: SettingsViewModel, onProvider: (String) -> Unit) {
+    ProvidersCard(vm, onProvider)
+    DefaultModelCard(vm)
+}
+
+@Composable
+internal fun DeepSeekKeyCard(vm: SettingsViewModel) {
     val c = Dsh.colors
     val s by vm.settings.collectAsStateWithLifecycle()
     val hasKey by vm.hasKeyFlow.collectAsStateWithLifecycle()
@@ -303,8 +309,6 @@ private fun ModelSection(vm: SettingsViewModel, onProvider: (String) -> Unit) {
             DButton(stringResource(R.string.apply), { scope.launch { if (vm.saveKey(key) == null) key = "" } }, size = BtnSize.Sm, enabled = key.isNotBlank())
         }
     }
-    ProvidersCard(vm, onProvider)
-    DefaultModelCard(vm)
 }
 
 @Composable
@@ -361,8 +365,7 @@ internal fun groupLabel(g: ToolGroup) = when (g) {
 private fun WebSection(vm: SettingsViewModel) {
     val s by vm.settings.collectAsStateWithLifecycle()
     val hasKey by vm.hasKeyFlow.collectAsStateWithLifecycle()
-    // Mirrors EngineManager.webSearch: DeepSeek search needs the API key, or the account while a DeepSeek model is in use.
-    val search = hasKey || s.choice.isDeepSeek
+    val search = hasKey && s.providers.any { it.isNativeDeepSeek && it.enabled }
     SettingsGroupTitle(stringResource(R.string.set_web_group))
     SettingsCard {
         SettingsRow(stringResource(R.string.web_search_title), stringResource(if (search) R.string.web_search_desc else R.string.web_search_off_desc), divider = false,
