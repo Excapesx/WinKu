@@ -316,7 +316,7 @@ private fun ErrorRow(e: TurnError, onRetry: (TurnError) -> Unit, onOpenSettings:
             if (retryable) Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 when {
                     needsSignIn -> {
-                        DButton(stringResource(R.string.acct_add_api_key), { onOpenSettings("Model") }, size = BtnSize.Sm)
+                        DButton(stringResource(R.string.onb_setup_models), { onOpenSettings("Model") }, size = BtnSize.Sm)
                     }
                     unavailable != null || e.kind == "model_config" -> {
                         DButton(stringResource(R.string.err_open_model_settings), { onOpenSettings("Model") }, size = BtnSize.Sm)

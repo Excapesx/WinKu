@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.jackwener.dsh.core.data.BusySend
-import io.github.jackwener.dsh.core.data.Effort
 import io.github.jackwener.dsh.core.data.SecretStore
 import io.github.jackwener.dsh.core.data.ThemeMode
 import io.github.jackwener.dsh.core.data.WorkDetails
@@ -69,20 +68,10 @@ class SettingsViewModel @Inject constructor(
     val usage: StateFlow<List<UsageEntity>> = usage.observe().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val engineState: StateFlow<EngineState> = engine.state
     val doctor = MutableStateFlow<List<DoctorCheck>>(emptyList())
-    val keyStatus = MutableStateFlow<String?>(null)
-
-    val hasKey get() = secrets.read() != null
-    val hasKeyFlow = MutableStateFlow(secrets.read() != null)
-    fun clearKey() = viewModelScope.launch {
-        secrets.clear(); hasKeyFlow.value = false
-        repo.updateProvider(io.github.jackwener.dsh.core.provider.DEEPSEEK_PROVIDER) { it.copy(hasKey = false, verified = emptyList()) }
-    }
-    val maskedKey get() = secrets.read()?.let { it.take(5) + "…" + it.takeLast(4) }
-
     fun setGroup(g: ToolGroup, on: Boolean) = viewModelScope.launch { repo.setGroupEnabled(g, on) }
     suspend fun saveMode(m: io.github.jackwener.dsh.core.model.SessionMode) = repo.saveMode(m)
     suspend fun deleteMode(id: String) = repo.deleteMode(id)
-    /** [provider] "" = DeepSeek. */
+    /** [provider] is an explicit configured route id; blank means no selection. */
     fun setModel(provider: String, m: String) = viewModelScope.launch { repo.setModel(provider, m) }
 
     // ── third-party providers ──
@@ -113,21 +102,23 @@ class SettingsViewModel @Inject constructor(
         appRequestHeaders(resolveHeaderRows(rows ?: headerRowsOf(existing), existing) { secrets.read(it) }, sessionHeader, appUserAgent(io.github.jackwener.dsh.BuildConfig.VERSION_NAME))
     fun setProviderEnabled(p: ProviderConfig, on: Boolean) = viewModelScope.launch { repo.saveProvider(p.copy(enabled = on)) }
     /** `GET {baseUrl}/models` with [key] (or the stored key of [existing]); also the connection test. */
-    suspend fun fetchModels(baseUrl: String, key: String?, existing: ProviderConfig?, headerRows: List<HeaderRow>? = null, sessionHeader: String? = existing?.sessionHeader): Result<io.github.jackwener.dsh.core.provider.FetchedModels<io.github.jackwener.dsh.core.provider.RemoteModel>> = withContext(Dispatchers.IO) {
+    suspend fun fetchModels(baseUrl: String, key: String?, existing: ProviderConfig?, headerRows: List<HeaderRow>? = null, sessionHeader: String? = existing?.sessionHeader,
+        protocol: io.github.jackwener.dsh.core.provider.ProviderProtocol = existing?.protocol ?: io.github.jackwener.dsh.core.provider.ProviderProtocol.ChatCompletions): Result<io.github.jackwener.dsh.core.provider.FetchedModels<io.github.jackwener.dsh.core.provider.RemoteModel>> = withContext(Dispatchers.IO) {
         val k = keyFor(existing, key)
         val headers = requestHeaders(existing, headerRows, sessionHeader)
-        io.github.jackwener.dsh.core.provider.fetchModelsResolving(baseUrl, k) { u, kk -> io.github.jackwener.dsh.core.provider.fetchModels(u, kk, headers) }
+        io.github.jackwener.dsh.core.provider.fetchModelsResolving(baseUrl, k) { u, kk -> io.github.jackwener.dsh.core.provider.fetchModels(u, kk, headers, protocol) }
     }
     private fun keyFor(existing: ProviderConfig?, typed: String?): String? =
         typed?.trim()?.takeIf { it.isNotEmpty() } ?: existing?.let { secrets.read(it.secretName) }
 
     /** 测试并保存: real chat requests with a tool, [candidates] in order (ModelVerify.kt). [onTesting] runs on an IO thread. */
     suspend fun verifyModels(baseUrl: String, key: String?, existing: ProviderConfig?, candidates: List<String>, onTesting: (String) -> Unit,
-        headerRows: List<HeaderRow>? = null, sessionHeader: String? = existing?.sessionHeader): VerifyOutcome =
+        headerRows: List<HeaderRow>? = null, sessionHeader: String? = existing?.sessionHeader,
+        protocol: io.github.jackwener.dsh.core.provider.ProviderProtocol = existing?.protocol ?: io.github.jackwener.dsh.core.provider.ProviderProtocol.ChatCompletions): VerifyOutcome =
         withContext(Dispatchers.IO) {
             val k = keyFor(existing, key)
             // A fresh session id per probe: each test call stands alone (appRequestHeaders).
-            verifyCandidates(candidates, onTesting = onTesting) { probeModel(baseUrl, k, it, requestHeaders(existing, headerRows, sessionHeader)) }
+            verifyCandidates(candidates, onTesting = onTesting) { probeModel(baseUrl, k, it, requestHeaders(existing, headerRows, sessionHeader), protocol) }
         }
 
     /** Saves a tested provider and, when [main] is set, makes that model the main model. */
@@ -153,7 +144,7 @@ class SettingsViewModel @Inject constructor(
         }
         if (select && model in p.verified) { modelCheck.value = null; repo.setModel(p.id, model); return@launch }
         modelCheck.value = ModelCheck(p.id, model, busy = true)
-        val f = withContext(Dispatchers.IO) { probeModel(p.baseUrl, keyFor(p, null), model, requestHeaders(p, null, p.sessionHeader)) }
+        val f = withContext(Dispatchers.IO) { probeModel(p.baseUrl, keyFor(p, null), model, requestHeaders(p, null, p.sessionHeader), p.protocol) }
         repo.updateProvider(p.id) { cur -> cur.copy(verified = if (f == null) (cur.verified + model).distinct() else cur.verified - model) }
         modelCheck.value = when {
             f == null -> {
@@ -169,7 +160,10 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun setEffort(e: Effort) = viewModelScope.launch { repo.setEffort(e) }
+    fun setReasoning(level: String?) = viewModelScope.launch {
+        val choice = repo.current().choice
+        if (choice.provider != null) repo.setReasoningChoice(choice.providerId, choice.model, level)
+    }
     fun setTheme(t: ThemeMode) = viewModelScope.launch { repo.setTheme(t) }
     fun setWorkDetails(w: WorkDetails) = viewModelScope.launch { repo.setWorkDetails(w) }
     fun setBusySend(b: BusySend) = viewModelScope.launch { repo.setBusySend(b) }
@@ -208,7 +202,7 @@ class SettingsViewModel @Inject constructor(
             val roles = mutableListOf<Pair<String, String>>()
             roles += "main model" to (choice.provider?.let { p -> "${p.id} / ${choice.model}" + if (choice.model in p.verified) " (passed test)" else " (not tested)" }
                 ?.let { it + ", effort ${st.reasoningEffort ?: "default"}" }
-                ?: "DeepSeek / ${choice.model}, effort ${st.effort.id}")
+                ?: "No model selected")
             choice.validate(secrets::read)?.let { roles += "selection problem" to it.name }
             val runs = runCatching { sessionDao.recentRunEnds(DiagnosticsReport.RUNS) }.getOrDefault(emptyList())
                 .mapNotNull { DiagnosticsReport.outcomeOf(it.type, it.time, it.json) }
@@ -229,7 +223,7 @@ class SettingsViewModel @Inject constructor(
                 agentScreenUnavailable = screenWhy,
                 agentScreenSetting = st.agentScreen,
                 agentScreenError = agentScreen.lastCreateError,
-                deepseekCredential = if (hasKey) "api key" else "none",
+                modelCredential = if (choice.validate(secrets::read) == null) "configured" else "unavailable",
                 roles = roles,
                 providers = st.providers.map { ProviderFacts(it.id, it.preset, it.enabled, it.baseUrl, it.models, it.verified) },
                 runs = runs,
@@ -239,23 +233,6 @@ class SettingsViewModel @Inject constructor(
                 generatedAt = System.currentTimeMillis(),
             ))
         }
-    }
-
-    /** Native adapter credentials use the same real chat/tool probe as the other providers. */
-    suspend fun saveKey(key: String): String? {
-        keyStatus.value = "checking"
-        if (key.isBlank()) return context.getString(R.string.prov_err_key).also { keyStatus.value = it }
-        val p = repo.current().providers.firstOrNull { it.isNativeDeepSeek }
-            ?: io.github.jackwener.dsh.core.provider.deepSeekProvider()
-        val model = repo.current().choice.takeIf { it.isDeepSeek && it.model in p.models }?.model ?: p.models.first()
-        val failure = withContext(Dispatchers.IO) { probeModel(p.baseUrl, key.trim(), model, requestHeaders(p, null, null)) }
-        val err = failure?.let { describeFailure(context, it) }
-        keyStatus.value = err
-        if (err == null) {
-            saveProvider(p.copy(verified = (p.verified + model).distinct()), key)
-            hasKeyFlow.value = true
-        }
-        return err
     }
 
     /** (label, package) of user apps for the notification whitelist; null while loading. */

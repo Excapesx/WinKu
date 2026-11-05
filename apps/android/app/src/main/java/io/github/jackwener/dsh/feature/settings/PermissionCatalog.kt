@@ -90,7 +90,7 @@ object PermissionCatalog {
         PermissionItem("location", "位置", "Location", "按 Wi‑Fi 名称或地点触发自动化", "Trigger automations by Wi‑Fi name or place",
             setOf(ToolGroup.Rules), runtime = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
             check = { granted(it, Manifest.permission.ACCESS_FINE_LOCATION) }),
-        PermissionItem("bg_location", "后台位置", "Background location", "离开 App 时也能按地点触发", "Place triggers while DSH is closed",
+        PermissionItem("bg_location", "后台位置", "Background location", "离开 App 时也能按地点触发", "Place triggers while WinKu is closed",
             setOf(ToolGroup.Rules),
             check = { granted(it, Manifest.permission.ACCESS_BACKGROUND_LOCATION) },
             intent = { appDetails(it) }),

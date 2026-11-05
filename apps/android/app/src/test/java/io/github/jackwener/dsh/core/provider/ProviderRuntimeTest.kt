@@ -4,7 +4,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ProviderRuntimeTest {
-    private val native = deepSeekProvider()
+    private val native = ProviderConfig("deepseek", "deepseek", "DeepSeek", "https://api.deepseek.com/v1", listOf("deepseek-flash"))
     private val cloud = ProviderConfig("kimi", "kimi", "Kimi", "https://example.com/v1", listOf("m"))
     private val local = ProviderConfig("local", "ollama", "Local", "http://192.168.1.2:11434/v1", listOf("m"))
 
@@ -35,12 +35,12 @@ class ProviderRuntimeTest {
         listOf("https://", "not a url", "file:///etc", "https://user:pass@example.com", "https://example.com?key=x", "https://example.com#x").forEach { assertFalse(it, isProviderUrl(it)) }
     }
 
-    @Test fun nativeAdapterNeverBecomesALiteRoute() {
+    @Test fun deepSeekUsesTheSameAdapterAsEveryProvider() {
         val patch = renderProfilePatch(listOf(native, cloud), false)
-        assertFalse(patch.contains("\"deepseek-official\""))
+        assertTrue(patch.contains("\"deepseek\""))
         assertTrue(patch.contains("\"kimi\""))
-        assertEquals("DEEPSEEK_API_KEY", native.keyEnv)
-        assertEquals("provider-deepseek-official", native.secretName)
+        assertEquals("DSH_ANDROID_KEY_DEEPSEEK", native.keyEnv)
+        assertEquals("provider-deepseek", native.secretName)
     }
 
     @Test fun rotationOfEitherAdaptersKeyChangesFingerprint() {
@@ -52,7 +52,7 @@ class ProviderRuntimeTest {
         assertNotEquals(initial, fingerprint(keys + (cloud.secretName to "rotated-cloud-key")))
         assertEquals(initial, fingerprint(keys.entries.reversed().associate { it.toPair() }))
         assertFalse(initial.contains("key"))
-        assertEquals(mapOf("DEEPSEEK_API_KEY" to "native-key", "DSH_ANDROID_KEY_KIMI" to "cloud-key"), providerEnvironment(providers, keys::get))
+        assertEquals(mapOf("DSH_ANDROID_KEY_DEEPSEEK" to "native-key", "DSH_ANDROID_KEY_KIMI" to "cloud-key"), providerEnvironment(providers, keys::get))
         assertTrue(providerEnvironment(providers.map { it.copy(enabled = false) }, keys::get).isEmpty())
     }
 }

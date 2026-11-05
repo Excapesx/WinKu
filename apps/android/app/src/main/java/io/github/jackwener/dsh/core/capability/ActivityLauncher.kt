@@ -26,7 +26,7 @@ class ActivityLauncher @Inject constructor(
 ) {
     private val pm get() = context.packageManager
 
-    /** Android drops (without an error) activity starts from a background app unless one of these exempts DSH. */
+    /** Android drops (without an error) activity starts from a background app unless one of these exempts WinKu. */
     private fun mayStartFromBackground(): Boolean = AppVisibility.isForeground || Settings.canDrawOverlays(context) ||
         DshAccessibilityService.instance != null ||
         runCatching { context.getSystemService(android.app.role.RoleManager::class.java).isRoleHeld(android.app.role.RoleManager.ROLE_ASSISTANT) }.getOrDefault(false)
@@ -41,8 +41,8 @@ class ActivityLauncher @Inject constructor(
     private suspend fun start(intent: Intent, displayId: Int? = null, expect: String? = null): String {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         if (displayId == null && (mayStartFromBackground() || !shizuku.available)) {
-            if (!mayStartFromBackground()) throw LaunchBlocked("Android does not let DSH open other apps while it is in the background " +
-                "(no overlay permission, accessibility service or Shizuku). Ask the user to open it, or to enable DSH's accessibility service.")
+            if (!mayStartFromBackground()) throw LaunchBlocked("Android does not let WinKu open other apps while it is in the background " +
+                "(no overlay permission, accessibility service or Shizuku). Ask the user to open it, or to enable WinKu's accessibility service.")
             try { context.startActivity(intent) }
             catch (e: ActivityNotFoundException) { throw InvalidArgsException("No app can handle this: ${e.message}") }
             catch (e: SecurityException) { if (!shizuku.available) throw e; return viaShell(intent, null, expect) }

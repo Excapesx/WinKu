@@ -85,9 +85,9 @@ $adb="<repo>\apps\android\toolchains\local\android-sdk\platform-tools\adb.exe"
 
 编译 → 装机 → 截图 → 看图。不看图不算改完（除非改的是纯逻辑）。
 
-模型配置统一（2026-11-05）的验证：服务商与迁移相关 67 项单元测试、3 项 Android 设备测试通过，预览包和 arm64 包均构建成功，模型设置与停用错误状态已截图检查。
-全量 386 项单元测试中，4 项 `ShellFilesTest` 在 Windows 临时目录路径上失败，该文件模块本次未修改。
-设备测试使用隔离的 Android Keystore 槽位和本机 HTTP 测试服务；通过 dsh 引擎调用真实模型仍需 arm64 真机与有效 API Key 验证。
+多模型运行时（2026-11-05）的验证：88 项直接相关 JVM 测试通过；扩大回归后，排除 `ShellFilesTest` 和 `ExtensionsStoreTest` 两个旧测试类，其余 370 项 JVM 测试全部通过。前者有 4 项 Windows 临时目录路径断言失败，后者在等待扩展激活事件时挂起，均未修改。
+197 项引擎测试通过，包含实际打包的提示词组装、SDK 拒绝未注册路由、请求头、网关回放和设备策略；4 项 Android 设备测试通过，使用隔离 Keystore 与本机 HTTP 服务验证密钥迁移及三种协议。
+预览包和 arm64 包均构建成功，APK 内嵌 engine.zip 校验一致，空模型配置与协议选择器已装机截图检查。产物在 `apps/android/build/winku-release/`（不入库）。预览包不启动真实 Node 引擎；通过 dsh 调用真实服务商仍需 arm64 真机与有效 API Key 验证。
 
 ## 4. 代码地图（`apps/android/`）
 
@@ -107,11 +107,15 @@ $adb="<repo>\apps\android\toolchains\local\android-sdk\platform-tools\adb.exe"
 
 - **DeepSeek 账号登录整体移除**：`core/account`、`feature/account` 已删，引擎里
   `plugin-account` 已从 `engine.zip` 和 `cordis.patch.yml` 移除，`llm-deepseek-account` 路由已 disabled
-- 模型配置统一存在 `Settings.providers`，DeepSeek 也是列表中的一项；底层继续分别使用 dsh 原生适配器（`deepseek-official`）与 OpenAI 兼容适配器
-- 首次升级通过 `ModelSettingsMigration` 把旧的空 provider id 迁为 `deepseek-official`，保留模型、推理等级和其他服务商配置；原 `deepseek.key` 直接作为命名密钥槽位的别名，无需重新填 key
+- 模型配置统一存在 `Settings.providers`，全部经过 `llm-service-lite`；支持 Chat Completions、Responses、Messages。Anthropic 预设使用 Messages，DeepSeek 只是普通可选预设，新安装没有默认服务商或模型
+- `ModelSettingsMigration` v2 将已有密钥的旧内置路由迁成普通服务商：先复制到命名加密槽位，偏好提交成功后才清理旧密钥。空占位项直接移除，其他服务商和原选择保留；旧原生路由的验证结果清空，需要重新验证
 - 服务商停用、删除或移除所选模型时保留原选择并报错；初始化失败也不会回退到其他模型。更换密钥会更新配置指纹，下次空闲调用重新启动引擎
 - `EngineManager.control()` 可在未配置模型时启动控制通道供扩展管理使用，模型初始化延迟到 `sdk()` 首次发送前
 - `platform.deepseek.com` 的充值与用量页面全删
+- Kotlin 和实际打包的 SDK 都拒绝未注册路由，关闭 `llm-deepseek`、账号路由及厂商联网搜索；`web_fetch` 保留，搜索通过独立扩展或 MCP 接入
+- 实际引擎提示词使用 WinKu 身份并关闭上游身份注入；请求 User-Agent 为 `WinKu/<版本>`，更新只指向 `Excapesx/WinKu`。没有发布新清单前，更新检查可能返回无可用清单，不会下载上游 APK
+- 保留 dsh 内核、上游 npm 命名空间、许可证与来源说明，它们不代表模型依赖。`applicationId` 保持原值，避免破坏用户数据
+- 正常重打引擎用 `js/build-engine.sh`（包含补丁 23/24）；Windows 已有完整引擎包时可用 `tools/refresh-engine-bundle.ps1 -Install` 更新自有包并应用这两项补丁，原包备份在 `build/engine-backups/`。依赖变更仍须完整构建
 
 ## 6. 下一步（按 ROADMAP P1）
 

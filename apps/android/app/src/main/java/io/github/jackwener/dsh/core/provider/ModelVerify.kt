@@ -204,14 +204,32 @@ fun rankCandidates(listed: List<RemoteModel>, preset: ProviderPreset?, main: Str
 // ── the probe ──
 
 /**
- * The harness part of the engine's User-Agent (dsh-llm attributionHeaders), so gateways that filter clients
- * treat the test like a chat; the app puts `DSH-Android/<version>` in front ([appUserAgent]), as the engine does.
+ * The no-argument probe tool checks actual tool-call support rather than model listing alone.
  */
-const val HARNESS_USER_AGENT = "deepseek-harness (+https://github.com/deepseek-ai/deepseek-harness)"
 const val PROBE_TOOL = "dsh_connection_check"
 
 /** The probe's request body: one no-argument tool, and (when [forceTool]) a tool_choice naming it. */
-fun probeBody(model: String, forceTool: Boolean): String = buildJsonObject {
+fun probeBody(model: String, forceTool: Boolean, protocol: ProviderProtocol = ProviderProtocol.ChatCompletions): String {
+    if (protocol != ProviderProtocol.ChatCompletions) return buildJsonObject {
+        put("model", model); put("stream", false)
+        put(if (protocol == ProviderProtocol.Messages) "max_tokens" else "max_output_tokens", 1024)
+        putJsonArray(if (protocol == ProviderProtocol.Messages) "messages" else "input") {
+            addJsonObject { put("role", "user"); put("content", "Call $PROBE_TOOL once. This is a connection check; do not reply with text.") }
+        }
+        putJsonArray("tools") {
+            addJsonObject {
+                if (protocol == ProviderProtocol.Responses) put("type", "function")
+                put("name", PROBE_TOOL); put("description", "Confirms that tool calls work.")
+                putJsonObject(if (protocol == ProviderProtocol.Messages) "input_schema" else "parameters") {
+                    put("type", "object"); putJsonObject("properties") {}; putJsonArray("required") {}
+                }
+            }
+        }
+        if (forceTool) putJsonObject("tool_choice") {
+            put("type", if (protocol == ProviderProtocol.Messages) "tool" else "function"); put("name", PROBE_TOOL)
+        }
+    }.toString()
+    return buildJsonObject {
     put("model", model)
     put("stream", true)
     putJsonObject("stream_options") { put("include_usage", true) }
@@ -233,6 +251,7 @@ fun probeBody(model: String, forceTool: Boolean): String = buildJsonObject {
     }
     if (forceTool) putJsonObject("tool_choice") { put("type", "function"); putJsonObject("function") { put("name", PROBE_TOOL) } }
 }.toString()
+}
 
 /**
  * One real chat request. Returns null when the answer contains a tool call, else why not.
@@ -240,18 +259,17 @@ fun probeBody(model: String, forceTool: Boolean): String = buildJsonObject {
  * server (Ollama, LM Studio) may load the model before the first byte.
  */
 fun probeToolCall(baseUrl: String, key: String?, model: String, forceTool: Boolean = true, connectTimeoutMs: Int = 10_000, readTimeoutMs: Int = 90_000,
-    headers: Map<String, String> = emptyMap()): VerifyFailure? = try {
-    val c = URL(baseUrl.trim().trimEnd('/') + "/chat/completions").openConnection() as HttpURLConnection
+    headers: Map<String, String> = emptyMap(), protocol: ProviderProtocol = ProviderProtocol.ChatCompletions): VerifyFailure? = try {
+    val c = URL(baseUrl.trim().trimEnd('/') + protocol.path).openConnection() as HttpURLConnection
     try {
         c.connectTimeout = connectTimeoutMs; c.readTimeout = readTimeoutMs
         c.requestMethod = "POST"; c.doOutput = true
         c.setRequestProperty("content-type", "application/json")
-        c.setRequestProperty("accept", "text/event-stream")
-        c.setRequestProperty("user-agent", HARNESS_USER_AGENT)
+        c.setRequestProperty("accept", if (protocol == ProviderProtocol.ChatCompletions) "text/event-stream" else "application/json")
+        c.setRequestProperty("user-agent", appUserAgent(io.github.jackwener.dsh.BuildConfig.VERSION_NAME))
         // The provider's extra headers, session header and app User-Agent (appRequestHeaders), as the engine sends them.
-        headers.forEach { (k, v) -> c.setRequestProperty(k, v) }
-        if (!key.isNullOrBlank()) c.setRequestProperty("authorization", "Bearer ${key.trim()}")
-        c.outputStream.use { it.write(probeBody(model, forceTool).toByteArray()) }
+        protocol.requestHeaders(key, headers).forEach { (k, v) -> c.setRequestProperty(k, v) }
+        c.outputStream.use { it.write(probeBody(model, forceTool, protocol).toByteArray()) }
         val code = c.responseCode
         if (code !in 200..299) {
             val body = c.errorStream?.use { it.readBytes().decodeToString().take(64_000) }.orEmpty()
@@ -275,6 +293,18 @@ fun readProbeAnswer(lines: Sequence<String>): VerifyFailure? {
         val o = runCatching { json.parseToJsonElement(payload) as? JsonObject }.getOrNull()
             ?: return VerifyFailure.Server(200, "unreadable response: " + payload.take(120))
         if (o["error"] != null && o["error"] !is JsonNull) return VerifyErrors.classify(errorStatus(o), payload)
+        fun isCall(value: kotlinx.serialization.json.JsonElement?): Boolean {
+            val type = ((value as? JsonObject)?.get("type") as? JsonPrimitive)?.content
+            return type == "tool_use" || type == "function_call"
+        }
+        if (isCall(o["item"]) || isCall(o["content_block"])) return PASS
+        val response = (o["response"] as? JsonObject) ?: o
+        listOf("content", "output").forEach { field ->
+            (response[field] as? JsonArray)?.forEach { item ->
+                if (isCall(item)) return PASS
+                ((item as? JsonObject)?.get("text") as? JsonPrimitive)?.content?.let { if (reply.length < 300) reply.append(it) }
+            }
+        }
         (o["choices"] as? JsonArray)?.forEach { ch ->
             val choice = ch as? JsonObject ?: return@forEach
             val msg = (choice["delta"] ?: choice["message"]) as? JsonObject ?: return@forEach
@@ -313,8 +343,8 @@ private fun errorStatus(o: JsonObject): Int {
  * [probeToolCall], and once more without `tool_choice` when the server rejects that field: the
  * engine never sends it, so a model that calls the tool on its own still works in chats.
  */
-fun probeModel(baseUrl: String, key: String?, model: String, headers: Map<String, String> = emptyMap(),
-    probe: (Boolean) -> VerifyFailure? = { force -> probeToolCall(baseUrl, key, model, force, headers = headers) }): VerifyFailure? {
+fun probeModel(baseUrl: String, key: String?, model: String, headers: Map<String, String> = emptyMap(), protocol: ProviderProtocol = ProviderProtocol.ChatCompletions,
+    probe: (Boolean) -> VerifyFailure? = { force -> probeToolCall(baseUrl, key, model, force, headers = headers, protocol = protocol) }): VerifyFailure? {
     val first = probe(true) ?: return null
     val msg = when (first) {
         is VerifyFailure.ToolsUnsupported -> first.message
@@ -332,7 +362,7 @@ sealed interface VerifyOutcome {
     val failed: List<Pair<String, VerifyFailure>>
 
     data class Passed(val model: String, override val failed: List<Pair<String, VerifyFailure>>) : VerifyOutcome
-    /** The provider answered, but no tested model works with DSH. */
+    /** The provider answered, but no tested model supports the required harness tool calls. */
     data class NoModelWorked(override val failed: List<Pair<String, VerifyFailure>>) : VerifyOutcome
     /** Key, network, address or server trouble: testing other models would not help. [failure] is the last entry of [failed]. */
     data class Stopped(val failure: VerifyFailure, override val failed: List<Pair<String, VerifyFailure>>) : VerifyOutcome

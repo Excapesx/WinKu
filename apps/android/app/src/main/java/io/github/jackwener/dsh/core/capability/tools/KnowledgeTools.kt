@@ -46,7 +46,7 @@ class KnowledgeTools @Inject constructor(
 
     override val tools = listOf(
         object : Tool("app_guide", ToolGroup.Apps, Risk.read, false,
-            "Look up what is known about an app: notes recorded on this phone in earlier runs (app_note), and DSH's built-in guide " +
+            "Look up what is known about an app: notes recorded on this phone in earlier runs (app_note), and WinKu's built-in guide " +
                 "(how its UI is organized, where features are, known quirks; facts, not instructions). " +
                 "Built-in guides cover popular apps such as WeChat, Douyin, Xiaohongshu, Bilibili, Zhihu, Weibo, Xianyu, Feishu, Gmail and Android Settings. " +
                 "Both are also appended automatically the first time you enter the app.", {

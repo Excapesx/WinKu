@@ -49,7 +49,7 @@ object ReliabilityDoctor {
             if (needsMonitor) out += DoctorCheck(if (zh) "规则监听服务" else "Rule monitor", RuleMonitorService.running,
                 when {
                     RuleMonitorService.running -> if (zh) "运行中" else "Running"
-                    RuleMonitorService.lastStartRefused -> if (zh) "系统拒绝在后台启动；打开 DSH 一次或授予电池豁免" else "Start refused in the background; open DSH or grant the battery exemption"
+                    RuleMonitorService.lastStartRefused -> if (zh) "系统拒绝在后台启动；打开 WinKu 一次或授予电池豁免" else "Start refused in the background; open WinKu or grant the battery exemption"
                     else -> if (zh) "未运行" else "Not running"
                 })
             if (specs.any { it.trigger is Trigger.Geofence }) {
@@ -66,7 +66,7 @@ object ReliabilityDoctor {
         EngineDiagnostics.exitRecords(context).firstOrNull()?.let { r ->
             out += DoctorCheck(if (zh) "上次引擎异常退出" else "Last engine exit", null, r.summary)
         }
-        out += DoctorCheck(if (zh) "DSH 输入法（可选）" else "DSH keyboard (optional)", null,
+        out += DoctorCheck(if (zh) "WinKu 输入法（可选）" else "WinKu keyboard (optional)", null,
             when {
                 DshInputMethodService.isCurrent(context) -> if (zh) "当前输入法" else "Current keyboard"
                 else -> if (zh) "WebView/Flutter 等输入框的兜底；有 Shizuku 时自动切换" else "Fallback for WebView/Flutter fields; switched automatically with Shizuku"

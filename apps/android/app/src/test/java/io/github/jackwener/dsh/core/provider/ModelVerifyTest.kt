@@ -234,7 +234,7 @@ class ModelVerifyTest {
         val (headers, body) = requests.single()
         assertEquals("Bearer sk-test", headers["authorization"])
         assertEquals("text/event-stream", headers["accept"])
-        assertTrue(headers["user-agent"]!!.startsWith("deepseek-harness"))
+        assertTrue(headers["user-agent"]!!.startsWith("WinKu/"))
         val o = Json.parseToJsonElement(body) as JsonObject
         assertEquals("true", o["stream"]!!.jsonPrimitive.content)
         assertEquals(PROBE_TOOL, o["tools"].toString().let { Regex("\"name\":\"([^\"]+)\"").find(it)!!.groupValues[1] })
@@ -273,7 +273,7 @@ class ModelVerifyTest {
         assertTrue("a test call stands alone: a fresh id each time", a["x-opencode-session"] != b["x-opencode-session"])
         assertEquals("blue", a["x-team"])
         assertEquals("the key wins over an extra Authorization header", "Bearer sk-test", a["authorization"])
-        assertTrue(a["user-agent"]!!.startsWith("DSH-Android/0.2.6 deepseek-harness"))
+        assertEquals("WinKu/0.2.6", a["user-agent"])
     }
 
     @Test fun unreachableIsNetwork() {

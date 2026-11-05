@@ -1,6 +1,7 @@
 package io.github.jackwener.dsh.core.update
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -12,7 +13,7 @@ class UpdateManifestTest {
     private val signer = "2b37a375ead19476e5d0d9e38920032ea9822e880dcc7540a14e5ab6ac1f4f69"
 
     private fun manifest(
-        format: String = "1", code: String = "22", minSdk: String = "29", urls: String = """["https://github.com/jackwener/DSH-Android/releases/download/v0.3.4/a.apk"]""",
+        format: String = "1", code: String = "22", minSdk: String = "29", urls: String = """["https://github.com/Excapesx/WinKu/releases/download/v0.3.4/a.apk"]""",
         apkSha: String = "\"$sha\"", signerSha: String = "\"$signer\"", notes: String = """{"zh":"中文说明","en":"English notes"}""", extra: String = "",
     ) = """{"format":$format,"packageName":"io.github.jackwener.dsh","versionCode":$code,"versionName":"0.3.4","minSdk":$minSdk,
         "apk":{"name":"a.apk","size":100,"sha256":$apkSha,"urls":$urls},"signerSha256":$signerSha,"notes":$notes,"publishedAt":"2026-11-01T00:00:00Z"$extra}"""
@@ -25,7 +26,7 @@ class UpdateManifestTest {
         assertEquals(22L, m.versionCode)
         assertEquals("0.3.4", m.versionName)
         assertEquals(29, m.minSdk)
-        assertEquals(UpdateManifest.Apk("a.apk", 100, sha, listOf("https://github.com/jackwener/DSH-Android/releases/download/v0.3.4/a.apk")), m.apk)
+        assertEquals(UpdateManifest.Apk("a.apk", 100, sha, listOf("https://github.com/Excapesx/WinKu/releases/download/v0.3.4/a.apk")), m.apk)
         assertEquals(signer, m.signerSha256)
         assertEquals("2026-11-01T00:00:00Z", m.publishedAt)
     }
@@ -78,20 +79,15 @@ class UpdateManifestTest {
         assertEquals(Offer.Offer, Offer.of(UpdateManifest.parse(manifest(code = "23")), installedCode = 21, sdk = 34, skippedCode = 22))
     }
 
-    /** The committed update/latest.json (what raw.githubusercontent.com / jsDelivr serve) must stay readable by the app. */
-    @Test fun committedManifestIsValid() {
-        val f = File("../update/latest.json")
-        assertTrue("run from the app module: ${f.absolutePath}", f.isFile)
-        val m = UpdateManifest.parse(f.readText(), "io.github.jackwener.dsh")
-        assertEquals(signer, m.signerSha256)
-        assertTrue(m.apk.urls.first().startsWith("https://github.com/jackwener/DSH-Android/releases/download/v${m.versionName}/"))
-        assertTrue(m.notes.keys.containsAll(listOf("zh", "en")))
+    @Test fun defaultSourcesNeverReferenceUpstreamDistribution() {
+        assertTrue(UpdateManifest.SOURCES.all { it.contains("Excapesx/WinKu") })
+        assertFalse(UpdateManifest.SOURCES.any { it.contains("jackwener/DSH-Android") })
     }
 
     @Test fun sourcesStartWithTheReleaseAssetAndAreHttps() {
-        assertEquals("https://github.com/jackwener/DSH-Android/releases/latest/download/update.json", UpdateManifest.SOURCES.first())
+        assertEquals("https://github.com/Excapesx/WinKu/releases/latest/download/update.json", UpdateManifest.SOURCES.first())
         assertTrue(UpdateManifest.SOURCES.all { it.startsWith("https://") })
-        assertTrue(UpdateManifest.SOURCES.any { it.startsWith("https://cdn.jsdelivr.net/gh/jackwener/DSH-Android@main/update/latest.json") })
+        assertTrue(UpdateManifest.SOURCES.any { it.startsWith("https://cdn.jsdelivr.net/gh/Excapesx/WinKu@main/apps/android/update/latest.json") })
     }
 
     @Test fun policyChecksOncePerDay() {

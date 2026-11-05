@@ -9,7 +9,6 @@ import android.graphics.BitmapFactory
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import io.github.jackwener.dsh.core.capability.AgentScreen
-import io.github.jackwener.dsh.core.data.Effort
 import io.github.jackwener.dsh.core.data.SessionEntity
 import io.github.jackwener.dsh.core.data.Settings
 import io.github.jackwener.dsh.core.data.SettingsRepository
@@ -137,9 +136,8 @@ open class ConversationController(
     fun setPreset(p: PermissionPreset) = viewModelScope.launch { store.setPreset(sessionId.value, p) }
     /** Only before the conversation's first message; the store refuses it afterwards. */
     fun setMode(modeId: String) = viewModelScope.launch { store.setMode(sessionId.value, modeId) }
-    /** [provider] "" = DeepSeek. */
+    /** [provider] is an explicit configured route id; blank means no selection. */
     fun setModel(provider: String, m: String) = viewModelScope.launch { settingsRepo.setModel(provider, m) }
-    fun setEffort(e: Effort) = viewModelScope.launch { settingsRepo.setEffort(e) }
     /** 推理强度 of the selected third-party model ([level] null = its default). */
     fun setReasoning(level: String?) = viewModelScope.launch {
         val choice = settings.value.choice

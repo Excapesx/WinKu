@@ -46,7 +46,7 @@ class NotificationTools @Inject constructor(
     private suspend fun find(key: String): StatusBarNotification {
         val sbn = listener().activeNotifications.firstOrNull { it.key == key }
             ?: throw InvalidArgsException("No current notification with key $key (it may have been dismissed); call notification_list again")
-        if (sbn.packageName in blocked()) throw InvalidArgsException("The user blocked reading ${sbn.packageName} notifications (DSH settings → Notifications)")
+        if (sbn.packageName in blocked()) throw InvalidArgsException("The user blocked reading ${sbn.packageName} notifications (WinKu settings → Notifications)")
         return sbn
     }
 
@@ -79,7 +79,7 @@ class NotificationTools @Inject constructor(
             override suspend fun invoke(args: JsonObject, call: CallContext): ToolResult {
                 val blocked = blocked()
                 val pkg = args.str("package")
-                if (pkg != null && pkg in blocked) return ToolResult.text("The user blocked reading $pkg notifications (DSH settings → Notifications); ask them to unblock it if needed.")
+                if (pkg != null && pkg in blocked) return ToolResult.text("The user blocked reading $pkg notifications (WinKu settings → Notifications); ask them to unblock it if needed.")
                 val fmt = SimpleDateFormat("MM-dd HH:mm", Locale.US)
                 val list = listener().activeNotifications.filter { it.packageName !in blocked && (pkg == null || it.packageName == pkg) }
                     .sortedByDescending { it.postTime }.take((args.int("limit") ?: 30).coerceIn(1, 100))

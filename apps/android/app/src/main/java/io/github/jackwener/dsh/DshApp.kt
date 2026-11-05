@@ -20,7 +20,6 @@ import javax.inject.Inject
 class DshApp : Application() {
     @Inject lateinit var triggers: dagger.Lazy<TriggerHub>
     @Inject lateinit var settings: dagger.Lazy<SettingsRepository>
-    @Inject lateinit var secrets: dagger.Lazy<io.github.jackwener.dsh.core.data.SecretStore>
     @Inject lateinit var agentScreen: dagger.Lazy<AgentScreen>
     @Inject lateinit var updater: dagger.Lazy<io.github.jackwener.dsh.core.update.AppUpdater>
 
@@ -30,7 +29,7 @@ class DshApp : Application() {
         AppLanguage.applyToProcess(this)
         if (!isMainProcess()) return
         Notifications.createChannels(this)
-        importDebugKey()
+
         TriggerEvents.init(this)
         // Known update, post-install cleanup, the daily 自动检查更新 (network work runs in the background).
         runCatching { updater.get().start() }.onFailure { android.util.Log.e("DshApp", "updater start failed", it) }
@@ -49,15 +48,6 @@ class DshApp : Application() {
         super.onConfigurationChanged(newConfig)
         // Android 10–12: a configuration change resets the process locale to the system's.
         AppLanguage.applyToProcess(this)
-    }
-
-    /** Debug builds only: device tests provision the key with `run-as <pkg> sh -c 'cat > files/debug.key'`. */
-    private fun importDebugKey() {
-        if (!BuildConfig.DEBUG) return
-        val f = java.io.File(filesDir, "debug.key")
-        if (!f.exists()) return
-        f.readText().trim().takeIf { it.isNotEmpty() }?.let { secrets.get().write(it) }
-        f.delete()
     }
 
     private fun isMainProcess() = getProcessName() == packageName

@@ -65,7 +65,7 @@ data class ScreenTarget(val displayId: Int, val agent: Boolean, val note: String
 /**
  * The agent's own screen (docs/AGENT-SCREEN-V2.md §1): one virtual display per conversation,
  * created through Shizuku on the first app_launch / app_open_link, released after 10 idle minutes
- * (and with the shell service, i.e. when DSH exits). Apps opened there are muted until they leave
+ * (and with the shell service, i.e. when WinKu exits). Apps opened there are muted until they leave
  * it or the user opens them on the main screen. Without Shizuku, on Android 10 or with the setting
  * off, everything stays on the main screen.
  */
@@ -92,7 +92,7 @@ class AgentScreen @Inject constructor(
     private val _displays = MutableStateFlow<Map<String, Int>>(emptyMap())
     /** Conversation (root session id) → its agent display, for the live preview. */
     val displays: StateFlow<Map<String, Int>> = _displays.asStateFlow()
-    /** Set while some app may be muted, so a DSH killed meanwhile gives the sound back on its next start. */
+    /** Set while some app may be muted, so a WinKu killed meanwhile gives the sound back on its next start. */
     private val prefs by lazy { context.getSharedPreferences("agent_screen", Context.MODE_PRIVATE) }
 
     init {
@@ -116,7 +116,7 @@ class AgentScreen @Inject constructor(
     /** Why this call cannot use an agent screen (model-facing), or null when it can. */
     suspend fun unavailableReason(): String? = when {
         Build.VERSION.SDK_INT < 30 -> "the agent screen needs Android 11 or newer"
-        !settings.current().agentScreen -> "the user turned off \"operate apps on the agent screen\" in DSH settings"
+        !settings.current().agentScreen -> "the user turned off \"operate apps on the agent screen\" in WinKu settings"
         !shizuku.available -> shizuku.access.state.value.reason
         else -> null
     }
@@ -222,7 +222,7 @@ class AgentScreen @Inject constructor(
         slots.values.forEach { s -> s.muted.filter { TaskRow.inUseOnMain(rows, it) }.forEach { unmute(s, it) } }
     }
 
-    /** A previous DSH process ended with apps muted (killed before it could restore them): restore them now. */
+    /** A previous WinKu process ended with apps muted (killed before it could restore them): restore them now. */
     suspend fun restoreLeftoverMutes() {
         if (!prefs.getBoolean(MUTE_PENDING, false) || slots.isNotEmpty() || !shizuku.available) return
         runCatching { withContext(Dispatchers.IO) { shizuku.service().restoreAudio() } }

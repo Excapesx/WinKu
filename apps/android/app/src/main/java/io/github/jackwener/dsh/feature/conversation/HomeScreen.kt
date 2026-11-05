@@ -224,7 +224,7 @@ fun ComposerSlot(vm: ConversationController, composer: ComposerState, settings: 
         live.approval != null -> ApprovalCard(live.approval) { vm.approve(live.approval, it) }
         live.question != null -> QuestionCard(live.question, onSubmit = { vm.answer(live.question, it) }, onSkip = { vm.skipQuestion(live.question) })
         else -> Composer(
-            composer, live.running, live.preset, vm::setPreset, settings.choice, settings.providers, settings.effort, vm::setModel, vm::setEffort, conv.contextTokens,
+            composer, live.running, live.preset, vm::setPreset, settings.choice, settings.providers, vm::setModel, conv.contextTokens,
             onSend = { voice.cancel(); send() },
             onStop = { vm.stop() },
             reasoning = settings.reasoning, reasoningChoice = settings.reasoningChoice, onReasoning = vm::setReasoning,
@@ -233,6 +233,11 @@ fun ComposerSlot(vm: ConversationController, composer: ComposerState, settings: 
                 onNewSession = if (conv.isEmpty) null else ({ vm.newSession() }),
                 onTrajectory = if (conv.isEmpty) null else ({ vm.view.value = SessionView.Trajectory }),
                 onAutomation = onAutomation,
+                onManageModels = {
+                    context.startActivity(android.content.Intent(context, io.github.jackwener.dsh.MainActivity::class.java)
+                        .putExtra(io.github.jackwener.dsh.MainActivity.EXTRA_SECTION, "Model")
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP))
+                },
             ),
             showChips = showChips,
             canSendEmpty = canSendEmpty,

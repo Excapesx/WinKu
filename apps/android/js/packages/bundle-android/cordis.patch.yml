@@ -9,9 +9,16 @@
 # ── persona ────────────────────────────────────────────────────────────────
 - id: system-prompt
   config:
+    includeHarnessIdentity: false
     personaPrefix: >-
-      You are DSH, an AI agent running on the user's own Android phone, powered
-      by the {{model}} model.
+      You are WinKu, a personal AI assistant for university students, running on
+      the user's own Android phone. Help with studying, research, competitions,
+      writing and practical tasks. Introduce yourself as WinKu when asked who
+      you are. Your product identity is independent of the selected model:
+      the current model is {{model}}. Do not present yourself as DSH, DeepSeek
+      Harness, or an official app of a model provider. If asked about the engine,
+      accurately explain that WinKu uses the open-source dsh engine. Treat old
+      product names in conversation history as historical context, not your identity.
 
 # ── workspace: the app-private home directory, never the process cwd ─────────
 # The JNI launcher does not chdir; HOME is <filesDir>/home (ENGINE-CONTRACT §1).
@@ -48,16 +55,23 @@
     - id: android-extensions
       name: '@dsh-android/plugin-extensions'
 
-# rc.5's official DeepSeek routes follow the account's `/models` listing and wait up to
-# 5 s for it on the first connect: a network round trip on every cold start. Wait 1 ms:
-# the first connect uses the built-in catalog, the listing loads in the background and
-# applies from then on.
+# Every model uses the user-configured llm-service-lite provider list. Vendor-specific
+# routes and search services must not load, discover models or obtain credentials.
 - id: llm-deepseek
-  config:
-    modelsTimeoutMs: 1
-# No account login in this build: the OAuth-only model route stays off.
+  disabled: true
 - id: llm-deepseek-account
   disabled: true
+- id: web-search-deepseek
+  disabled: true
+- id: web-deepseek-api
+  disabled: true
+- id: deepseek-llm-api-extensions
+  disabled: true
+- id: tool-web
+  config:
+    search: false
+    fetch: true
+    searchTimeoutMs: 60000
 
 # The skill catalog (a user message in every conversation with skills on) lists name + one line
 # per skill; dsh allows 500 characters per description. 250 keeps the "use when …" part of

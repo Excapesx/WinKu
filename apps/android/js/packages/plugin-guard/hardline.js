@@ -382,7 +382,7 @@ function cdTarget(argv, ctx) {
 /** The model-facing refusal text (also used as the denial reason). */
 export function refusalText(v) {
   return `HARDLINE_BLOCKED (rule: ${v.rule}): this command ${v.summary}. ` +
-    'DSH-Android never runs it — not with user approval, not in any permission mode. ' +
+    'WinKu never runs it — not with user approval, not in any permission mode. ' +
     'Do not retry it or work around it with another command or tool. Tell the user it was blocked, and if they ' +
     'need something narrower (for example deleting specific files), propose that instead. ' +
     `Blocked segment: ${JSON.stringify(v.segment)}`

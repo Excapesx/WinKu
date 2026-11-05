@@ -35,7 +35,7 @@ class DiagnosticsTest {
         appVersion = "0.2.6", versionCode = 16, buildType = "release", engineVersion = "0.2.1-rc.2-ad86b59ac98",
         device = "Xiaomi 2312", androidRelease = "15", sdk = 35, abis = listOf("arm64-v8a"),
         shizuku = "Shizuku is ready", accessibility = true, overlay = false, batteryExempt = true, notifications = true,
-        agentScreenUnavailable = null, agentScreenSetting = true, deepseekCredential = "api key",
+        agentScreenUnavailable = null, agentScreenSetting = true, modelCredential = "api key",
         roles = listOf("main model" to "ollama / qwen3:8b (passed test)"),
         providers = listOf(
             ProviderFacts("ollama", "ollama", true, "http://192.168.1.5:11434/v1", listOf("qwen3:8b", "gemma3"), listOf("qwen3:8b", "gone")),

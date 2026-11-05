@@ -1,0 +1,22 @@
+WinKu: SDK initialization requires an explicitly registered provider, for every vendor.
+No built-in adapter is imported or mounted as an implicit fallback.
+
+--- a/node_modules/@deepseek-ai/dsh-sdk-jsonrpc-server/lib/index.js
++++ b/node_modules/@deepseek-ai/dsh-sdk-jsonrpc-server/lib/index.js
+@@ -9 +9 @@
+-import * as LlmDeepSeek from "@deepseek-ai/dsh-llm-deepseek-api-key";
++// WinKu: model adapters come exclusively from the configured provider list.
+@@ -53,2 +53,2 @@
+-	provider = "deepseek-official";
+-	model = "deepseek-official";
++	provider = "";
++	model = "";
+@@ -170,4 +170 @@
+-		if (!this.hasAdapterFor(provider)) {
+-			if (provider !== "deepseek-official") throw new Error(`no adapter registered for provider "${provider}"`);
+-			this.llmFiber = await this.ctx.plugin(LlmDeepSeek);
+-		}
++		if (!this.hasAdapterFor(provider)) throw new Error(`no adapter registered for provider "${provider}"`);
+@@ -189 +186 @@
+-			name: "deepseek-harness-sdk-runtime",
++			name: "winku-harness-sdk-runtime",

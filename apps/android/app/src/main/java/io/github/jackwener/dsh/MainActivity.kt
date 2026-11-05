@@ -54,8 +54,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(settings: SettingsRepository, secrets: SecretStore) : ViewModel() {
-    /** null = still loading (keeps the splash up). Second: a model credential exists — a DeepSeek API key
-     *  or an enabled provider. */
+    /** null = still loading (keeps the splash up). Second: an enabled provider has a usable model configuration. */
     val boot = settings.settings.map { st ->
         st.theme to st.providers.any { p -> p.models.any { m ->
             io.github.jackwener.dsh.core.provider.ModelChoice(p, m).validate(secrets::read) == null
@@ -65,7 +64,7 @@ class MainViewModel @Inject constructor(settings: SettingsRepository, secrets: S
 
 /**
  * The app opens straight into the conversation (dsh home). Onboarding is only the credential
- * choice when there is none (dsh: 登录 DeepSeek 账号 / 使用 API Key); everything else (Android
+ * choice when there is none; everything else (Android
  * permissions) is asked just in time from the composer slot.
  */
 @AndroidEntryPoint

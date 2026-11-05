@@ -69,7 +69,7 @@ test('without a session header the fake refuses the chat (the #32 failure)', asy
 test('session header: stable within a session, different across sessions and routes, never the raw id', async () => {
   const srv = await opencode()
   try {
-    const route = { baseURL: srv.base, sessionHeader: SESSION, userAgent: 'DSH-Android/0.2.6' }
+    const route = { baseURL: srv.base, sessionHeader: SESSION, userAgent: 'WinKu/0.2.6' }
     const adapter = adapterFor({ go: route, go2: route })
     for (const [p, s] of [['go', 'sess-a'], ['go', 'sess-a'], ['go', 'sess-b'], ['go2', 'sess-a']]) {
       const r = await turn(adapter, p, s)
@@ -84,7 +84,7 @@ test('session header: stable within a session, different across sessions and rou
     assert.equal(ids[0], sessionToken('go', 'sess-a'))
     // Survives an engine restart: the id is a pure function of route + session id.
     assert.equal(sessionToken('go', 'sess-a'), sessionToken('go', 'sess-a'))
-    for (const s of srv.seen) assert.match(s.headers['user-agent'], /^DSH-Android\/0\.2\.6 deepseek-harness\//)
+    for (const s of srv.seen) assert.equal(s.headers['user-agent'], 'WinKu/0.2.6')
   } finally { await srv.close() }
 })
 
@@ -127,7 +127,7 @@ test('profile validation refuses a bad session header name and a headerEnv witho
 test('model listing sends the route token and a fresh session id', async () => {
   const srv = await opencode()
   try {
-    const route = { provider: 'go', userAgent: 'DSH-Android/0.2.6', sessionHeader: SESSION }
+    const route = { provider: 'go', userAgent: 'WinKu/0.2.6', sessionHeader: SESSION }
     await discoverEndpointModels(srv.base, 'sk-test', undefined, { headers: { 'X-Team': 'blue' }, route })
     await discoverEndpointModels(srv.base, 'sk-test', undefined, { route })
     const [a, b] = srv.seen
@@ -135,6 +135,6 @@ test('model listing sends the route token and a fresh session id', async () => {
     assert.match(a.headers[SESSION], /^[0-9a-f]{32}$/)
     assert.notEqual(a.headers[SESSION], b.headers[SESSION])
     assert.equal(a.headers['x-team'], 'blue')
-    assert.match(a.headers['user-agent'], /^DSH-Android\/0\.2\.6 deepseek-harness\//)
+    assert.equal(a.headers['user-agent'], 'WinKu/0.2.6')
   } finally { await srv.close() }
 })

@@ -55,9 +55,8 @@ class EngineStartException(message: String, val log: String?, cause: Throwable) 
 class EngineBackgroundStartException(cause: Throwable) : Exception("foreground service start not allowed from the background", cause)
 
 /**
- * The process-wide SDK route (`initialize`): provider + model + effort ([effort] is the Effort id for
- * DeepSeek, a level the engine reported for a third-party model (#46), or "" to send none: the
- * model's own default).
+ * The process-wide SDK route (`initialize`): explicit provider + model and a reasoning level
+ * reported by that model, or "" to use its default.
  */
 data class EngineRoute(val provider: String, val model: String, val effort: String)
 
@@ -68,8 +67,8 @@ class RouteUnavailableException(message: String) : Exception(message)
  * Owns the `:engine` process from the app side: starts it on demand, wires the SDK and capability
  * channels, and shuts it down after idling. See docs/ENGINE-CONTRACT.md.
  *
- * All providers use Settings.providers and named SecretStore slots. The native DeepSeek adapter
- * receives DEEPSEEK_API_KEY; OpenAI-compatible adapters receive DSH_ANDROID_KEY_<ID>.
+ * All providers use Settings.providers, named SecretStore slots and the llm-service-lite adapter.
+ * Only DSH_ANDROID_KEY_<ID> credential variables are exported; there is no built-in vendor route.
  *
  * Third-party providers (Settings → 模型服务): the app writes its settings layer
  * `$DSH_HOME/android/app-layer.patch.yml` (a launcher overlay; llm-service-lite providers, see
@@ -111,7 +110,7 @@ class EngineManager @Inject constructor(
         set(v) { _route.value = v }
     /** Device time zone the running engine was started with (TZ is read once, at process start). */
     @Volatile private var startedTz: String = TimeZone.getDefault().id
-    /** DSH_ANDROID_LOCALE the running process got (approval texts, account pages, extension labels follow the app language). */
+    /** DSH_ANDROID_LOCALE the running process got (approval texts and extension labels follow the app language). */
     @Volatile private var startedLocale: String = Locale.getDefault().toLanguageTag()
     /** Whether an SDK session was opened in this generation (then a route change needs a restart). */
     @Volatile private var sessionsOpened = false
@@ -123,19 +122,15 @@ class EngineManager @Inject constructor(
 
     private fun wantedRoute(st: io.github.jackwener.dsh.core.data.Settings): EngineRoute {
         val choice = st.choice
-        choice.provider?.takeUnless { it.isNativeDeepSeek }?.let { p ->
+        choice.provider?.let { p ->
             val reasoning = ReasoningLevels.of(p, choice.model, engineReasoning ?: st.reasoningCatalog)
             return EngineRoute(p.id, choice.model, ReasoningLevels.effective(reasoning, st.reasoningChoice).orEmpty())
         }
         return EngineRoute(choice.providerId, choice.model, st.reasoningEffort.orEmpty())
     }
 
-    /** Search still uses the native DeepSeek credential until search-provider decoupling. */
-    private fun webSearch(st: io.github.jackwener.dsh.core.data.Settings) =
-        st.providers.any { it.isNativeDeepSeek && it.enabled && !secrets.read(it.secretName).isNullOrBlank() }
-
     private fun profilePatch(st: io.github.jackwener.dsh.core.data.Settings) = io.github.jackwener.dsh.core.extensions.appendPatchRows(
-        renderProfilePatch(st.providers, webSearch(st), io.github.jackwener.dsh.core.provider.appProductToken(io.github.jackwener.dsh.BuildConfig.VERSION_NAME)),
+        renderProfilePatch(st.providers, webSearch = false, io.github.jackwener.dsh.core.provider.appProductToken(io.github.jackwener.dsh.BuildConfig.VERSION_NAME)),
         io.github.jackwener.dsh.core.extensions.ExtensionsEngineInputs.patchRows(st.mcpServers, File(context.filesDir, "dsh-home").path))
 
     /** Provider keys and secret header values, plus the extensions' environment (plugin registries, MCP header secrets): env var name → value. */
@@ -227,7 +222,7 @@ class EngineManager @Inject constructor(
      * level only while the model offers it. Unanswered (timeout, error) keeps the stored catalog.
      */
     private suspend fun refreshReasoning(peer: JsonRpcPeer, st: io.github.jackwener.dsh.core.data.Settings) {
-        val routes = st.providers.filter { !it.isNativeDeepSeek && it.enabled && it.models.isNotEmpty() && it.baseUrl.isNotBlank() }.flatMap { p -> p.models.map { p to it } }
+        val routes = st.providers.filter { it.enabled && it.models.isNotEmpty() && it.baseUrl.isNotBlank() }.flatMap { p -> p.models.map { p to it } }
         if (routes.isEmpty()) return
         val result = runCatching {
             withTimeout(30_000) {

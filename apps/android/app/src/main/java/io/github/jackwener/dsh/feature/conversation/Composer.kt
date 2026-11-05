@@ -65,8 +65,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.jackwener.dsh.R
-import io.github.jackwener.dsh.core.data.Effort
-import io.github.jackwener.dsh.core.provider.DEEPSEEK_MODELS
 import io.github.jackwener.dsh.core.provider.ModelChoice
 import io.github.jackwener.dsh.core.provider.ModelReasoning
 import io.github.jackwener.dsh.core.provider.ProviderConfig
@@ -149,9 +147,7 @@ fun rememberSettled(ms: Long = 600): () -> Boolean {
     return { android.os.SystemClock.uptimeMillis() - since >= ms }
 }
 
-/** DeepSeek models shown by the model chip (dsh ui-model-selection); third-party ones come from Settings.providers. */
-val Models = DEEPSEEK_MODELS
-fun modelLabel(id: String) = Models.firstOrNull { it.first == id }?.second ?: id
+fun modelLabel(id: String) = id.ifBlank { "—" }
 
 object PresetUi {
     @DrawableRes fun icon(p: PermissionPreset) = when (p) {
@@ -176,6 +172,7 @@ data class ComposerActions(
     val onNewSession: (() -> Unit)? = null,
     val onTrajectory: (() -> Unit)? = null,
     val onAutomation: (() -> Unit)? = null,
+    val onManageModels: (() -> Unit)? = null,
 )
 
 /**
@@ -191,10 +188,8 @@ fun Composer(
     model: ModelChoice,
     /** Third-party providers; their enabled models are listed under the provider's name. */
     providers: List<ProviderConfig>,
-    effort: Effort,
-    /** (provider route id or "" for DeepSeek, model id). */
+    /** (provider route id, model id). */
     onModel: (String, String) -> Unit,
-    onEffort: (Effort) -> Unit,
     contextTokens: Long,
     onSend: () -> Unit,
     onStop: () -> Unit,
@@ -282,7 +277,7 @@ fun Composer(
         }
         // #39: a text-only model gets "[image omitted …]" instead of the picture; say so before it is sent.
         if ((state.images.isNotEmpty() || state.pending > 0) && !model.acceptsImages) Text(
-            stringResource(if (model.isDeepSeek) R.string.images_text_only_deepseek else R.string.images_text_only, modelLabel(model.model)),
+            stringResource(R.string.images_text_only, modelLabel(model.model)),
             Modifier.padding(horizontal = 14.dp, vertical = 4.dp), style = DshType.xxs12, color = c.amber)
         BasicTextField(
             state.text,
@@ -352,14 +347,13 @@ fun Composer(
             if (showChips) Box(Modifier.weight(1f, fill = false)) {
                 // Third-party models: the levels the engine reports for them (#46); the chip names the level in effect.
                 val defaultLabel = stringResource(R.string.effort_default)
-                val reasoningMenu = if (model.isDeepSeek) null else ReasoningLevels.menu(reasoning, reasoningChoice, defaultLabel)
-                val effortLabel = if (model.isDeepSeek) effort.label
-                    else reasoning?.let { r -> r.level(ReasoningLevels.effective(r, reasoningChoice) ?: r.default)?.name }.orEmpty()
+                val reasoningMenu = ReasoningLevels.menu(reasoning, reasoningChoice, defaultLabel)
+                val effortLabel = reasoning?.let { r -> r.level(ReasoningLevels.effective(r, reasoningChoice) ?: r.default)?.name }.orEmpty()
                 val modelDesc = stringResource(R.string.model_chip_desc, modelLabel(model.model), effortLabel)
                 Row(Modifier.heightIn(min = 28.dp).widthIn(max = 200.dp).clip(Radius.sm).pressable({ if (settled()) modelOpen = true }, Radius.sm)
                     .semantics(mergeDescendants = true) { contentDescription = modelDesc }.padding(start = 6.dp, end = 2.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    Text(modelLabel(model.model).removePrefix("DeepSeek-"), Modifier.weight(1f, fill = false), style = DshType.xs13m, color = c.labelSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(if (model.model.isBlank()) stringResource(R.string.model_select) else modelLabel(model.model), Modifier.weight(1f, fill = false), style = DshType.xs13m, color = c.labelSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (effortLabel.isNotEmpty()) {
                         Spacer(Modifier.width(4.dp))
                         Text(effortLabel, style = DshType.xs13m, color = c.labelCaption, maxLines = 1)
@@ -367,15 +361,14 @@ fun Composer(
                     Chevron(Modifier.padding(start = 2.dp), size = 12.dp)
                 }
                 DMenu(modelOpen, { modelOpen = false }) {
+                    actions.onManageModels?.let { manage ->
+                        MenuItem(stringResource(R.string.onb_setup_models), { modelOpen = false; manage() }, R.drawable.dsw_settings_outline)
+                        if (providers.any { it.enabled && it.models.isNotEmpty() }) MenuDivider()
+                    }
                     providers.filter { it.enabled && it.models.isNotEmpty() }.forEachIndexed { i, p ->
                         if (i > 0) MenuDivider()
                         MenuSectionTitle(p.name)
-                        p.models.forEach { m -> MenuItem(if (p.isNativeDeepSeek) modelLabel(m) else m, { modelOpen = false; onModel(p.id, m) }, R.drawable.dsw_data_outline, selected = model.providerId == p.id && model.model == m) }
-                    }
-                    if (model.isDeepSeek) {
-                        MenuDivider()
-                        MenuSectionTitle(stringResource(R.string.effort))
-                        Effort.entries.forEach { e -> MenuItem(e.label, { modelOpen = false; onEffort(e) }, null, stringResource(effortDesc(e)), selected = e == effort) }
+                        p.models.forEach { m -> MenuItem(m, { modelOpen = false; onModel(p.id, m) }, R.drawable.dsw_data_outline, selected = model.providerId == p.id && model.model == m) }
                     }
                     if (reasoningMenu != null) {
                         MenuDivider()
@@ -406,11 +399,6 @@ fun Composer(
         stringResource(R.string.full_confirm_ok), stringResource(R.string.cancel),
         onConfirm = { confirmFull = false; onPreset(PermissionPreset.Full) }, onDismiss = { confirmFull = false },
     )
-}
-
-private fun effortDesc(e: Effort) = when (e) {
-    Effort.Off -> R.string.effort_off_desc; Effort.Low -> R.string.effort_low_desc
-    Effort.High -> R.string.effort_high_desc; Effort.Max -> R.string.effort_max_desc
 }
 
 /** Composer chip: height 28, R8, 13/20 weight 500 secondary, 14 dp icon + chevron. */

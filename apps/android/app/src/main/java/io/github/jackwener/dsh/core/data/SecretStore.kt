@@ -16,20 +16,16 @@ import javax.inject.Singleton
 
 /**
  * Secret storage: AES-GCM with a non-exportable Android Keystore key, files in noBackupFilesDir
- * (excluded from backups). The unnamed slot is the DeepSeek API key; named slots hold third-party
- * provider keys (`provider-<routeId>`), passed to the engine only as environment variables.
+ * (excluded from backups). All provider keys use named slots (`provider-<routeId>`) and reach
+ * the engine only as environment variables. Legacy files are read only during settings migration.
  */
 @Singleton
 class SecretStore @Inject constructor(@ApplicationContext context: Context) {
     private val dir = context.noBackupFilesDir
-    private val file = File(dir, "deepseek.key")
-    // Alias the native provider to the legacy slot: no copy/delete window and no key re-entry on upgrade.
-    private fun named(name: String) = if (name == "provider-deepseek-official") file else
-        File(dir, "secret-" + name.filter { it.isLetterOrDigit() || it == '-' || it == '_' } + ".key")
+    private fun named(name: String) = File(dir, "secret-" + name.filter { it.isLetterOrDigit() || it == '-' || it == '_' } + ".key")
 
-    fun read(): String? = read(file)
-    fun write(value: String) = write(file, value)
-    fun clear() { file.delete() }
+    internal fun readLegacyModelKey(): String? = read(File(dir, "deepseek.key")) ?: read("provider-deepseek-official")
+    internal fun clearLegacyModelKey() { File(dir, "deepseek.key").delete(); clear("provider-deepseek-official") }
 
     fun read(name: String): String? = read(named(name))
     fun write(name: String, value: String) = write(named(name), value)

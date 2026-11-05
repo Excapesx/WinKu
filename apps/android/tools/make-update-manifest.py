@@ -4,7 +4,7 @@
 The app reads it from the release asset `update.json` and from `update/latest.json` in the
 repository (core/update/UpdateManifest.kt); docs/RELEASE.md has the release steps.
 
-  tools/make-update-manifest.py app/build/outputs/apk/release/DSH-Android-v0.3.4-arm64.apk \\
+  tools/make-update-manifest.py app/build/outputs/apk/release/WinKu-v0.3.4-arm64.apk \\
       --notes-zh notes-zh.md --notes-en notes-en.md -o update.json
 
 Everything is read from the APK: package / versionCode / versionName / minSdk (aapt2 dump
@@ -28,7 +28,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = "io.github.jackwener.dsh"
-DEFAULT_REPO = "jackwener/DSH-Android"
+DEFAULT_REPO = "Excapesx/WinKu"
 
 
 def die(msg):

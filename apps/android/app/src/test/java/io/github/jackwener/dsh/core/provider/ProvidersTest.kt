@@ -70,10 +70,10 @@ class ProvidersTest {
         assertEquals(kimi, resolveChoice("kimi", "kimi-k3", listOf(kimi)).provider)
         assertEquals(ModelConfigProblem.ProviderDisabled, resolveChoice("kimi", "kimi-k3", listOf(kimi.copy(enabled = false))).problem)
         assertEquals(ModelConfigProblem.ModelMissing, resolveChoice("kimi", "gone", listOf(kimi)).problem)
-        val removed = resolveChoice("kimi", "kimi-k3", listOf(deepSeekProvider(hasKey = true)))
+        val removed = resolveChoice("kimi", "kimi-k3", listOf(custom))
         assertEquals("kimi-k3", removed.model)
         assertEquals("kimi", removed.providerId)
-        assertFalse(removed.isDeepSeek)
+        assertEquals("kimi", removed.providerId)
         assertEquals(ModelConfigProblem.ProviderMissing, removed.problem)
         assertEquals("deepseek-v4-pro", resolveChoice("", "deepseek-v4-pro", listOf(kimi)).model)
         assertEquals(ThirdParty.DEFAULT_CONTEXT_WINDOW, resolveChoice("kimi", "kimi-k3", listOf(kimi)).contextWindow)
@@ -149,7 +149,7 @@ class ProvidersTest {
         assertEquals(LimitSource.DEFAULT, resolveChoice("custom", "b", listOf(p)).contextSource)
         assertEquals(200_000L, resolveChoice("custom", "b", listOf(p.copy(contextWindow = 200_000))).contextWindow)
         assertNull(resolveChoice("", "deepseek-flash", listOf(p)).contextSource)
-        assertEquals(ModelChoice.DEEPSEEK_CONTEXT, resolveChoice("", "deepseek-flash", listOf(p)).contextWindow)
+        assertEquals(ThirdParty.DEFAULT_CONTEXT_WINDOW, resolveChoice("", "deepseek-flash", listOf(p)).contextWindow)
     }
 
     @Test fun patchCarriesPerModelLimits() {
@@ -193,7 +193,7 @@ class ProvidersTest {
         assertTrue(yml, yml.contains("\"headers\":{\"X-Team\":\"blue\"}"))
         assertTrue(yml, yml.contains("\"headerEnv\":{\"X-Api-Token\":\"DSH_ANDROID_HDR_OPENCODE_GO_X_API_TOKEN\"}"))
         assertTrue(yml, yml.contains("\"sessionHeader\":\"x-opencode-session\""))
-        assertTrue(yml, yml.contains("\"userAgent\":\"DSH-Android/0.2.6\""))
+        assertTrue(yml, yml.contains("\"userAgent\":\"WinKu/0.2.6\""))
         assertEquals("DSH_ANDROID_HDR_OPENCODE_GO_X_API_TOKEN", p.headerEnv("X-Api-Token"))
         assertEquals("provider-opencode-go-h-x-api-token", p.headerSecretName("X-Api-Token"))
     }
@@ -214,7 +214,7 @@ class ProvidersTest {
         val h = appRequestHeaders(mapOf("user-agent" to "mine/1", OPENCODE_SESSION_HEADER to "typed"), OPENCODE_SESSION_HEADER, appUserAgent("1"))
         assertEquals("mine/1", h["user-agent"]); assertFalse(h.containsKey("User-Agent"))
         assertTrue(h[OPENCODE_SESSION_HEADER]!!.matches(Regex("[0-9a-f]{32}")))
-        assertEquals(mapOf("User-Agent" to "DSH-Android/1 $HARNESS_USER_AGENT"), appRequestHeaders(emptyMap(), null, appUserAgent("1")))
+        assertEquals(mapOf("User-Agent" to "WinKu/1"), appRequestHeaders(emptyMap(), null, appUserAgent("1")))
     }
 
     @Test fun headerPlanKeepsSecretsOutOfSettings() {

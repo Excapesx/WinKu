@@ -22,9 +22,9 @@ internal object PrivateStorage {
     /** Whether [path] must go through the shell user on Android [sdk]. */
     fun needsShell(path: String, sdk: Int): Boolean = sdk >= 30 && isPrivate(path)
 
-    const val NEEDS_SHIZUKU = "Android/data and Android/obb are closed to apps on Android 11 and newer; DSH can reach them only through Shizuku " +
+    const val NEEDS_SHIZUKU = "Android/data and Android/obb are closed to apps on Android 11 and newer; WinKu can reach them only through Shizuku " +
         "(shell access), and %s. Ask the user to turn Shizuku on (访问 Android/data 需要 Shizuku：去 设置 → 手机权限 → Shizuku 打开; " +
-        "DSH → Settings → Phone permissions → Shizuku), then try again."
+        "WinKu → Settings → Phone permissions → Shizuku), then try again."
 
     fun needsShizuku(reason: String) = NEEDS_SHIZUKU.format(reason)
 }

@@ -20,8 +20,8 @@ import javax.inject.Singleton
  * verified by re-reading the node and the next path is tried:
  *  1. AccessibilityNodeInfo ACTION_SET_TEXT (verified);
  *  2. Android 13+: the accessibility service's own input connection (flagInputMethodEditor);
- *  3. DSH 输入法 ([DshInputMethodService]) when it is the current keyboard;
- *  4. Shizuku: `input text` for ASCII; otherwise switch to DSH 输入法 with `ime set`, commit, and
+ *  3. WinKu 输入法 ([DshInputMethodService]) when it is the current keyboard;
+ *  4. Shizuku: `input text` for ASCII; otherwise switch to WinKu 输入法 with `ime set`, commit, and
  *     switch back to the user's keyboard;
  *  5. clipboard + ACTION_PASTE on the field (any language; the clipboard keeps the text).
  */
@@ -110,7 +110,7 @@ class TextInput @Inject constructor(@ApplicationContext private val context: Con
         })
     }
 
-    /** Temporarily selects DSH 输入法 through Shizuku, commits, then restores the user's keyboard. */
+    /** Temporarily selects WinKu 输入法 through Shizuku, commits, then restores the user's keyboard. */
     private suspend fun viaImeSwitch(text: String, replace: Boolean): Boolean {
         val ours = DshInputMethodService.id(context)
         val previous = DshInputMethodService.currentId(context)

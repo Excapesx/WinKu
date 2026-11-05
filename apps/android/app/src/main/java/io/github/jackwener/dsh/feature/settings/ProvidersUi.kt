@@ -31,7 +31,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.jackwener.dsh.R
-import io.github.jackwener.dsh.core.data.Effort
 import io.github.jackwener.dsh.core.designsystem.BtnSize
 import io.github.jackwener.dsh.core.designsystem.BtnVariant
 import io.github.jackwener.dsh.core.designsystem.DButton
@@ -51,7 +50,6 @@ import io.github.jackwener.dsh.core.designsystem.SettingsGroupTitle
 import io.github.jackwener.dsh.core.designsystem.SettingsRow
 import io.github.jackwener.dsh.core.designsystem.Spinner
 import io.github.jackwener.dsh.core.provider.CUSTOM
-import io.github.jackwener.dsh.core.provider.DEEPSEEK_MODELS
 import io.github.jackwener.dsh.core.provider.EffectiveLimits
 import io.github.jackwener.dsh.core.provider.FetchedModels
 import io.github.jackwener.dsh.core.provider.HeaderRow
@@ -75,6 +73,7 @@ import io.github.jackwener.dsh.core.provider.NetDiagnosis
 import io.github.jackwener.dsh.core.provider.PRESETS
 import io.github.jackwener.dsh.core.provider.ProviderConfig
 import io.github.jackwener.dsh.core.provider.ProviderPreset
+import io.github.jackwener.dsh.core.provider.ProviderProtocol
 import io.github.jackwener.dsh.core.provider.RemoteModel
 import io.github.jackwener.dsh.core.provider.ThirdParty
 import io.github.jackwener.dsh.core.provider.parseTokenInput
@@ -143,7 +142,7 @@ private fun CheckMessage(text: String, ok: Boolean) {
     Text(text, Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp), style = DshType.xxs12, color = if (ok) c.labelTertiary else c.error)
 }
 
-/** 默认模型: DeepSeek models, then each enabled provider's models; effort only for DeepSeek. */
+/** Default model and reasoning for every enabled configured provider. */
 @Composable
 fun DefaultModelCard(vm: SettingsViewModel) {
     val c = Dsh.colors
@@ -160,7 +159,7 @@ fun DefaultModelCard(vm: SettingsViewModel) {
             p.models.forEach { m ->
                 val mine = check?.takeIf { it.provider == p.id && it.model == m }
                 // Picking an untested model tests it first (ModelVerify.kt); a verified one switches at once.
-                SettingsRow(if (p.isNativeDeepSeek) DEEPSEEK_MODELS.firstOrNull { it.first == m }?.second ?: m else m,
+                SettingsRow(m,
                     p.name, onClick = { vm.checkModel(p, m, select = true) },
                     trailing = {
                         if (mine?.busy == true) Spinner(14.dp)
@@ -169,9 +168,10 @@ fun DefaultModelCard(vm: SettingsViewModel) {
                 mine?.message?.let { CheckMessage(it, mine.ok) }
             }
         }
-        if (choice.isDeepSeek) SettingsRow(stringResource(R.string.effort), stringResource(R.string.effort_desc), stacked = true) {
-            Segmented(Effort.entries.map { it.label }, s.effort.ordinal, { vm.setEffort(Effort.entries[it]) })
-        } else SettingsRow(stringResource(R.string.effort), stringResource(R.string.prov_model_desc))
+        val levels = ReasoningLevels.menu(s.reasoning, s.reasoningChoice, stringResource(R.string.effort_default))
+        if (levels != null) SettingsRow(stringResource(R.string.effort), stacked = true) {
+            Segmented(levels.map { it.name }, levels.indexOfFirst { it.selected }.coerceAtLeast(0), { vm.setReasoning(levels[it].id) })
+        }
     }
 }
 
@@ -180,10 +180,6 @@ fun DefaultModelCard(vm: SettingsViewModel) {
 fun ProviderPage(vm: SettingsViewModel, target: String, presetId: String?, onPreset: (String) -> Unit, onDone: () -> Unit) {
     val s by vm.settings.collectAsStateWithLifecycle()
     val existing = s.providers.firstOrNull { it.id == target }
-    if (existing?.isNativeDeepSeek == true) {
-        DeepSeekKeyCard(vm)
-        return
-    }
     val preset = presetOf(presetId ?: existing?.preset)
     if (existing == null && preset == null) {
         // Step 1: pick a preset.
@@ -209,6 +205,7 @@ private fun ProviderEditor(vm: SettingsViewModel, existing: ProviderConfig?, pre
     val s by vm.settings.collectAsStateWithLifecycle()
     var name by rememberSaveable { mutableStateOf(existing?.name ?: defaultName) }
     var baseUrl by rememberSaveable { mutableStateOf(existing?.baseUrl ?: preset.baseUrl) }
+    var protocol by rememberSaveable { mutableStateOf(existing?.protocol ?: preset.protocol) }
     var key by rememberSaveable { mutableStateOf("") }
     val selected = remember { mutableStateListOf<String>().apply { addAll(existing?.models ?: preset.models) } }
     val offered = remember { mutableStateListOf<String>().apply { addAll(existing?.models ?: preset.models) } }
@@ -285,7 +282,7 @@ private fun ProviderEditor(vm: SettingsViewModel, existing: ProviderConfig?, pre
     suspend fun testAndSave() {
         result = null
         testing = context.getString(R.string.prov_testing_list)
-        val listing = vm.fetchModels(baseUrl, key, current, headerRows.toList(), sessionHeaderOrNull())
+        val listing = vm.fetchModels(baseUrl, key, current, headerRows.toList(), sessionHeaderOrNull(), protocol)
         listing.onSuccess(::applyListing)
         listing.exceptionOrNull()?.let { t ->
             val f = VerifyErrors.ofThrowable(t)
@@ -304,9 +301,10 @@ private fun ProviderEditor(vm: SettingsViewModel, existing: ProviderConfig?, pre
             testing = null; result = false to context.getString(if (listed == null) R.string.prov_test_need_model else R.string.prov_test_no_chat_model); return
         }
         val base = baseUrl.trim().trimEnd('/')
-        val outcome = vm.verifyModels(base, key, current, candidates, { m -> testing = context.getString(R.string.prov_testing_model, m) }, headerRows.toList(), sessionHeaderOrNull())
+        val outcome = vm.verifyModels(base, key, current, candidates, { m -> testing = context.getString(R.string.prov_testing_model, m) }, headerRows.toList(), sessionHeaderOrNull(), protocol)
         testing = null
-        val plan = planSave(outcome, checked, current?.verified.orEmpty(), makeMain = existing == null || s.choice.provider?.id == current?.id)
+        val previousVerified = current?.takeIf { key.isBlank() && it.protocol == protocol && it.baseUrl.trimEnd('/') == base }?.verified.orEmpty()
+        val plan = planSave(outcome, checked, previousVerified, makeMain = existing == null || s.choice.provider?.id == current?.id)
         if (plan.save) {
             plan.models.forEach { if (it !in offered) offered.add(it); if (it !in selected) selected.add(it) }
             val id = current?.id ?: newRouteId(preset.id, s.providers.map { it.id })
@@ -316,7 +314,7 @@ private fun ProviderEditor(vm: SettingsViewModel, existing: ProviderConfig?, pre
             vm.saveTested(ProviderConfig(id, preset.id, name.trim().ifEmpty { defaultName }, base, models,
                 enabled = current?.enabled ?: true, hasKey = current?.hasKey ?: false,
                 contextWindow = tokensOrNull(ctxText), maxTokens = tokensOrNull(maxText)?.toIntSat(), limits = limits, verified = plan.verified,
-                sessionHeader = sessionHeaderOrNull()), key, plan.main, headerRows.toList())
+                sessionHeader = sessionHeaderOrNull(), protocol = protocol), key, plan.main, headerRows.toList())
             savedId = id
         }
         result = (outcome is VerifyOutcome.Passed) to describeOutcome(context, outcome, becameMain = plan.main != null)
@@ -345,7 +343,7 @@ private fun ProviderEditor(vm: SettingsViewModel, existing: ProviderConfig?, pre
                     if (!isHttpUrl(baseUrl)) { error = R.string.prov_err_url; return@DButton }
                     fetchState = "busy"
                     scope.launch {
-                        vm.fetchModels(baseUrl, key, current, headerRows.toList(), sessionHeaderOrNull()).onSuccess(::applyListing).onFailure { t ->
+                        vm.fetchModels(baseUrl, key, current, headerRows.toList(), sessionHeaderOrNull(), protocol).onSuccess(::applyListing).onFailure { t ->
                             fetchOk = false
                             // Same wording as a failed chat turn (Stream.kt ErrorRow): cause, hint, raw detail.
                             fetchNet = NetDiagnose.ofException(t)
@@ -382,6 +380,10 @@ private fun ProviderEditor(vm: SettingsViewModel, existing: ProviderConfig?, pre
                 DIcon(if (advanced) R.drawable.dsw_chevron_up_outline else R.drawable.dsw_chevron_down_outline, size = 14.dp, tint = c.labelTertiary)
             }
             if (advanced) {
+                Text(stringResource(R.string.prov_protocol), style = DshType.xs13m, color = c.labelSecondary)
+                Segmented(ProviderProtocol.entries.map { it.label }, protocol.ordinal, {
+                    protocol = ProviderProtocol.entries[it]; result = null; fetchState = null
+                }, compact = true)
                 Text(stringResource(R.string.prov_session_header), style = DshType.xs13m, color = c.labelSecondary)
                 DInput(sessionHeader, { sessionHeader = it.trim() }, placeholder = "x-opencode-session")
                 Text(stringResource(R.string.prov_session_header_hint), style = DshType.xxs12, color = c.labelTertiary)

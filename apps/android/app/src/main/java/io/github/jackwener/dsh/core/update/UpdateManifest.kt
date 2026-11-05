@@ -38,7 +38,8 @@ data class UpdateManifest(
 
     companion object {
         const val FORMAT = 1L
-        private const val REPO = "jackwener/DSH-Android"
+        private const val REPO = "Excapesx/WinKu"
+        private const val MANIFEST_PATH = "apps/android/update/latest.json"
 
         /**
          * Where `update.json` is fetched from, in order (first valid one wins, the next starts a few
@@ -48,11 +49,11 @@ data class UpdateManifest(
          */
         val SOURCES = listOf(
             "https://github.com/$REPO/releases/latest/download/update.json",
-            "https://raw.githubusercontent.com/$REPO/main/update/latest.json",
-            "https://cdn.jsdelivr.net/gh/$REPO@main/update/latest.json",
-            "https://fastly.jsdelivr.net/gh/$REPO@main/update/latest.json",
-            "https://gcore.jsdelivr.net/gh/$REPO@main/update/latest.json",
-            "https://testingcf.jsdelivr.net/gh/$REPO@main/update/latest.json",
+            "https://raw.githubusercontent.com/$REPO/main/$MANIFEST_PATH",
+            "https://cdn.jsdelivr.net/gh/$REPO@main/$MANIFEST_PATH",
+            "https://fastly.jsdelivr.net/gh/$REPO@main/$MANIFEST_PATH",
+            "https://gcore.jsdelivr.net/gh/$REPO@main/$MANIFEST_PATH",
+            "https://testingcf.jsdelivr.net/gh/$REPO@main/$MANIFEST_PATH",
         )
         const val RELEASES_PAGE = "https://github.com/$REPO/releases/latest"
 
@@ -77,7 +78,7 @@ data class UpdateManifest(
                 s
             } ?: throw Invalid("$.apk.urls", "must be an array")
             if (urls.isEmpty()) throw Invalid("$.apk.urls", "must not be empty")
-            val apkName = apk.str("name")?.takeIf { it.isNotBlank() } ?: "DSH-Android-$name.apk"
+            val apkName = apk.str("name")?.takeIf { it.isNotBlank() } ?: "WinKu-$name.apk"
             val signer = hex64(root.str("signerSha256"), "$.signerSha256")
             val notes = when (val n = root["notes"]) {
                 null -> emptyMap()

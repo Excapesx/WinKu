@@ -38,7 +38,7 @@ class RuleTools @Inject constructor(
         val missing = h.missingPrerequisites(spec)
         val caveats = h.caveats(spec)
         return buildString {
-            if (missing.isNotEmpty()) append("\nWARNING: it cannot fire until DSH has: ${missing.joinToString()}. Ask the user to grant it (DSH → Settings → Permissions).")
+            if (missing.isNotEmpty()) append("\nWARNING: it cannot fire until WinKu has: ${missing.joinToString()}. Ask the user to grant it (WinKu → Settings → Permissions).")
             caveats.forEach { append("\nNote: $it.") }
         }
     }

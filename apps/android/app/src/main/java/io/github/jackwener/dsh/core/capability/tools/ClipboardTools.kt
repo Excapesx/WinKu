@@ -25,8 +25,8 @@ class ClipboardTools @Inject constructor(@ApplicationContext private val context
 
     override val tools = listOf(
         object : Tool("clipboard_get", ToolGroup.Clipboard, Risk.sensitive, false,
-            "Read the clipboard text. Android only allows this while DSH is in the foreground (or via Shizuku).", {},
-            ShellUse.Fallback, "only work while DSH is in the foreground") {
+            "Read the clipboard text. Android only allows this while WinKu is in the foreground (or via Shizuku).", {},
+            ShellUse.Fallback, "only work while WinKu is in the foreground") {
             override suspend fun invoke(args: JsonObject, call: CallContext): ToolResult {
                 val (readable, text) = withContext(Dispatchers.Main) {
                     val clip = runCatching { cm.primaryClip }.getOrNull()
@@ -42,14 +42,14 @@ class ClipboardTools @Inject constructor(@ApplicationContext private val context
                     if (r.code == 0 && out.isNotEmpty() && !out.startsWith("Result: Parcel") && !out.contains("Unknown command"))
                         return ToolResult.text("(read via Shizuku) " + out.removePrefix("ClipData { text/plain ").removeSuffix("}"))
                 }
-                return ToolResult.error("failed", "Clipboard is not readable right now: Android only lets the app in front read it, and ${shizuku.access.state.value.reason}. Open DSH and retry, or ask the user to paste it.")
+                return ToolResult.error("failed", "Clipboard is not readable right now: Android only lets the app in front read it, and ${shizuku.access.state.value.reason}. Open WinKu and retry, or ask the user to paste it.")
             }
         },
         object : Tool("clipboard_set", ToolGroup.Clipboard, Risk.write, false, "Put text on the clipboard.", {
             string("text", "", required = true)
         }) {
             override suspend fun invoke(args: JsonObject, call: CallContext): ToolResult {
-                withContext(Dispatchers.Main) { cm.setPrimaryClip(ClipData.newPlainText("DSH", args.reqStr("text"))) }
+                withContext(Dispatchers.Main) { cm.setPrimaryClip(ClipData.newPlainText("WinKu", args.reqStr("text"))) }
                 return ToolResult.text("Copied to clipboard")
             }
         },

@@ -58,7 +58,7 @@ class ShellGate @Inject constructor(val shell: ShizukuShell, private val session
         return ToolResult.error("shizuku_unavailable", when {
             call.unattended -> "This step needs Shizuku (shell access), but $reason. Automations cannot ask the user to set it up; skip this step or report it."
             else -> "This needs Shizuku (shell access), but $reason and the user chose not to set it up now. Do not call Shizuku-only tools again " +
-                "in this session; do it another way (system intents, settings panels, screen tools) or tell the user it can be enabled in DSH → Settings → Phone."
+                "in this session; do it another way (system intents, settings panels, screen tools) or tell the user it can be enabled in WinKu → Settings → Phone."
         })
     }
 

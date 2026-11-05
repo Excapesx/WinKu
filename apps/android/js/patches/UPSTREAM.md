@@ -233,6 +233,19 @@ level); a style with no levels means none. Undeclared profiles behave as before.
 > level list or `thinkingStyle` as the model's whole reasoning declaration. Tests:
 > `js/test/provider-reasoning.test.mjs`.
 
+## 23: explicitly configured User-Agent replaces the default
+
+An application-supplied `userAgent` is the complete value for requests and model discovery.
+Explicit custom headers still take precedence. This lets a derived product identify its own
+client without silently appending the upstream product name. Covered by `provider-headers.test.mjs`.
+
+## 24: configured routes are required by the SDK
+
+WinKu-specific policy: remove the SDK's eager vendor adapter import and lazy DeepSeek fallback.
+An unregistered provider always fails initialization. Empty SDK defaults force the client to select
+a real route; runtime metadata identifies WinKu. Covered against the packaged SDK by
+`winku-harness.test.mjs`. Upstream engine namespaces and licensing remain intact.
+
 ## Not upstream material
 
 Patches 01–13 adapt dsh to Android (bionic, `/system/bin/sh`, `link(2)`, sharp WASM, SDK extensions

@@ -77,7 +77,7 @@ fun validateRule(spec: RuleSpec, knownTools: Set<String>, now: Long = System.cur
             a.steps.map { it.tool }.filter { it !in knownTools }.distinct().takeIf { it.isNotEmpty() }?.let { p += "unknown step tool(s): ${it.joinToString()}" }
             // A step runs without the engine, so the hardline command checks would not see it.
             a.steps.map { it.tool }.filter { it in ENGINE_ONLY_STEP_TOOLS }.distinct().takeIf { it.isNotEmpty() }
-                ?.let { p += "${it.joinToString()} cannot be a direct step (DSH checks its commands in the engine); use an agent action that calls it" }
+                ?.let { p += "${it.joinToString()} cannot be a direct step (WinKu checks its commands in the engine); use an agent action that calls it" }
             allowed = allowed + a.steps.map { it.tool }
         }
     }

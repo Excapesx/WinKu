@@ -68,7 +68,7 @@ data class DiagnosticsInput(
     /** Why the latest agent screen could not be created (AgentScreen.lastCreateError), null when none failed. */
     val agentScreenError: String? = null,
     /** "api key" / "account" / "none" (never the credential). */
-    val deepseekCredential: String,
+    val modelCredential: String,
     /** Role → "route / model …" (main model, effort). */
     val roles: List<Pair<String, String>>,
     val providers: List<ProviderFacts>,
@@ -107,7 +107,7 @@ object DiagnosticsReport {
         line("agent screen", (input.agentScreenUnavailable?.let { "unavailable ($it)" } ?: "supported") + ", setting " + yes(input.agentScreenSetting, "on", "off"))
         input.agentScreenError?.let { line("agent screen last failure", oneLine(it, 400)) }
         section("Models")
-        line("deepseek sign-in", input.deepseekCredential)
+        line("model credential", input.modelCredential)
         input.roles.forEach { (role, v) -> line(role, v) }
         section("Providers")
         if (input.providers.isEmpty()) sb.append("none\n")

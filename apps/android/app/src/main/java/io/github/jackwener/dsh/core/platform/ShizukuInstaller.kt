@@ -33,7 +33,7 @@ import javax.inject.Singleton
 /** Where the in-app install/update of the bundled Shizuku APK stands. */
 sealed interface ShizukuInstallState {
     data object Idle : ShizukuInstallState
-    /** Sent to 安装未知应用 for DSH; the install resumes by itself when the user comes back with it allowed. */
+    /** Sent to 安装未知应用 for WinKu; the install resumes by itself when the user comes back with it allowed. */
     data object AwaitingUnknownSources : ShizukuInstallState
     /** Came back from that page without allowing it. */
     data object UnknownSourcesDenied : ShizukuInstallState
@@ -48,7 +48,7 @@ sealed interface ShizukuInstallState {
 
 /**
  * Installs (or updates) the official Shizuku app from the APK bundled at `assets/shizuku/shizuku.apk`
- * (see tools/fetch-shizuku.sh) through a [PackageInstaller] session, so users never leave DSH to get it.
+ * (see tools/fetch-shizuku.sh) through a [PackageInstaller] session, so users never leave WinKu to get it.
  * Same signer as the Play/GitHub builds, so it also updates an existing install in place.
  * Completion is picked up by [ShellAccess] through its package-added/replaced receiver; this class
  * also refreshes it directly on success.

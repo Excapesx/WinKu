@@ -3,6 +3,11 @@ package io.github.jackwener.dsh.core.provider
 import android.content.ContextWrapper
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.jackwener.dsh.core.data.SecretStore
+import io.github.jackwener.dsh.core.data.ModelSettingsMigration
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -15,22 +20,27 @@ import java.util.concurrent.atomic.AtomicReference
 
 /** Real Android Keystore and HTTP stack; isolated slots and a loopback test endpoint, no external API keys. */
 class ModelConfigurationTest {
-    @Test fun nativeNamedSlotReadsAndReplacesLegacyEncryptedKey() {
+    @Test fun encryptedLegacyKeyMigratesToAnOrdinaryProviderSlot() = runBlocking {
         val base = InstrumentationRegistry.getInstrumentation().targetContext
         val directory = File(base.cacheDir, "model-key-test-${UUID.randomUUID()}").apply { mkdirs() }
         val isolated = object : ContextWrapper(base) { override fun getNoBackupFilesDir() = directory }
         val legacy = SecretStore(isolated)
-        val native = deepSeekProvider()
         try {
-            legacy.write("test-legacy-key")
+            legacy.write("fixture", "test-legacy-key")
+            File(directory, "secret-fixture.key").copyTo(File(directory, "deepseek.key"))
+            val migration = ModelSettingsMigration(legacy::readLegacyModelKey, legacy::write, legacy::clearLegacyModelKey)
+            val migrated = migration.migrate(emptyPreferences())
+            val p = Json.decodeFromString(ListSerializer(ProviderConfig.serializer()), migrated[stringPreferencesKey("providers_json")]!!).single()
             val upgraded = SecretStore(isolated)
-            assertEquals("test-legacy-key", upgraded.read(native.secretName))
-            upgraded.write(native.secretName, "test-rotated-key")
-            assertEquals("test-rotated-key", SecretStore(isolated).read())
-            assertEquals(1, directory.listFiles()!!.size)
-            assertFalse(directory.listFiles()!!.single().readText().contains("test-rotated-key"))
-            upgraded.clear(native.secretName)
-            assertNull(SecretStore(isolated).read())
+            assertEquals("test-legacy-key", upgraded.read(p.secretName))
+            assertTrue(File(directory, "deepseek.key").exists())
+            migration.cleanUp()
+            assertFalse(File(directory, "deepseek.key").exists())
+            upgraded.write(p.secretName, "test-rotated-key")
+            assertEquals("test-rotated-key", SecretStore(isolated).read(p.secretName))
+            assertFalse(File(directory, "secret-${p.secretName}.key").readText().contains("test-rotated-key"))
+            upgraded.clear(p.secretName)
+            assertNull(SecretStore(isolated).read(p.secretName))
         } finally { directory.listFiles()?.forEach { it.delete() }; directory.delete() }
     }
 
@@ -51,6 +61,26 @@ class ModelConfigurationTest {
         }
         withEndpoint(404, """{"error":{"message":"model not found","code":"model_not_found"}}""") { baseUrl, _ ->
             assertTrue(probeModel(baseUrl, "test-provider-key", "missing-model") is VerifyFailure.ModelNotFound)
+        }
+    }
+
+    @Test fun nativeProtocolsUseTheirOwnPathsAndAuthentication() {
+        withEndpoint(200, """{"content":[{"type":"tool_use","id":"t","name":"$PROBE_TOOL","input":{}}]}""") { url, request ->
+            assertNull(probeModel(url, "test-messages-key", "selected-claude", protocol = ProviderProtocol.Messages))
+            val wire = request()
+            assertTrue(wire.first.startsWith("POST /v1/messages "))
+            assertTrue(wire.first.contains("x-api-key: test-messages-key", true))
+            assertTrue(wire.first.contains("anthropic-version: 2023-06-01", true))
+            assertFalse(wire.first.contains("Authorization:", true))
+            assertTrue(wire.first.contains("User-Agent: WinKu", true))
+            assertEquals("selected-claude", Json.parseToJsonElement(wire.second).jsonObject["model"]!!.jsonPrimitive.content)
+        }
+        withEndpoint(200, """{"output":[{"type":"function_call","name":"$PROBE_TOOL","arguments":"{}","call_id":"t"}]}""") { url, request ->
+            assertNull(probeModel(url, "test-responses-key", "selected-gpt", protocol = ProviderProtocol.Responses))
+            val wire = request()
+            assertTrue(wire.first.startsWith("POST /v1/responses "))
+            assertTrue(wire.first.contains("Authorization: Bearer test-responses-key", true))
+            assertEquals("selected-gpt", Json.parseToJsonElement(wire.second).jsonObject["model"]!!.jsonPrimitive.content)
         }
     }
 

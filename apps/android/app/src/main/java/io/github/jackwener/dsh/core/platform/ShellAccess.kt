@@ -31,10 +31,10 @@ sealed interface ShellState {
     data object NotInstalled : ShellState
     /** Installed but its server is not running — typical after a reboot. [wasReady]: it worked here before. */
     data class InstalledNotRunning(val wasReady: Boolean) : ShellState
-    /** Server running, DSH not authorized. [denied]: the user chose "deny" before, so Shizuku won't ask again. */
+    /** Server running, WinKu not authorized. [denied]: the user chose "deny" before, so Shizuku won't ask again. */
     data class RunningNoPermission(val denied: Boolean) : ShellState
     data object Ready : ShellState
-    /** Server older than the API DSH needs (user services need v11+). */
+    /** Server older than the API WinKu needs (user services need v11+). */
     data class Unsupported(val version: Int) : ShellState
 
     val ready get() = this == Ready
@@ -42,16 +42,16 @@ sealed interface ShellState {
     val reason get() = when (this) {
         NotInstalled -> "Shizuku is not installed"
         is InstalledNotRunning -> "Shizuku is installed but not running" + if (wasReady) " (it stops after a reboot)" else ""
-        is RunningNoPermission -> "DSH is not authorized in Shizuku"
+        is RunningNoPermission -> "WinKu is not authorized in Shizuku"
         Ready -> "Shizuku is ready"
         is Unsupported -> "the installed Shizuku is too old (API $version)"
     }
     /** What the user has to do next, in words (diagnostics; the UI has localized ones in ShellGuide). */
     val hint get() = when (this) {
-        NotInstalled -> "install Shizuku from DSH → Settings → Phone permissions (optional)"
+        NotInstalled -> "install Shizuku from WinKu → Settings → Phone permissions (optional)"
         is InstalledNotRunning -> if (wasReady) "open Shizuku and tap Start (needed again after every reboot)"
             else "turn on Wireless debugging in Developer options, then pair and start it in Shizuku"
-        is RunningNoPermission -> if (denied) "denied before: enable DSH under Authorized apps in Shizuku" else "tap Authorize in DSH (Shizuku shows its prompt)"
+        is RunningNoPermission -> if (denied) "denied before: enable WinKu under Authorized apps in Shizuku" else "tap Authorize in WinKu (Shizuku shows its prompt)"
         Ready -> "nothing to do"
         is Unsupported -> "update Shizuku to the latest version, then start it again"
     }
@@ -66,7 +66,7 @@ data class ShellProbe(
     val binderAlive: Boolean,
     /** Server API version; null when asking failed (the binder died between the calls). */
     val serverVersion: Int?,
-    /** Whether DSH holds the Shizuku permission; null when asking failed. */
+    /** Whether WinKu holds the Shizuku permission; null when asking failed. */
     val granted: Boolean?,
     /** The user chose "deny" before (Shizuku will not prompt again). */
     val denied: Boolean,
@@ -79,7 +79,7 @@ data class ShellProbe(
 /**
  * The single source of truth for Shizuku: a [StateFlow] driven by Shizuku's binder received/dead
  * and permission-result callbacks, package add/remove broadcasts and app-foreground refreshes —
- * no polling. DSH never runs its own ADB client or privileged server; it only talks to the
+ * no polling. WinKu never runs its own ADB client or privileged server; it only talks to the
  * official Shizuku app (Sui/root are not offered, though a running Sui binder simply counts as Ready).
  */
 @Singleton

@@ -75,12 +75,12 @@ class SystemTools @Inject constructor(
 
     /**
      * The non-shell path for a toggle: a system panel/page the user finishes with one tap. Android
-     * only lets DSH open it while DSH is visible (or may draw overlays); otherwise say so plainly.
+     * only lets WinKu open it while WinKu is visible (or may draw overlays); otherwise say so plainly.
      */
     private fun openForUser(intent: Intent, what: String): ToolResult {
         val reason = gate.access.state.value.let { if (it.ready) "the Shizuku command failed" else it.reason }
         if (!AppVisibility.isForeground && !Settings.canDrawOverlays(context))
-            return ToolResult.error("needs_user", "Could not $what directly ($reason) and Android blocks opening system panels while DSH is in the background. Ask the user to do it.")
+            return ToolResult.error("needs_user", "Could not $what directly ($reason) and Android blocks opening system panels while WinKu is in the background. Ask the user to do it.")
         return runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.fold(
             { ToolResult.text("path=system_panel: $reason, so I opened the system page to $what. The user must tap the switch there; verify with device_status before relying on it.") },
             { ToolResult.error("failed", "Could not $what ($reason) and the system page failed to open: ${it.message}") })
@@ -357,7 +357,7 @@ class SystemTools @Inject constructor(
                 val loc = Locator.current(context, precise = args.bool("precise") != false && fine)
                     ?: return ToolResult.error("location_unavailable", "No location fix within 20s. " +
                         (if (!AppVisibility.isForeground && context.checkSelfPermission(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED)
-                            "DSH is in the background without 'Allow all the time' location access; ask the user to grant it or open DSH and retry." else "The phone may be indoors; try again or use precise=false."))
+                            "WinKu is in the background without 'Allow all the time' location access; ask the user to grant it or open WinKu and retry." else "The phone may be indoors; try again or use precise=false."))
                 val ageS = ((System.currentTimeMillis() - loc.time) / 1000).coerceAtLeast(0)
                 val address = Locator.address(context, loc.latitude, loc.longitude)
                 return ToolResult.text(buildString {
@@ -410,7 +410,7 @@ internal object AdbShell {
         "Runs /system/bin/sh from \"/\" without root and without a terminal: no prompts, and a command that never ends (logcat without -d, top without -n) " +
         "is stopped at the timeout. Returns the exit code and stdout+stderr (at most 64 000 characters). The same hard blocks as bash apply."
 
-    const val NOT_FROM_ENGINE = "adb_shell runs only from a conversation or an automation's agent run (where DSH's command safety checks see it), " +
+    const val NOT_FROM_ENGINE = "adb_shell runs only from a conversation or an automation's agent run (where WinKu's command safety checks see it), " +
         "not as a direct automation step. Make the automation an agent action instead."
 
     fun timeoutS(requested: Int?): Int = (requested ?: DEFAULT_TIMEOUT_S).coerceIn(1, MAX_TIMEOUT_S)

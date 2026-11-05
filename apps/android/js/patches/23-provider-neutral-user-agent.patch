@@ -1,0 +1,11 @@
+WinKu: an explicitly configured product User-Agent replaces the upstream default.
+User-defined route headers still take precedence. Applies after patches 18 and 22.
+
+--- a/node_modules/@snnh/dsh-llm-service-lite/lib/index.js
++++ b/node_modules/@snnh/dsh-llm-service-lite/lib/index.js
+@@ -2860 +2860 @@
+-	if (!declaredAgent && profile.userAgent !== void 0) out["user-agent"] = `${profile.userAgent} ${out["user-agent"] ?? ""}`.trim();
++	if (!declaredAgent && profile.userAgent !== void 0) out["user-agent"] = profile.userAgent;
+@@ -5522 +5522 @@
+-	if (route.userAgent !== void 0) headers.set("user-agent", `${route.userAgent} ${headers.get("user-agent") ?? ""}`.trim());
++	if (route.userAgent !== void 0) headers.set("user-agent", route.userAgent);

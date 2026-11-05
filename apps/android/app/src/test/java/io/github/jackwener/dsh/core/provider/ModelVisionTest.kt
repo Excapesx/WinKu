@@ -70,7 +70,7 @@ class ModelVisionTest {
         assertTrue(yml, yml.substringAfter(""""id":"private-b",""").substringBefore("}}").endsWith("""["text"]"""))
         assertTrue(resolveChoice("custom", "private-a", listOf(p)).acceptsImages)
         assertFalse(resolveChoice("custom", "private-b", listOf(p)).acceptsImages)
-        assertTrue(resolveChoice("", "deepseek-flash", listOf(p)).acceptsImages)
+        assertFalse(resolveChoice("", "", listOf(p)).acceptsImages)
         assertFalse(resolveChoice("", "deepseek-v4-pro", listOf(p)).acceptsImages)
         // Stored settings round-trip, and an older record without the fields still decodes.
         val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }

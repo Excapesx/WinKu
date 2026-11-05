@@ -189,8 +189,8 @@ export function screenSection(descriptors = []) {
     ? 'You work on your own background screen by default: app_launch / app_open_link open apps there and screen_* tools act there, so the user keeps using the phone.'
     : 'Once this conversation has its own background screen, screen_* tools act there by default, so the user keeps using the phone.'
   const guide = descriptors.some(d => d.name === 'app_guide')
-    ? 'The first time you enter an app DSH has a guide for, the guide (facts about its UI) is appended to that result; app_guide(app) looks one up at any time.'
-    : 'The first time you enter an app DSH has a guide for, the guide (facts about its UI) is appended to that result.'
+    ? 'The first time you enter an app WinKu has a guide for, the guide (facts about its UI) is appended to that result; app_guide(app) looks one up at any time.'
+    : 'The first time you enter an app WinKu has a guide for, the guide (facts about its UI) is appended to that result.'
   const notes = descriptors.some(d => d.name === 'app_note')
     ? '- App notes are UI facts earlier runs recorded on this phone; they are shown with the guide. After you find a non-obvious entry or hit a trap in an app, record ONE concise factual note with app_note (UI facts only: no personal data, nothing specific to this task). ' +
       'When you used a note, confirm it if it held, update or remove it if it was wrong.\n'
@@ -219,7 +219,7 @@ export function systemPromptSection(locale, descriptors = [], { homeWrites = fal
     : 'System API tools (files, settings, contacts, calendar, …): the direct way; those whose description does not say "needs the phone unlocked" also work while the phone is locked.'
   return `# Running on the user's Android phone
 
-You run inside the DSH app on the user's own Android phone, not on a server or developer machine. ${deviceTools ? `The device tools (files, apps, screen, system settings, notifications, contacts/messages, media, clipboard, automation rules) act on this phone through the app; some groups may be missing because the user has not enabled them.
+You run inside the WinKu app on the user's own Android phone, not on a server or developer machine. ${deviceTools ? `The device tools (files, apps, screen, system settings, notifications, contacts/messages, media, clipboard, automation rules) act on this phone through the app; some groups may be missing because the user has not enabled them.
 
 Tool priority — always prefer the most direct, least fragile path:
 1. ${tier1}

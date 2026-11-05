@@ -2,7 +2,7 @@
 
 DeepSeek Harness (dsh) **0.2.1-rc.5**, installed unmodified from npm and customized only by a dsh bundle (profile
 `android`), three plugins, one vendored third-party LLM adapter and a few patches applied at build time. The app side of the interface is
-[`../docs/ENGINE-CONTRACT.md`](../docs/ENGINE-CONTRACT.md).
+[`../../../docs/ENGINE-CONTRACT.md`](../../../docs/ENGINE-CONTRACT.md).
 
 ## Layout
 
@@ -14,8 +14,7 @@ DeepSeek Harness (dsh) **0.2.1-rc.5**, installed unmodified from npm and customi
 | `packages/plugin-device/` | capability bridge client (`DSH_BRIDGE_FD`) → dynamic dsh tools |
 | `packages/plugin-guard/` | hardline shell floor, approval policy, budgets, phone system prompt, long-task continuation and turn-end reasons (`continuation.js`, ENGINE-CONTRACT §2.7) |
 | `packages/plugin-mode/` | session modes: per-conversation tool restriction, skills switch, mode prompt section (`android/session/mode`, ENGINE-CONTRACT §2.5); deferred tools: catalog section + `load_tools` (`deferred.js`, §2.5.1) |
-| `packages/plugin-account/` | DeepSeek account login: loopback OAuth callback server + `account/*` SDK methods |
-| `packages/llm-service-lite/` | vendored `@snnh/dsh-llm-service-lite` 0.2.1 (MIT, snnh): third-party OpenAI-compatible model routes; built `lib/index.js` copied verbatim from the npm tarball (provenance in its `package.json` `//vendored`), Web client dropped. Upgrade = replace `lib/index.js` + note; changes go in `patches/` (14, 16, 17, 18, 22); upstreaming notes in [`patches/UPSTREAM.md`](patches/UPSTREAM.md) |
+| `packages/llm-service-lite/` | vendored `@snnh/dsh-llm-service-lite` 0.2.1 (MIT, snnh): all configured model routes (Chat Completions, Responses, Messages); built `lib/index.js` copied verbatim from the npm tarball (provenance in its `package.json` `//vendored`), Web client dropped. Upgrade = replace `lib/index.js` + note; changes go in `patches/` (14, 16, 17, 18, 22, 23); upstreaming notes in [`patches/UPSTREAM.md`](patches/UPSTREAM.md) |
 | `patches/*.patch` | unified diffs against `node_modules/`, applied in order with `patch -p1` (dry-run first) |
 | `scripts/fetch-locked.mjs` | installs lockfile-pinned packages `npm ci` skips on the host (sharp's WebAssembly build), sha512-verified |
 | `scripts/unreachable.mjs` | lists packages reachable only through given deps (used to prune pi-ai's provider SDKs) |
@@ -42,13 +41,31 @@ DeepSeek Harness (dsh) **0.2.1-rc.5**, installed unmodified from npm and customi
 
 Our packages are plain ESM with no dependencies outside `node:` built-ins; there is no compile step (the vendored adapter is shipped as built upstream).
 
+## WinKu runtime policy
+
+The shipped profile identifies the assistant as WinKu and disables upstream persona injection. All providers use
+llm-service-lite; vendor-native model, account and search rows are disabled. SDK patch 24 rejects unregistered routes,
+and patch 23 makes the configured WinKu User-Agent replace the upstream default. Upstream package namespaces and
+licenses remain as engine provenance. Search is configured separately through extensions or MCP.
+
+On Windows, an existing patched engine can be refreshed with `tools/refresh-engine-bundle.ps1 -Install`.
+It verifies the original archive, applies patches 23/24 idempotently, copies first-party package sources and backs up
+the original before installation. Changes to dependencies require the full build below.
+
+Host identity, routing and transport regression checks (after extracting the resulting archive to a stage directory):
+
+`node --test js/test/winku-harness.test.mjs js/test/provider-headers.test.mjs js/test/gateway-replay.test.mjs`
+
+Set `DSH_STAGE_NM` to that stage's node_modules. Legacy host-e2e scripts containing vendor assumptions require
+adaptation; a real arm64 device and valid provider credentials are needed to validate Android model calls end to end.
+
 ## Build
 
 ```sh
 js/build-engine.sh
 ```
 
-Paths are relative to the repo root; `toolchains/` is gitignored.
+Commands and paths in this file are relative to `apps/android/`; `toolchains/` is gitignored.
 
 | Env | Default | |
 |---|---|---|

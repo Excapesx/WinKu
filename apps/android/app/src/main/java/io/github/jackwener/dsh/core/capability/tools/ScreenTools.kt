@@ -91,7 +91,7 @@ class ScreenTools @Inject constructor(
     /** A live snapshot with stable ids assigned. */
     private class Read(val snap: ScreenSnapshot, val frame: Frame)
 
-    private fun svc() = DshAccessibilityService.instance ?: throw PermissionMissingException("Accessibility service (DSH screen control)")
+    private fun svc() = DshAccessibilityService.instance ?: throw PermissionMissingException("Accessibility service (WinKu screen control)")
 
     private fun read(call: CallContext, d: Int): Read {
         val snap = svc().snapshot(d)
@@ -224,7 +224,7 @@ class ScreenTools @Inject constructor(
         const val KINDS = "login, captcha, payment, secure_page, choose, other"
         fun screenshotError(code: Int?) = when (code) {
             null -> "screenshots need Android 11+"
-            1 -> "internal error"; 2 -> "accessibility screenshots are not enabled for DSH (re-enable the DSH accessibility service)"
+            1 -> "internal error"; 2 -> "accessibility screenshots are not enabled for WinKu (re-enable the WinKu accessibility service)"
             ERROR_INTERVAL_TOO_SHORT -> "called too often; wait a second"
             4 -> "invalid display"; 5 -> "invalid window"
             else -> "error code $code"
@@ -447,12 +447,12 @@ class ScreenTools @Inject constructor(
                 return if (a11y != null) a11y.tap(x, y, if (long) 700 else 60, d)
                 else if (shizuku.available) shizuku.exec(if (long) "input -d $d swipe ${x.toInt()} ${y.toInt()} ${x.toInt()} ${y.toInt()} 700"
                     else "input -d $d tap ${x.toInt()} ${y.toInt()}").code == 0
-                else throw PermissionMissingException("Accessibility service (DSH screen control)")
+                else throw PermissionMissingException("Accessibility service (WinKu screen control)")
             }
         },
         object : ScreenTool("screen_type", Risk.write, true,
             "Type text into an editable field (element id, or the focused field). Replaces the field's content unless append=true. " +
-                "submit=true then presses the keyboard's Enter/Search key. Works in WebView/Flutter fields too (falls back to the DSH keyboard, Shizuku or paste).", {
+                "submit=true then presses the keyboard's Enter/Search key. Works in WebView/Flutter fields too (falls back to the WinKu keyboard, Shizuku or paste).", {
                 string("text", "Text to enter", required = true)
                 string("node", "Editable element id from the latest screen read (default: focused field)")
                 bool("append", "Append instead of replacing")
@@ -634,7 +634,7 @@ class ScreenTools @Inject constructor(
 
     private fun JsonObject.only(vararg keys: String) = JsonObject(filter { it.key in keys })
 
-    /** Enter/Search in the focused field: accessibility IME action, DSH keyboard, then Shizuku keyevent. Returns how, or null. */
+    /** Enter/Search in the focused field: accessibility IME action, WinKu keyboard, then Shizuku keyevent. Returns how, or null. */
     private suspend fun pressEnter(search: Boolean, d: Int, r: Read): String? {
         if (d == Display.DEFAULT_DISPLAY) {
             if (DshAccessibilityService.instance?.pressImeAction(search) == true) return if (search) "Search" else "Enter"

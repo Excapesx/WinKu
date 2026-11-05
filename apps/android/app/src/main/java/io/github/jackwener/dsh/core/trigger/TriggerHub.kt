@@ -112,7 +112,7 @@ class TriggerHub @Inject constructor(
             is Trigger.Wifi -> if (t.ssid != null && !(granted(Manifest.permission.ACCESS_FINE_LOCATION) && granted(Manifest.permission.ACCESS_BACKGROUND_LOCATION)))
                 add("location 'Allow all the time' (Android hides the Wi-Fi name otherwise)")
             is Trigger.Notification -> if (context.packageName !in NotificationManagerCompat.getEnabledListenerPackages(context)) add("Notification access")
-            is Trigger.AppOpened -> if (DshAccessibilityService.instance == null) add("Accessibility service (DSH screen control)")
+            is Trigger.AppOpened -> if (DshAccessibilityService.instance == null) add("Accessibility service (WinKu screen control)")
             else -> {}
         }
     }
@@ -120,7 +120,7 @@ class TriggerHub @Inject constructor(
     /** Non-blocking caveats (e.g. inexact alarms) to mention when a rule is created. */
     fun caveats(spec: RuleSpec): List<String> = buildList {
         if (spec.trigger is Trigger.Time && !context.getSystemService(AlarmManager::class.java).canExact())
-            add("exact alarms are not allowed for DSH, so this time rule may fire several minutes late (grant 'Alarms & reminders' to fix)")
+            add("exact alarms are not allowed for WinKu, so this time rule may fire several minutes late (grant 'Alarms & reminders' to fix)")
         if (spec.trigger is Trigger.Geofence && !playServicesGeofencing)
             add("no Google Play services: the geofence uses the platform location service and may fire minutes late")
     }

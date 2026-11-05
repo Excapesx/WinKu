@@ -55,6 +55,10 @@ Skills 按能力系统分类，后续在各系统下补充具体技能与接入�
 Android 已有可运行的客户端（聊天、多服务商模型接入、学习内容渲染、手机操作能力），
 界面与品牌正在重做，学生组件（拍照解题、课表、DDL、复习卡）尚未开始。
 
+模型运行时已统一为多服务商 harness：支持 Chat Completions、OpenAI Responses 和 Anthropic Messages，
+新安装不预选任何厂商。DeepSeek 仅是可选服务商之一，没有专属账号、密钥通道或隐式回退。
+助手身份为 WinKu，底层继续使用开源 dsh 引擎；联网搜索需单独配置扩展或 MCP，不依赖某家模型的密钥。
+
 | 端 | 状态 | 说明 |
 |---|---|---|
 | **Android** | 🟡 能跑，未打磨 | Kotlin + Compose，内置 dsh 引擎（Node），带设备能力 |
@@ -140,7 +144,8 @@ JNI 起独立引擎进程、Kotlin 实现设备能力并通过 socket 桥接给�
 
 - 界面与品牌重做（WinKu 配色、图标、字标）
 - **移除 DeepSeek 账号登录体系**，模型接入只保留 API Key 与第三方服务商
-- 引擎包内移除 `plugin-account` 插件，关闭 OAuth 模型路由
+- 引擎包内移除 `plugin-account` 插件，关闭厂商专属路由；所有模型统一经过多协议适配器
+- 助手身份、请求 User-Agent 和更新渠道改为 WinKu；选择失效或初始化失败时明确报错，不自动换模型
 - 新增学生向的交互内容渲染（图表、公式、流程图、测验）
 - 仓库重构为多端结构（`apps/android`，另有 web / ios / desktop 的规划）
 

@@ -55,7 +55,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.jackwener.dsh.BuildConfig
 import io.github.jackwener.dsh.R
 import io.github.jackwener.dsh.core.data.BusySend
-import io.github.jackwener.dsh.core.data.Effort
 import io.github.jackwener.dsh.core.data.ThemeMode
 import io.github.jackwener.dsh.core.data.WorkDetails
 import io.github.jackwener.dsh.core.designsystem.BtnSize
@@ -91,10 +90,6 @@ import io.github.jackwener.dsh.nav.ProviderRoute
 import io.github.jackwener.dsh.nav.Route
 import io.github.jackwener.dsh.nav.SectionRoute
 import kotlinx.coroutines.launch
-
-private fun openKeyPage(context: android.content.Context) {
-    runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://platform.deepseek.com/api_keys")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-}
 
 @Composable
 fun isZh(): Boolean = LocalConfiguration.current.locales[0].language == "zh"
@@ -276,42 +271,6 @@ private fun ModelSection(vm: SettingsViewModel, onProvider: (String) -> Unit) {
 }
 
 @Composable
-internal fun DeepSeekKeyCard(vm: SettingsViewModel) {
-    val c = Dsh.colors
-    val s by vm.settings.collectAsStateWithLifecycle()
-    val hasKey by vm.hasKeyFlow.collectAsStateWithLifecycle()
-    val status by vm.keyStatus.collectAsStateWithLifecycle()
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    var key by remember { mutableStateOf("") }
-    val masked = remember(hasKey) { vm.maskedKey }
-    Spacer(Modifier.height(8.dp))
-    // dsh provider card: grey fill, API key field, Cancel / Apply.
-    Column(Modifier.fillMaxWidth().clip(Radius.lg).background(c.bgModule).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            io.github.jackwener.dsh.core.designsystem.Whale(width = 20.dp)
-            Spacer(Modifier.width(8.dp))
-            Text("DeepSeek", Modifier.weight(1f), style = DshType.s14m, color = c.labelPrimary)
-            Tag(stringResource(if (hasKey) R.string.key_connected else R.string.key_missing), if (hasKey) Tone.Success else Tone.Warn)
-        }
-        Text(stringResource(R.string.api_key_label), style = DshType.xs13m, color = c.labelSecondary)
-        DInput(key, { key = it }, placeholder = masked ?: "sk-…", secret = true, keyboardType = KeyboardType.Password)
-        when (status) {
-            null -> {}
-            "checking" -> Text(stringResource(R.string.key_checking), style = DshType.xxs12, color = c.labelTertiary)
-            else -> Text(stringResource(R.string.key_invalid, status!!), style = DshType.xxs12, color = c.error)
-        }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.key_get), Modifier.weight(1f).clip(Radius.sm).clickable { openKeyPage(context) }.padding(vertical = 4.dp),
-                style = DshType.xs13, color = c.link)
-            if (hasKey) DButton(stringResource(R.string.key_clear), { vm.clearKey() }, variant = BtnVariant.Outline, size = BtnSize.Sm)
-            if (key.isNotEmpty()) DButton(stringResource(R.string.cancel), { key = "" }, variant = BtnVariant.Outline, size = BtnSize.Sm)
-            DButton(stringResource(R.string.apply), { scope.launch { if (vm.saveKey(key) == null) key = "" } }, size = BtnSize.Sm, enabled = key.isNotBlank())
-        }
-    }
-}
-
-@Composable
 private fun AgentSection(vm: SettingsViewModel, onAppNotes: () -> Unit) {
     val c = Dsh.colors
     val s by vm.settings.collectAsStateWithLifecycle()
@@ -345,7 +304,7 @@ private fun AgentSection(vm: SettingsViewModel, onAppNotes: () -> Unit) {
             }, size = BtnSize.Sm)
         }
     }
-    WebSection(vm)
+    WebSection()
 }
 
 internal fun groupLabel(g: ToolGroup) = when (g) {
@@ -362,14 +321,10 @@ internal fun groupLabel(g: ToolGroup) = when (g) {
 }
 
 @Composable
-private fun WebSection(vm: SettingsViewModel) {
-    val s by vm.settings.collectAsStateWithLifecycle()
-    val hasKey by vm.hasKeyFlow.collectAsStateWithLifecycle()
-    val search = hasKey && s.providers.any { it.isNativeDeepSeek && it.enabled }
+private fun WebSection() {
     SettingsGroupTitle(stringResource(R.string.set_web_group))
     SettingsCard {
-        SettingsRow(stringResource(R.string.web_search_title), stringResource(if (search) R.string.web_search_desc else R.string.web_search_off_desc), divider = false,
-            trailing = { if (search) Tag(stringResource(R.string.enabled), Tone.Success) else Tag(stringResource(R.string.web_search_needs_key), Tone.Warn) })
+        SettingsRow(stringResource(R.string.web_search_title), stringResource(R.string.web_search_off_desc), divider = false)
         SettingsRow(stringResource(R.string.web_fetch_title), stringResource(R.string.web_fetch_desc), trailing = { Tag(stringResource(R.string.enabled), Tone.Success) })
     }
 }
@@ -587,55 +542,20 @@ fun NotificationAppsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewM
     }
 }
 
-/**
- * First run without a credential (dsh onboarding's model step): whale + 探索未至之境, then the
- * choice — 登录 DeepSeek 账号 (primary; the sign-in dialog and the in-app sign-in screen take over) or 使用 API
- * Key (the key card). Straight into the conversation once either exists.
- */
+/** First run: choose any model provider; WinKu does not preselect a vendor. */
 @Composable
-fun Onboarding(showKey: Boolean, onShowKey: (Boolean) -> Unit, onDone: () -> Unit, onThirdParty: () -> Unit = {}, vm: SettingsViewModel = hiltViewModel()) {
+fun Onboarding(onConfigureModels: () -> Unit) {
     val c = Dsh.colors
-    val scope = rememberCoroutineScope()
-    val status by vm.keyStatus.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    var key by remember { mutableStateOf("") }
-    Column(Modifier.fillMaxSize().background(c.bgBase).statusBarsPadding().navigationBarsPadding().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
+    Column(Modifier.fillMaxSize().background(c.bgBase).statusBarsPadding().navigationBarsPadding().padding(24.dp),
         verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(Modifier.height(48.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            io.github.jackwener.dsh.core.designsystem.Whale(width = 34.dp)
-            Spacer(Modifier.width(10.dp))
-            Text(stringResource(R.string.hero_title), style = DshType.xl24.copy(fontWeight = androidx.compose.ui.text.font.FontWeight(500)), color = c.labelPrimary)
-        }
+        io.github.jackwener.dsh.core.designsystem.Whale(width = 34.dp)
+        Spacer(Modifier.height(16.dp))
+        Text("WinKu", style = DshType.xl24, color = c.labelPrimary)
         Spacer(Modifier.height(12.dp))
-        Text(stringResource(R.string.onb_tagline), style = DshType.s14, color = c.labelTertiary, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-        Spacer(Modifier.height(32.dp))
-        SettingsCard {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(stringResource(R.string.onb_use_key), style = DshType.base16m, color = c.labelPrimary)
-                run {
-                    HDividerSpaced()
-                    Text(stringResource(R.string.onb_key_body), style = DshType.xs13, color = c.labelTertiary)
-                    DInput(key, { key = it }, placeholder = "sk-…", secret = true, keyboardType = KeyboardType.Password)
-                    when (status) {
-                        null -> {}
-                        "checking" -> Text(stringResource(R.string.key_checking), style = DshType.xxs12, color = c.labelTertiary)
-                        else -> Text(stringResource(R.string.key_invalid, status!!), style = DshType.xxs12, color = c.error)
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(stringResource(R.string.key_get), Modifier.weight(1f).clip(Radius.sm).clickable { openKeyPage(context) }.padding(vertical = 6.dp),
-                            style = DshType.xs13, color = c.link)
-                        DButton(stringResource(R.string.continue_), { scope.launch { if (vm.saveKey(key) == null) onDone() } }, enabled = key.isNotBlank() && status != "checking")
-                    }
-                }
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        Text(stringResource(R.string.onb_third_party), Modifier.clip(Radius.sm).clickable(onClick = onThirdParty).padding(8.dp), style = DshType.xs13, color = c.link)
-        DButton(stringResource(R.string.learning_title), {
-            context.startActivity(Intent(context, io.github.jackwener.dsh.feature.learning.LearningActivity::class.java))
-        }, variant = BtnVariant.Ghost)
-        Spacer(Modifier.height(4.dp))
+        Text(stringResource(R.string.onb_models_body), style = DshType.s14, color = c.labelTertiary, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        Spacer(Modifier.height(24.dp))
+        DButton(stringResource(R.string.onb_setup_models), onConfigureModels)
+        Spacer(Modifier.height(16.dp))
         Text(stringResource(R.string.onb_disclaimer), style = DshType.xxs12, color = c.labelTertiary, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
     }
 }

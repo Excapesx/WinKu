@@ -1,7 +1,7 @@
 package io.github.jackwener.dsh.feature.settings
 
 /**
- * Vendor ROM detection and the candidate settings screens that stop the ROM from killing DSH in
+ * Vendor ROM detection and the candidate settings screens that stop the ROM from killing WinKu in
  * the background. Pure data so it is unit-testable; [KeepAliveLauncher] turns targets into Intents.
  */
 object RomKeepAlive {
@@ -185,11 +185,11 @@ object RomKeepAlive {
     fun hint(vendor: Vendor, kind: Kind): Hint = when (kind) {
         Kind.Battery -> Hint("允许“不受电池优化限制”，锁屏后也能执行任务", "Allow ignoring battery optimisation so tasks run while locked")
         Kind.AutoStart -> when (vendor) {
-            Vendor.Xiaomi -> Hint("自启动 → 打开 DSH", "Autostart → turn DSH on")
-            Vendor.Huawei, Vendor.Honor -> Hint("应用启动管理 → DSH → 关闭“自动管理”，允许自启动、关联启动、后台活动",
-                "App launch → DSH → turn off Manage automatically, allow auto-launch, secondary launch and run in background")
-            Vendor.Oppo, Vendor.OnePlus, Vendor.Realme -> Hint("自启动管理 → 允许 DSH 自启动", "Auto launch → allow DSH")
-            Vendor.Vivo -> Hint("后台启动管理 / 自启动 → 允许 DSH", "Background startup / Autostart → allow DSH")
+            Vendor.Xiaomi -> Hint("自启动 → 打开 WinKu", "Autostart → turn WinKu on")
+            Vendor.Huawei, Vendor.Honor -> Hint("应用启动管理 → WinKu → 关闭“自动管理”，允许自启动、关联启动、后台活动",
+                "App launch → WinKu → turn off Manage automatically, allow auto-launch, secondary launch and run in background")
+            Vendor.Oppo, Vendor.OnePlus, Vendor.Realme -> Hint("自启动管理 → 允许 WinKu 自启动", "Auto launch → allow WinKu")
+            Vendor.Vivo -> Hint("后台启动管理 / 自启动 → 允许 WinKu", "Background startup / Autostart → allow WinKu")
             Vendor.Meizu -> Hint("权限管理 → 后台管理 / 自启动 → 允许后台运行", "Permissions → background management / autostart → allow")
             else -> Hint("此系统无单独的自启动开关", "This system has no separate autostart switch")
         }
@@ -199,20 +199,20 @@ object RomKeepAlive {
                 "Battery → more settings → stay connected while asleep; allow background activity in App launch")
             Vendor.Oppo, Vendor.OnePlus, Vendor.Realme -> Hint("应用信息 → 耗电管理 → 允许完全后台行为、允许自动启动",
                 "App info → Battery usage → allow full background activity and auto launch")
-            Vendor.Vivo -> Hint("后台耗电管理 → DSH → 允许后台高耗电", "Background power consumption → DSH → allow high background usage")
-            Vendor.Samsung -> Hint("后台使用限制 → 从不休眠的应用 → 添加 DSH", "Background usage limits → Never sleeping apps → add DSH")
-            Vendor.Meizu -> Hint("后台管理 → DSH → 允许后台运行", "Background management → DSH → allow running in background")
+            Vendor.Vivo -> Hint("后台耗电管理 → WinKu → 允许后台高耗电", "Background power consumption → WinKu → allow high background usage")
+            Vendor.Samsung -> Hint("后台使用限制 → 从不休眠的应用 → 添加 WinKu", "Background usage limits → Never sleeping apps → add WinKu")
+            Vendor.Meizu -> Hint("后台管理 → WinKu → 允许后台运行", "Background management → WinKu → allow running in background")
             else -> Hint("应用电池用量 → 不受限制", "App battery usage → Unrestricted")
         }
     }
 
-    /** Locking the card in Recents keeps most Chinese ROMs' one-tap cleaner from killing DSH. */
+    /** Locking the card in Recents keeps most Chinese ROMs' one-tap cleaner from killing WinKu. */
     fun recentsHint(vendor: Vendor): Hint = when (vendor) {
         Vendor.Xiaomi, Vendor.Huawei, Vendor.Honor, Vendor.Vivo, Vendor.Meizu ->
-            Hint("在最近任务中下拉 DSH 卡片加锁，一键清理时不会被结束", "In Recents, pull down the DSH card to lock it so Clear all skips it")
+            Hint("在最近任务中下拉 WinKu 卡片加锁，一键清理时不会被结束", "In Recents, pull down the WinKu card to lock it so Clear all skips it")
         Vendor.Oppo, Vendor.OnePlus, Vendor.Realme ->
-            Hint("在最近任务中点 DSH 卡片右上角菜单 → 锁定", "In Recents, open the DSH card menu → Lock")
-        Vendor.Samsung -> Hint("在最近任务中点 DSH 图标 → 保持打开", "In Recents, tap the DSH icon → Keep open")
-        else -> Hint("如系统支持，在最近任务中锁定 DSH", "Lock DSH in Recents if your system supports it")
+            Hint("在最近任务中点 WinKu 卡片右上角菜单 → 锁定", "In Recents, open the WinKu card menu → Lock")
+        Vendor.Samsung -> Hint("在最近任务中点 WinKu 图标 → 保持打开", "In Recents, tap the WinKu icon → Keep open")
+        else -> Hint("如系统支持，在最近任务中锁定 WinKu", "Lock WinKu in Recents if your system supports it")
     }
 }

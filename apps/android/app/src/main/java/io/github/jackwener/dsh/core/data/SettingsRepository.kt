@@ -32,7 +32,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private val Context.store by preferencesDataStore("settings", produceMigrations = { context ->
-    listOf(ModelSettingsMigration { !SecretStore(context).read().isNullOrBlank() })
+    val secrets = SecretStore(context)
+    listOf(ModelSettingsMigration(secrets::readLegacyModelKey, secrets::write, secrets::clearLegacyModelKey))
 })
 
 enum class ThemeMode { System, Light, Dark }
@@ -43,23 +44,13 @@ enum class WorkDetails { Compact, Standard, Detailed }
 /** dsh "繁忙时的发送行为". */
 enum class BusySend { Queue, Steer }
 
-/**
- * Reasoning effort ids accepted by the DeepSeek adapter (`packages/llm/llm-deepseek/src/model-info.ts`).
- * DeepSeek only; third-party models offer the levels the engine reports for them (ModelReasoning.kt).
- */
-enum class Effort(val id: String, val label: String) {
-    Off("off", "Off"), Low("low", "Low"), High("high", "High"), Max("max", "Max");
-    companion object { fun of(id: String?) = entries.firstOrNull { it.id == id } ?: High }
-}
-
 data class Settings(
     /** Selected route id from [providers]. */
-    val provider: String = io.github.jackwener.dsh.core.provider.DEEPSEEK_PROVIDER,
+    val provider: String = "",
     val model: String = DEFAULT_MODEL,
-    val effort: Effort = Effort.High,
     /** Device tool groups the user switched off (everything else is offered to the agent). */
     val disabledGroups: Set<ToolGroup> = emptySet(),
-    /** Apps whose notifications DSH must not read (default: none — every app is readable). */
+    /** Apps whose notifications WinKu must not read (default: none — every app is readable). */
     val notificationBlocked: Set<String> = emptySet(),
     val floatingBall: Boolean = false,
     /** 操作时显示状态: the ball's status capsule, and the border while the agent operates the user's screen. */
@@ -79,7 +70,7 @@ data class Settings(
     /** 任务结束后自动总结经验: after a turn that worked in an app, one short model call distills App 经验 notes. */
     val reflectExperience: Boolean = true,
     /** All configured model providers; keys live in SecretStore, never here. */
-    val providers: List<ProviderConfig> = listOf(io.github.jackwener.dsh.core.provider.deepSeekProvider()),
+    val providers: List<ProviderConfig> = emptyList(),
     /** Third-party 推理强度 per route + model ([ReasoningLevels.key] → level id); absent = the model's default. */
     val reasoningChoices: Map<String, String> = emptyMap(),
     /** Each third-party model's levels as the engine last reported them (refreshed at every engine start). */
@@ -93,7 +84,7 @@ data class Settings(
     val mcpServers: List<McpServer> = emptyList(),
     /** Plugin updates found by the last check: the 扩展 entry's badge. */
     val extUpdateBadge: Int = 0,
-    /** 自动检查更新: a background check for a new DSH release at most once a day (core/update/AppUpdater). */
+    /** 自动检查更新: a background check for a new WinKu release at most once a day (core/update/AppUpdater). */
     val autoUpdateCheck: Boolean = true,
 ) {
     /** Built-in then user modes, in display order. */
@@ -104,14 +95,14 @@ data class Settings(
     /** The saved selection, even when it is missing or disabled. */
     val choice: ModelChoice get() = resolveChoice(provider, model, providers)
 
-    /** The selected third-party model's reasoning selector (null for DeepSeek, or while unknown). */
-    val reasoning: ModelReasoning? get() = choice.provider?.takeUnless { it.isNativeDeepSeek }?.let { ReasoningLevels.of(it, choice.model, reasoningCatalog) }
+    /** The selected model's reasoning selector, null while unknown. */
+    val reasoning: ModelReasoning? get() = choice.provider?.let { ReasoningLevels.of(it, choice.model, reasoningCatalog) }
     /** The saved 推理强度 of the selected third-party model, null = its default. */
     val reasoningChoice: String? get() = choice.provider?.let { reasoningChoices[ReasoningLevels.key(it.id, choice.model)] }
     /** The level the selected third-party route sends: the saved one while the model offers it, else none. */
-    val reasoningEffort: String? get() = if (choice.isDeepSeek) effort.id else ReasoningLevels.effective(reasoning, reasoningChoice)
+    val reasoningEffort: String? get() = ReasoningLevels.effective(reasoning, reasoningChoice)
 
-    companion object { const val DEFAULT_MODEL = "deepseek-flash" }
+    companion object { const val DEFAULT_MODEL = "" }
 }
 
 private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
@@ -128,7 +119,6 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val providers = stringPreferencesKey("providers_json")
         val modes = stringPreferencesKey("session_modes_json")
         val model = stringPreferencesKey("model")
-        val effort = stringPreferencesKey("effort")
         val disabledGroups = stringSetPreferencesKey("disabled_groups")
         val notifBlocked = stringSetPreferencesKey("notif_blocked")
         val ball = booleanPreferencesKey("floating_ball")
@@ -157,11 +147,10 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     suspend fun current(): Settings = settings.first()
 
     private fun Preferences.toSettings() = Settings(
-        provider = this[K.provider] ?: io.github.jackwener.dsh.core.provider.DEEPSEEK_PROVIDER,
+        provider = this[K.provider] ?: "",
         providers = this[K.providers]?.let { runCatching { json.decodeFromString(providerList, it) }.getOrNull() } ?: emptyList(),
         modes = decodeModes(this[K.modes]),
         model = this[K.model] ?: Settings.DEFAULT_MODEL,
-        effort = Effort.of(this[K.effort]),
         reasoningChoices = decodeChoices(this[K.reasoningChoices]),
         reasoningCatalog = this[K.reasoningCatalog]?.let { runCatching { json.decodeFromString(catalogMap, it) }.getOrNull() } ?: emptyMap(),
         disabledGroups = this[K.disabledGroups]?.mapNotNull(ToolGroup::of)?.toSet() ?: emptySet(),
@@ -185,9 +174,9 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         autoUpdateCheck = this[K.autoUpdateCheck] ?: true,
     )
 
-    /** Accept the old empty DeepSeek id at the boundary, but always persist an explicit route id. */
+    /** Both ids belong to an explicit user selection; an empty provider means no selection. */
     suspend fun setModel(provider: String, model: String) = context.store.edit {
-        it[K.provider] = provider.ifEmpty { io.github.jackwener.dsh.core.provider.DEEPSEEK_PROVIDER }; it[K.model] = model
+        it[K.provider] = provider; it[K.model] = model
     }
     suspend fun saveProvider(p: ProviderConfig) = context.store.edit {
         val cur = it[K.providers]?.let { s -> runCatching { json.decodeFromString(providerList, s) }.getOrNull() } ?: emptyList()
@@ -219,7 +208,6 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     suspend fun deleteMode(id: String) = context.store.edit {
         it[K.modes] = json.encodeToString(modeList, decodeModes(it[K.modes]).filter { c -> c.id != id })
     }
-    suspend fun setEffort(effort: Effort) = context.store.edit { it[K.effort] = effort.id }
     /** 推理强度 of one third-party model; [level] null = the model's default. */
     suspend fun setReasoningChoice(provider: String, model: String, level: String?) = context.store.edit {
         it[K.reasoningChoices] = json.encodeToString(choiceMap, withChoice(decodeChoices(it[K.reasoningChoices]), provider, model, level))

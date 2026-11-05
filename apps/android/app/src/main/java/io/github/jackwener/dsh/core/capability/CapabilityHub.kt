@@ -196,7 +196,7 @@ class CapabilityHub @Inject constructor(
         val tool = allTools[name] ?: return ToolResult.error("invalid_args", "unknown tool $name")
         val group = ToolGroup.of(tool.descriptor.group)
         if (group !in settings.current().enabledGroups) return ToolResult.error("not_authorized",
-            "The '${tool.descriptor.group}' capability is turned off. Ask the user to enable it in DSH → Settings → Agent.")
+            "The '${tool.descriptor.group}' capability is turned off. Ask the user to enable it in WinKu → Settings → Agent.")
         // Backstop for session modes (plugin-mode already hides these tools from the conversation).
         if (group != null && !sessions.get().modeAllowsGroup(sessionId, group)) return ToolResult.error("not_authorized",
             "The '${tool.descriptor.group}' tools are not available in this conversation's mode; nothing was done. Tell the user it needs a conversation in another mode.")
@@ -283,7 +283,7 @@ class CapabilityHub @Inject constructor(
                     // Attended sessions get a just-in-time permission card in the composer slot; the call
                     // waits there and is retried once the user comes back from the system settings page.
                     if (call.unattended || sessionId.isEmpty()) return ToolResult.error("permission_missing",
-                        "Missing permission: ${e.what}. Automations cannot ask the user for it; skip this step and report that DSH needs '${e.what}' (DSH → Settings → Permissions).")
+                        "Missing permission: ${e.what}. Automations cannot ask the user for it; skip this step and report that WinKu needs '${e.what}' (WinKu → Settings → Permissions).")
                     if (attempt++ >= 3 || !call.waitFor("grant '${e.what}'") { sessions.get().requestPermission(sessionId, name, e.what) })
                         return ToolResult.error("permission_missing", "Missing permission: ${e.what}. The user declined to grant it; continue without this capability or explain what is needed.")
                 }

@@ -78,11 +78,7 @@ fun NavGraphBuilder.dshGraph(nav: NavHostController, home: () -> HomeViewModel) 
 /** Onboarding's credential choice, and its 使用 API Key step (the same screen with the key card open). */
 @Composable
 private fun OnboardingPage(nav: NavHostController, e: NavBackStackEntry, keyStep: Boolean) {
-    val context = LocalContext.current
-    Onboarding(showKey = keyStep, onShowKey = { show -> if (show && !keyStep) nav.navigate(OnboardingKeyRoute) { launchSingleTop = true } else if (!show && keyStep) nav.up(e) },
-        onThirdParty = { nav.finishOnboarding(SectionRoute(SettingsSection.Model)) },
-        // Optional 增强能力 step (Shizuku) unless it is already set up.
-        onDone = { nav.finishOnboarding(if (shellAccessOf(context).refresh().ready) HomeRoute else EnhanceRoute) })
+    Onboarding(onConfigureModels = { nav.finishOnboarding(SectionRoute(SettingsSection.Model)) })
 }
 
 /**

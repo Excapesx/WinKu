@@ -16,7 +16,7 @@ import java.util.Locale
  * Per-app language (#40): 设置 → 通用 → 语言 (跟随系统 / one of the shipped languages).
  *
  * The shipped languages are res/xml/locales_config.xml (android:localeConfig), the same list
- * Android 13+ shows under system Settings → Apps → DSH → Language; adding a language is a
+ * Android 13+ shows under system Settings → Apps → WinKu → Language; adding a language is a
  * values-xx/strings.xml plus one line there. Android 13+: the framework LocaleManager stores the
  * choice and recreates the activities. Android 10–12 (minSdk 29) have no per-app language: the
  * choice is stored here (what AppCompat's autoStoreLocales does) and applied to every activity

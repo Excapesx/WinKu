@@ -21,7 +21,7 @@ import java.net.URI
 import java.net.URL
 
 /**
- * Third-party model providers (OpenAI-compatible Chat Completions endpoints), served in the engine
+ * User-configured model providers (Chat Completions, Responses and Messages), served in the engine
  * by the vendored `@snnh/dsh-llm-service-lite` row. See docs/ENGINE-CONTRACT.md §1.1.
  *
  * Presets: base URLs follow magpie's provider table (github.com/yetone/magpie,
@@ -48,6 +48,7 @@ data class ProviderPreset(
     val localHint: Int? = null,
     /** Header the provider wants a per-conversation id in (prefilled in the editor; see [ProviderConfig.sessionHeader]). */
     val sessionHeader: String? = null,
+    val protocol: ProviderProtocol = ProviderProtocol.ChatCompletions,
 )
 
 /*
@@ -60,9 +61,10 @@ data class ProviderPreset(
  */
 val PRESETS = listOf(
     ProviderPreset("openai", "OpenAI", "https://api.openai.com/v1", listOf("gpt-5"), keysUrl = "https://platform.openai.com/api-keys", family = listOf("gpt-", "o1", "o3", "o4", "chatgpt")),
-    ProviderPreset("anthropic", "Anthropic Claude", "https://api.anthropic.com/v1", listOf("claude-sonnet-5", "claude-opus-5"), keysUrl = "https://console.anthropic.com/settings/keys", family = listOf("claude")),
+    ProviderPreset("anthropic", "Anthropic Claude", "https://api.anthropic.com/v1", listOf("claude-sonnet-5", "claude-opus-5"), keysUrl = "https://console.anthropic.com/settings/keys", family = listOf("claude"), protocol = ProviderProtocol.Messages),
     ProviderPreset("gemini", "Google Gemini", "https://generativelanguage.googleapis.com/v1beta/openai", listOf("gemini-3.5-flash"), keysUrl = "https://aistudio.google.com/apikey", family = listOf("gemini")),
     ProviderPreset("xai", "xAI Grok", "https://api.x.ai/v1", listOf("grok-4"), keysUrl = "https://console.x.ai", family = listOf("grok")),
+    ProviderPreset("deepseek", "DeepSeek", "https://api.deepseek.com/v1", listOf("deepseek-flash", "deepseek-v4-pro"), keysUrl = "https://platform.deepseek.com/api_keys", family = listOf("deepseek")),
     ProviderPreset("openrouter", "OpenRouter", "https://openrouter.ai/api/v1", listOf("openrouter/auto"), keysUrl = "https://openrouter.ai/keys"),
     ProviderPreset("kimi", "Kimi (Moonshot)", "https://api.moonshot.cn/v1", listOf("kimi-k3"), keysUrl = "https://platform.kimi.com/console/api-keys", family = listOf("kimi", "moonshot")),
     ProviderPreset("zhipu", "智谱 GLM", "https://open.bigmodel.cn/api/paas/v4", listOf("glm-5.3"), keysUrl = "https://bigmodel.cn/usercenter/proj-mgmt/apikeys", family = listOf("glm")),
@@ -78,7 +80,7 @@ val PRESETS = listOf(
     // On the user's computer: the phone reaches it at the computer's LAN IP (the editor's localhost warning says so).
     ProviderPreset("ollama", "Ollama", "http://localhost:11434/v1", keyOptional = true, editableUrl = true, localHint = R.string.prov_hint_ollama),
     ProviderPreset("lmstudio", "LM Studio", "http://localhost:1234/v1", keyOptional = true, editableUrl = true, localHint = R.string.prov_hint_lmstudio),
-    ProviderPreset(CUSTOM, "自定义（OpenAI 兼容）", "", keyOptional = true, editableUrl = true),
+    ProviderPreset(CUSTOM, "自定义 API", "", keyOptional = true, editableUrl = true),
 )
 
 const val CUSTOM = "custom"
@@ -86,10 +88,10 @@ const val OPENCODE_SESSION_HEADER = "x-opencode-session"
 
 fun presetOf(id: String?): ProviderPreset? = PRESETS.firstOrNull { it.id == id }
 
-/** Shared configuration for a native DeepSeek route or an OpenAI-compatible route. */
+/** One user-configured provider, one adapter contract, no privileged model vendor. */
 @Serializable
 data class ProviderConfig(
-    /** Stable route id. [DEEPSEEK_PROVIDER] uses dsh's native adapter; other ids use llm-service-lite. */
+    /** Stable route id registered by llm-service-lite. */
     val id: String,
     val preset: String,
     val name: String,
@@ -113,11 +115,11 @@ data class ProviderConfig(
      * one-way hash of the session id, the same for every request of a conversation (js patch 18).
      */
     val sessionHeader: String? = null,
+    val protocol: ProviderProtocol = ProviderProtocol.ChatCompletions,
 ) {
-    val isNativeDeepSeek: Boolean get() = id == DEEPSEEK_PROVIDER
-    val keyRequired: Boolean get() = isNativeDeepSeek || presetOf(preset)?.keyOptional == false
+    val keyRequired: Boolean get() = presetOf(preset)?.keyOptional == false
     /** Adapter credential variable, set only in the `:engine` environment. */
-    val keyEnv: String get() = if (isNativeDeepSeek) "DEEPSEEK_API_KEY" else keyEnvOf(id)
+    val keyEnv: String get() = keyEnvOf(id)
     val secretName: String get() = "provider-$id"
     /** SecretStore name of a secret header's value. */
     fun headerSecretName(header: String) = "provider-$id-h-" + header.lowercase().filter { it.isLetterOrDigit() || it == '-' || it == '_' }
@@ -201,10 +203,10 @@ fun headerRowsOf(p: ProviderConfig?): List<HeaderRow> = p?.headers.orEmpty().map
 /** A fresh opaque id for a request outside any conversation (model listing, connection test). */
 fun freshSessionId(): String = java.util.UUID.randomUUID().toString().replace("-", "")
 
-/** The engine's User-Agent for third-party providers: `DSH-Android/<version>` in front of the harness one. */
-fun appUserAgent(version: String) = "${appProductToken(version)} $HARNESS_USER_AGENT"
-/** The product token alone; the engine puts it in front of its own `deepseek-harness/<v> (+url)`. */
-fun appProductToken(version: String) = "DSH-Android/$version"
+/** The complete product User-Agent used by the app and model adapter. */
+fun appUserAgent(version: String) = appProductToken(version)
+/** Independent product identity for outbound model requests. */
+fun appProductToken(version: String) = "WinKu/$version"
 
 /**
  * Headers for the app's own requests to a provider (获取模型列表, the connection test), matching what
@@ -221,9 +223,11 @@ fun appRequestHeaders(resolved: Map<String, String>, sessionHeader: String?, use
 
 fun keyEnvOf(routeId: String) = "DSH_ANDROID_KEY_" + routeId.uppercase().map { if (it.isLetterOrDigit()) it else '_' }.joinToString("")
 
-/** A fresh route id for [preset] that no existing provider (or DeepSeek) owns. */
+/** A fresh route id for [preset] that no existing provider owns, avoiding retired built-in route ids. */
 fun newRouteId(preset: String, existing: Collection<String>): String {
-    val base = preset.lowercase().filter { it.isLetterOrDigit() || it == '-' }.ifEmpty { CUSTOM }.let { if (it.startsWith("deepseek")) "x-$it" else it }
+    val base = preset.lowercase().filter { it.isLetterOrDigit() || it == '-' }.ifEmpty { CUSTOM }.let {
+        if (it == "deepseek-official" || it == "deepseek-account") "x-$it" else it
+    }
     if (base !in existing) return base
     return generateSequence(2) { it + 1 }.map { "$base-$it" }.first { it !in existing }
 }
@@ -308,16 +312,15 @@ fun ProviderConfig.limitsOf(model: String): EffectiveLimits = ThirdParty.resolve
 fun ProviderConfig.acceptsImages(model: String): Boolean = ModelVision.resolve(model, limits[model]).first
 
 /** The saved selection, including an unavailable one. Never substitutes another provider or model. */
-data class ModelChoice(val provider: ProviderConfig?, val model: String, val providerId: String = provider?.id ?: DEEPSEEK_PROVIDER) {
-    val isDeepSeek get() = providerId == DEEPSEEK_PROVIDER
-    /** Third-party limits; null for DeepSeek. */
-    val limits: EffectiveLimits? get() = provider?.takeUnless { isDeepSeek }?.limitsOf(model)
-    val contextWindow get() = limits?.contextWindow ?: if (isDeepSeek) DEEPSEEK_CONTEXT else ThirdParty.DEFAULT_CONTEXT_WINDOW
-    /** Where [contextWindow] came from; null for DeepSeek (a fixed fact). */
+data class ModelChoice(val provider: ProviderConfig?, val model: String, val providerId: String = provider?.id.orEmpty()) {
+    val limits: EffectiveLimits? get() = provider?.limitsOf(model)
+    val contextWindow get() = limits?.contextWindow ?: ThirdParty.DEFAULT_CONTEXT_WINDOW
+    /** Where the effective [contextWindow] came from. */
     val contextSource get() = limits?.contextSource
-    /** Images reach the model (else the engine sends a text placeholder): DeepSeek per model (V4.1-Flash sees, V4-Pro does not). */
-    val acceptsImages: Boolean get() = if (isDeepSeek) ModelVision.engineDefault(model) else provider?.acceptsImages(model) ?: false
+    /** Whether the selected model accepts images. */
+    val acceptsImages: Boolean get() = provider?.acceptsImages(model) ?: false
     val problem: ModelConfigProblem? get() = when {
+        providerId.isBlank() -> ModelConfigProblem.NoSelection
         provider == null -> ModelConfigProblem.ProviderMissing
         !provider.enabled -> ModelConfigProblem.ProviderDisabled
         model !in provider.models -> ModelConfigProblem.ModelMissing
@@ -329,18 +332,10 @@ data class ModelChoice(val provider: ProviderConfig?, val model: String, val pro
     fun validate(readSecret: (String) -> String?): ModelConfigProblem? = problem ?: provider?.let { p ->
         if ((p.keyRequired || p.hasKey) && readSecret(p.secretName).isNullOrBlank()) ModelConfigProblem.KeyMissing else null
     }
-    companion object { const val DEEPSEEK_CONTEXT = 1_000_000L }
 }
 
-val DEEPSEEK_MODELS = listOf("deepseek-flash" to "DeepSeek-V4.1-Flash", "deepseek-v4-pro" to "DeepSeek-V4-Pro")
-const val DEFAULT_DEEPSEEK_MODEL = "deepseek-flash"
-const val DEEPSEEK_PROVIDER = "deepseek-official"
-
-fun deepSeekProvider(hasKey: Boolean = false) = ProviderConfig(
-    DEEPSEEK_PROVIDER, "deepseek", "DeepSeek", "https://api.deepseek.com", DEEPSEEK_MODELS.map { it.first }, hasKey = hasKey,
-)
-
 enum class ModelConfigProblem(val messageRes: Int) {
+    NoSelection(R.string.model_config_choose_model),
     ProviderMissing(R.string.model_config_provider_missing),
     ProviderDisabled(R.string.model_config_provider_disabled),
     ModelMissing(R.string.model_config_model_missing),
@@ -355,12 +350,11 @@ fun isProviderUrl(value: String): Boolean = runCatching {
 }.getOrDefault(false)
 
 /**
- * Empty provider ids are the legacy spelling of DeepSeek. Missing/disabled selections remain
+ * Empty provider ids mean no model has been selected. Missing/disabled selections remain
  * selected so the caller can explain the problem rather than silently call another model.
  */
 fun resolveChoice(provider: String, model: String, providers: List<ProviderConfig>): ModelChoice {
-    val id = provider.ifEmpty { DEEPSEEK_PROVIDER }
-    return ModelChoice(providers.firstOrNull { it.id == id }, model, id)
+    return ModelChoice(providers.firstOrNull { it.id == provider }, model, provider)
 }
 
 /**
@@ -368,14 +362,14 @@ fun resolveChoice(provider: String, model: String, providers: List<ProviderConfi
  * `--patch` overlay above every layer). The app is its only writer and rewrites it before each engine start; it carries no
  * secret, only `apiKeyEnv` names. Values are JSON (a YAML subset), so no quoting rules apply.
  *
- * @param userAgent product token the engine puts in front of its User-Agent (`DSH-Android/<version>`).
- * @param webSearch false turns off `web_search`, which currently requires a DeepSeek API key.
+ * @param userAgent complete User-Agent for model requests (`WinKu/<version>`).
+ * @param webSearch false turns off the bundled search tool; independent extensions can provide search.
  */
 fun renderProfilePatch(providers: List<ProviderConfig>, webSearch: Boolean, userAgent: String? = null): String {
-    val active = providers.filter { !it.isNativeDeepSeek && it.enabled && it.models.isNotEmpty() && isProviderUrl(it.baseUrl) }
+    val active = providers.filter { it.enabled && it.models.isNotEmpty() && isProviderUrl(it.baseUrl) }
     val json = Json { prettyPrint = false }
     val sb = StringBuilder()
-    sb.append("# Generated by DSH-Android (设置 → 模型服务). Rewritten before every engine start; edits here are lost.\n")
+    sb.append("# Generated by WinKu (设置 → 模型服务). Rewritten before every engine start; edits here are lost.\n")
     if (active.isEmpty() && webSearch) return sb.append("[]\n").toString()
     if (active.isNotEmpty()) {
         val providersJson = buildJsonObject {
@@ -383,7 +377,7 @@ fun renderProfilePatch(providers: List<ProviderConfig>, webSearch: Boolean, user
                 active.forEach { p ->
                     putJsonObject(p.id) {
                         put("displayName", p.name)
-                        put("interfaceType", "openai-chat-completions")
+                        put("interfaceType", p.protocol.wire)
                         put("baseURL", p.baseUrl.trim().trimEnd('/'))
                         if (p.hasKey) put("apiKeyEnv", p.keyEnv)
                         // js patch 18: static headers here, secret ones by env name only, the session header, the UA token.
@@ -446,18 +440,13 @@ class HttpStatusException(val status: Int, val body: String) : Exception("HTTP $
  * Doubles as the connection test. Runs on the caller's thread (call from Dispatchers.IO).
  * https, or http for a user's LAN gateway (network_security_config permits cleartext).
  */
-fun fetchModels(baseUrl: String, key: String?, headers: Map<String, String> = emptyMap()): Result<List<RemoteModel>> = runCatching {
+fun fetchModels(baseUrl: String, key: String?, headers: Map<String, String> = emptyMap(), protocol: ProviderProtocol = ProviderProtocol.ChatCompletions): Result<List<RemoteModel>> = runCatching {
     val url = URL(baseUrl.trim().trimEnd('/') + "/models")
     val c = url.openConnection() as HttpURLConnection
     try {
         c.connectTimeout = 10_000; c.readTimeout = 15_000
-        headers.forEach { (k, v) -> c.setRequestProperty(k, v) }
+        protocol.requestHeaders(key, headers).forEach { (k, v) -> c.setRequestProperty(k, v) }
         c.setRequestProperty("Accept", "application/json")
-        if (!key.isNullOrBlank()) {
-            c.setRequestProperty("Authorization", "Bearer $key")
-            // Anthropic's listing reads x-api-key (its OpenAI-compatible layer takes the bearer).
-            if (url.host.endsWith("anthropic.com")) { c.setRequestProperty("x-api-key", key); c.setRequestProperty("anthropic-version", "2023-06-01") }
-        }
         val code = c.responseCode
         val body = (if (code in 200..299) c.inputStream else c.errorStream)?.use { it.readBytes().decodeToString().take(4_000_000) }.orEmpty()
         if (code !in 200..299) throw HttpStatusException(code, body.take(64_000))
