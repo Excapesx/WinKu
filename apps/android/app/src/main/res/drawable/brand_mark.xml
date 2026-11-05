@@ -1,0 +1,11 @@
+<!-- The brand mark (W), tinted by the caller: in-app logo, drawer brand row. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp" android:height="100dp"
+    android:viewportWidth="100" android:viewportHeight="100">
+    <path
+        android:pathData="M18,30 L34,72 L50,46 L66,72 L82,30"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

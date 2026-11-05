@@ -1,0 +1,33 @@
+# Android / Gradle
+.gradle/
+.kotlin/
+build/
+local.properties
+.idea/
+*.iml
+app/schemas/
+apps/android/app/schemas/
+apps/android/toolchains/
+apps/android/build/
+
+# Node / JS
+node_modules/
+**/node_modules/
+.expo/
+dist/
+*.log
+
+# Release artifacts
+/out/
+/apps/android/out/
+*.keystore
+*.jks
+
+# Secrets
+.env
+secrets/
+*.pem
+
+# OS
+.DS_Store
+Thumbs.db

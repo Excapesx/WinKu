@@ -1,0 +1,11 @@
+<!-- Brand mark: a chunky W with rounded joins, brand emerald on near-black. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path
+        android:pathData="M31,37 L42,71 L54,49 L66,71 L77,37"
+        android:strokeColor="#FF0E8A4A"
+        android:strokeWidth="9"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

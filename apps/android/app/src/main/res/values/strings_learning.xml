@@ -1,0 +1,8 @@
+<resources>
+    <string name="learning_title">交互学习</string>
+    <string name="learning_loading">正在准备交互内容…</string>
+    <string name="learning_load_failed">交互内容加载失败，请返回后重新打开。</string>
+    <string name="learning_intro">调一调参数，画一条曲线，再试一道小题。</string>
+    <string name="learning_demo_note">这里是离线组件示例。回到对话后，可以让 Agent 用这些组件讲解；点击“结合我的操作讲解”会把当前状态带回对话。</string>
+    <string name="learning_settings_desc">函数画板、流程图和小测验</string>
+</resources>

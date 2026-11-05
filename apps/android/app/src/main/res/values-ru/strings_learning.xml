@@ -1,0 +1,8 @@
+<resources>
+    <string name="learning_title">Интерактивное обучение</string>
+    <string name="learning_loading">Подготовка интерактивного содержимого…</string>
+    <string name="learning_load_failed">Не удалось загрузить содержимое. Вернитесь назад и откройте его снова.</string>
+    <string name="learning_intro">Измените параметр, исследуйте график и ответьте на короткий вопрос.</string>
+    <string name="learning_demo_note">Это автономные примеры компонентов. В чате можно попросить агента использовать их для объяснения; действие продолжения передаёт текущее состояние компонента.</string>
+    <string name="learning_settings_desc">Графики функций, диаграммы и тесты</string>
+</resources>

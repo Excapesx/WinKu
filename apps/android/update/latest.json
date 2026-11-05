@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "packageName": "io.github.jackwener.dsh",
+  "versionCode": 25,
+  "versionName": "0.3.7",
+  "minSdk": 29,
+  "apk": {
+    "name": "DSH-Android-v0.3.7-arm64.apk",
+    "size": 100585702,
+    "sha256": "b08af83dc2d64d332357c488f3664f445e20eda1409a5f2f578f2d1836deb02b",
+    "urls": [
+      "https://github.com/jackwener/DSH-Android/releases/download/v0.3.7/DSH-Android-v0.3.7-arm64.apk"
+    ]
+  },
+  "signerSha256": "2b37a375ead19476e5d0d9e38920032ea9822e880dcc7540a14e5ab6ac1f4f69",
+  "notes": {
+    "zh": "- **插件的后台会话不再发通知**（#43）：心跳、QQ 机器人这类插件开的后台会话，以前每跑一轮都弹一条内容是 JSON 的通知，点进去还找不到。现在只有会话列表里看得到的会话才发通知；也不会再出现莫名其妙的“新会话”\n- **每个会话一条通知**（#43）：标题是会话名，内容是最后一句回复的摘要，点开直达那个会话；打开会话后通知自动清除，多条会分组显示\n- **会话免打扰**（#43）：长按会话或点“…”菜单可以设免打扰，只静音“任务完成”提醒；需要你批准、回答或解锁的请求仍会通知，免得任务一直卡着\n- **Shizuku 状态说清楚**（#42）：分开显示“没装”“没启动”“没授权”“版本太旧”“可用”，每种都给出下一步怎么做，诊断信息里也写清楚\n- 这版没有在真机上测试过\n- 仅支持 arm64-v8a，Android 10 及以上；正式签名，可直接覆盖安装，也可以在 设置 → 关于 里直接更新",
+    "en": "- **Plugin background sessions no longer notify** (#43): heartbeat / QQ-bot style plugin sessions used to post a JSON notification every round that led nowhere. Only conversations shown in the session list notify now, and stray \"new conversation\" entries are gone\n- **One notification per conversation** (#43): titled with the conversation name, showing a short summary of the last reply; tapping opens it, opening it clears the notification, several are grouped\n- **Mute a conversation** (#43): long-press or \"…\" menu. Mutes \"task finished\" alerts only; approvals, questions and unlock requests still notify so tasks don't stall\n- **Clearer Shizuku status** (#42): not installed / not running / not authorized / too old / ready, each with the next step, also in diagnostics\n- Not yet tested on a real device"
+  },
+  "publishedAt": "2026-11-02T03:57:56Z"
+}

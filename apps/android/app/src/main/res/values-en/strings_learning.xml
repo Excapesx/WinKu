@@ -1,0 +1,8 @@
+<resources>
+    <string name="learning_title">Interactive learning</string>
+    <string name="learning_loading">Preparing interactive content…</string>
+    <string name="learning_load_failed">The content could not load. Go back and open it again.</string>
+    <string name="learning_intro">Change a parameter, explore a curve, then try a short question.</string>
+    <string name="learning_demo_note">These are offline component examples. In a conversation, ask the agent to explain with these components; the follow-up action includes your current interaction state.</string>
+    <string name="learning_settings_desc">Function plots, diagrams and quizzes</string>
+</resources>

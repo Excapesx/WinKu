@@ -1,0 +1,30 @@
+{
+  "name": "dsh-learning-components",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/serve.mjs",
+    "test": "node --test test/*.test.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "echarts": "6.0.0",
+    "highlight.js": "11.11.1",
+    "katex": "0.16.22",
+    "lucide-react": "0.468.0",
+    "mathjs": "14.8.1",
+    "mermaid": "11.12.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@types/katex": "0.16.7",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "adm-zip": "0.5.16",
+    "esbuild": "0.25.12",
+    "typescript": "5.9.3"
+  }
+}
