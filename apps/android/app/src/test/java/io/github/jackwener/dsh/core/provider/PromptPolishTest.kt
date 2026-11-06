@@ -3,6 +3,9 @@ package io.github.jackwener.dsh.core.provider
 import kotlinx.serialization.json.*
 import org.junit.Assert.*
 import org.junit.Test
+import com.sun.net.httpserver.HttpServer
+import java.net.InetSocketAddress
+import kotlinx.coroutines.runBlocking
 
 class PromptPolishTest {
     @Test fun requestsUseTheSelectedProtocolWithoutToolsOrHistory() {
@@ -65,5 +68,30 @@ class PromptPolishTest {
         assertNotNull(body["max_completion_tokens"])
         assertNull(body["max_tokens"])
         assertFalse(PromptPolish.preservesReferences("Read C:\\data\\report.pdf", "Read C:\\data\\other.pdf"))
+    }
+
+    @Test fun oneRequestUsesConfiguredRouteAndPreservesOriginalOnBadReply() = runBlocking {
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        val reply = java.util.concurrent.atomic.AtomicReference("""{"choices":[{"finish_reason":"stop","message":{"content":"Read @report carefully"}}]}""")
+        val calls = java.util.concurrent.atomic.AtomicInteger()
+        server.createContext("/v1/chat/completions") { exchange ->
+            calls.incrementAndGet()
+            val request = Json.parseToJsonElement(exchange.requestBody.bufferedReader().use { it.readText() }).jsonObject
+            assertEquals("configured-model", request["model"]!!.jsonPrimitive.content)
+            assertEquals("Bearer test-only", exchange.requestHeaders.getFirst("Authorization"))
+            val bytes = reply.get().toByteArray()
+            exchange.sendResponseHeaders(200, bytes.size.toLong())
+            exchange.responseBody.use { it.write(bytes) }
+        }
+        server.start()
+        try {
+            val provider = ProviderConfig("test", CUSTOM, "Test", "http://127.0.0.1:${server.address.port}/v1", listOf("configured-model"), hasKey = true)
+            val choice = ModelChoice(provider, "configured-model")
+            assertEquals("Read @report carefully", PromptPolish.request(choice, "rules", "Read @report", null) { "test-only" })
+            assertEquals(1, calls.get())
+            reply.set("""{"choices":[{"finish_reason":"stop","message":{"content":"Read something else"}}]}""")
+            assertTrue(runCatching { PromptPolish.request(choice, "rules", "Read @report", null) { "test-only" } }.isFailure)
+            assertEquals(2, calls.get()) // No silent model fallback or automatic retry.
+        } finally { server.stop(0) }
     }
 }
