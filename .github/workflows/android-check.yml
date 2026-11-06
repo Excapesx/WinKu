@@ -1,0 +1,38 @@
+name: Android checks
+
+on:
+  push:
+    branches: [main, 'codex/prompt-polish']
+    paths: ['apps/android/**', '.github/workflows/android-check.yml']
+  pull_request:
+    paths: ['apps/android/**', '.github/workflows/android-check.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Test and compile Android UI
+        working-directory: apps/android
+        run: bash gradlew :app:testDebugUnitTest :app:assembleDebug -Pdsh.fetchShizuku=false --console=plain
+      - name: Retain test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-test-reports
+          path: apps/android/app/build/reports/tests/
+          if-no-files-found: ignore

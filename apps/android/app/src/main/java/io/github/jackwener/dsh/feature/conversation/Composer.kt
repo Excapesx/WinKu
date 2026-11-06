@@ -103,13 +103,17 @@ const val MAX_IMAGES = 4
 
 @Stable
 class ComposerState {
-    var text by mutableStateOf("")
+    var polish by mutableStateOf(PolishDraft())
+    private var draftText by mutableStateOf("")
+    var text: String
+        get() = draftText
+        set(value) { if (value != draftText) { draftText = value; polish = polish.edited() } }
     val images = mutableStateListOf<ImageAttachment>()
     val files = mutableStateListOf<FileAttachment>()
     /** Picked attachments still decoding / copying; Send waits for them. */
     var pending by mutableStateOf(0)
     val isEmpty get() = text.isBlank() && images.isEmpty() && files.isEmpty()
-    fun clear() { text = ""; images.clear(); files.clear() }
+    fun clear() { text = ""; polish = PolishDraft(revision = polish.revision + 1); images.clear(); files.clear() }
 
     /** The text to send: the draft plus a reference line per attached file. */
     fun outgoingText(context: Context): String = buildString {
@@ -220,6 +224,47 @@ fun Composer(
     val c = Dsh.colors
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var polishJob by remember(state) { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    androidx.compose.runtime.DisposableEffect(state, model) {
+        onDispose {
+            polishJob?.cancel()
+            state.polish = state.polish.copy(revision = state.polish.revision + 1, requestRevision = null)
+        }
+    }
+    fun polishPrompt() {
+        if (state.polish.busy || state.text.isBlank() || state.text == state.polish.result) return
+        val source = state.text
+        if (source.length > io.github.jackwener.dsh.core.provider.PromptPolish.MAX_INPUT) {
+            android.widget.Toast.makeText(context, R.string.polish_too_long, android.widget.Toast.LENGTH_LONG).show()
+            return
+        }
+        state.polish = state.polish.begin()
+        val ticket = state.polish.revision
+        polishJob = scope.launch {
+            try {
+                val output = kotlinx.coroutines.withTimeout(20_000) {
+                    withContext(Dispatchers.IO) {
+                        val secrets = io.github.jackwener.dsh.core.data.SecretStore(context.applicationContext)
+                        model.validate(secrets::read)?.let { throw IllegalArgumentException(context.getString(it.messageRes)) }
+                        val instructions = context.assets.open("skills/prompt-polish/SKILL.md").bufferedReader().use { it.readText() }
+                        io.github.jackwener.dsh.core.provider.PromptPolish.request(model, instructions, source, reasoning, secrets::read)
+                    }
+                }
+                if (state.polish.accepts(ticket) && state.text == source) {
+                    state.text = output
+                    state.polish = state.polish.copy(original = source, result = output)
+                }
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                if (state.polish.accepts(ticket)) android.widget.Toast.makeText(context, R.string.polish_timeout, android.widget.Toast.LENGTH_LONG).show()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (state.polish.accepts(ticket)) android.widget.Toast.makeText(context, R.string.polish_failed, android.widget.Toast.LENGTH_LONG).show()
+            } finally {
+                state.polish = state.polish.finish(ticket)
+            }
+        }
+    }
     var plusOpen by remember { mutableStateOf(false) }
     /** The "/" menu: non-focusable so the keyboard stays up while it is open. */
     var slashOpen by remember { mutableStateOf(false) }
@@ -297,6 +342,16 @@ fun Composer(
                 }
             },
         )
+        if (state.polish.result != null && state.text == state.polish.result) Row(
+            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.polish_done), Modifier.weight(1f), style = DshType.xxs12, color = c.labelSecondary)
+            Text(stringResource(R.string.polish_undo), Modifier.pressable({
+                state.polish.original?.let { state.text = it }
+                state.polish = state.polish.copy(original = null, result = null)
+            }).padding(8.dp), style = DshType.xxs12m, color = c.business)
+        }
         if (voice != null) io.github.jackwener.dsh.feature.voice.VoiceStrip(voice, toKeyboard)
         Spacer(Modifier.height(10.dp))
         BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -344,6 +399,28 @@ fun Composer(
             // The context ring and model chip take only the space left, so Send always stays on screen.
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End)) {
             if (showChips && contextTokens > 0) ContextRing(contextTokens, model.contextWindow, model.contextSource)
+            if (showChips) {
+                val enabled = !state.polish.busy && state.text.isNotBlank() && state.text != state.polish.result && voice?.active != true
+                val label = stringResource(when {
+                    state.polish.busy -> R.string.polish_working
+                    state.text == state.polish.result -> R.string.polish_done
+                    else -> R.string.polish_prompt
+                })
+                Box(Modifier.size(34.dp).alpha(if (enabled || state.polish.busy) 1f else 0.4f).clip(CircleShape).background(c.info)
+                    .pressable({ if (settled()) polishPrompt() }, CircleShape, enabled = enabled)
+                    .semantics { contentDescription = label }, contentAlignment = Alignment.Center) {
+                    if (state.polish.busy) androidx.compose.material3.CircularProgressIndicator(
+                        Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp,
+                    ) else Canvas(Modifier.size(18.dp)) {
+                        val w = 2.dp.toPx()
+                        drawLine(Color.White, Offset(size.width * .18f, size.height * .82f), Offset(size.width * .72f, size.height * .28f), w, StrokeCap.Round)
+                        drawLine(Color.White, Offset(size.width * .2f, 0f), Offset(size.width * .2f, size.height * .28f), w, StrokeCap.Round)
+                        drawLine(Color.White, Offset(size.width * .06f, size.height * .14f), Offset(size.width * .34f, size.height * .14f), w, StrokeCap.Round)
+                        drawLine(Color.White, Offset(size.width * .8f, size.height * .61f), Offset(size.width * .8f, size.height * .89f), w, StrokeCap.Round)
+                        drawLine(Color.White, Offset(size.width * .66f, size.height * .75f), Offset(size.width * .94f, size.height * .75f), w, StrokeCap.Round)
+                    }
+                }
+            }
             if (showChips) Box(Modifier.weight(1f, fill = false)) {
                 // Third-party models: the levels the engine reports for them (#46); the chip names the level in effect.
                 val defaultLabel = stringResource(R.string.effort_default)
