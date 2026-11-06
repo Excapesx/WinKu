@@ -20,6 +20,15 @@ test('the shipped engine has the same WinKu persona as the source', () => {
   assert.equal(packaged.replaceAll('\r', ''), source.replaceAll('\r', ''))
 })
 
+test('the shipped prompt teaches textbook math for prose and every quiz field', () => {
+  const local = readFileSync('js/packages/plugin-guard/learning.js', 'utf8')
+  const shipped = readFileSync(join(nm, '@dsh-android/plugin-guard/learning.js'), 'utf8')
+  assert.equal(shipped.replaceAll('\r', ''), local.replaceAll('\r', ''))
+  const prompt = systemPromptSection('zh-CN', [])
+  for (const notation of ['Textbook mathematical notation', 'prompt/options/hint/explanation', '\\frac{numerator}{denominator}', '\\lim_{x\\to a}', '\\begin{aligned}']) assert.ok(prompt.includes(notation), notation)
+  assert.doesNotMatch(prompt, /\u0008|\u000c/)
+})
+
 test('the real prompt assembler identifies the product as WinKu for different models', async () => {
   const config = profile.find(row => row.id === 'system-prompt').config
   for (const model of ['provider-a/model-a', 'provider-b/model-b']) {

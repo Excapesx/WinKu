@@ -9,7 +9,9 @@ export type MathSpec = Base & {type:'math'; latex:string};
 export type TableSpec = Base & {type:'table'; columns:string[]; rows:(string|number|null)[][]};
 export type CodeSpec = Base & {type:'code'; language?:string; code:string};
 export type HtmlSpec = Base & {type:'html'; html:string};
-export type Spec = FunctionSpec|DiagramSpec|ChartSpec|QuizSpec|MathSpec|TableSpec|CodeSpec|HtmlSpec;
+/** Internal text renderer, not an agent-facing interactive component. */
+export type TextSpec = Base & {type:'markdown';text:string};
+export type Spec = FunctionSpec|DiagramSpec|ChartSpec|QuizSpec|MathSpec|TableSpec|CodeSpec|HtmlSpec|TextSpec;
 export type Theme = {dark?:boolean; reducedMotion?:boolean; fontScale?:number; colors?:Record<string,string>;canAsk?:boolean;fullScreen?:boolean};
-export type BridgeEvent = {type:'ready'|'height'|'state'|'ask'|'fullscreen'|'gesture'|'copy'; [key:string]:unknown};
+export type BridgeEvent = {type:'ready'|'height'|'state'|'ask'|'fullscreen'|'gesture'|'copy'|'link'; [key:string]:unknown};
 declare global {interface Window {DshLearning?:{postMessage:(message:string)=>void}; DshLearningApp:{mount:(spec:unknown,state?:unknown,theme?:Theme,locale?:string)=>void};}}

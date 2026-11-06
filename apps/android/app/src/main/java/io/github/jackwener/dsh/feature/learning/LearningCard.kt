@@ -81,7 +81,10 @@ fun LearningMarkdown(text: String, scope: String, onAsk: (String) -> Unit) {
     Column {
         parts.forEachIndexed { index, part ->
             when (part) {
-                is RichPart.Markdown -> SelectionContainer { DshMarkdown(part.text) }
+                is RichPart.Markdown -> if (needsMathLayout(part.text)) {
+                    val payload = remember(part.text) { buildJsonObject { put("type", "markdown"); put("id", "prose"); put("text", part.text) } }
+                    LearningWebView(RichPart.Artifact(payload, "prose"), "$scope/prose/$index", null, {}, Modifier.fillMaxWidth(), textDocument = true)
+                } else SelectionContainer { DshMarkdown(part.text) }
                 is RichPart.Artifact -> LearningCard(part, "$scope/$index/${part.fingerprint}", onAsk)
             }
         }
@@ -113,7 +116,7 @@ fun LearningCard(artifact: RichPart.Artifact, scope: String, onAsk: ((String) ->
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun LearningWebView(artifact: RichPart.Artifact, scope: String, onAsk: ((String) -> Unit)?, onExpand: () -> Unit, modifier: Modifier, fullScreen: Boolean = false) {
+private fun LearningWebView(artifact: RichPart.Artifact, scope: String, onAsk: ((String) -> Unit)?, onExpand: () -> Unit, modifier: Modifier, fullScreen: Boolean = false, textDocument: Boolean = false) {
     val context = LocalContext.current
     val c = Dsh.colors
     val locale = LocalConfiguration.current.locales[0].toLanguageTag()
@@ -121,7 +124,7 @@ private fun LearningWebView(artifact: RichPart.Artifact, scope: String, onAsk: (
     val reducedMotion = LocalReducedMotion.current
     val store = remember { ArtifactStateStore(context) }
     val key = remember(scope) { RichContent.fingerprint(scope) }
-    var height by remember(key) { mutableIntStateOf(420) }
+    var height by remember(key) { mutableIntStateOf(if (textDocument) 48 else 420) }
     var loaded by remember(key) { mutableStateOf(false) }
     var failed by remember(key) { mutableStateOf(false) }
     val ask by rememberUpdatedState(onAsk)
@@ -169,7 +172,9 @@ private fun LearningWebView(artifact: RichPart.Artifact, scope: String, onAsk: (
                         assets.shouldInterceptRequest(request.url) ?: WebResourceResponse("text/plain", "UTF-8", 403, "Blocked", emptyMap(), ByteArrayInputStream(byteArrayOf()))
                     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean =
                         request.url.toString() != PAGE && !(request.isForMainFrame.not() && request.url.toString() == "$ORIGIN/assets/learning/sandbox.html")
-                    override fun onPageFinished(view: WebView, url: String) { if (url == PAGE) view.evaluateJavascript(mount, null) }
+                    override fun onPageFinished(view: WebView, url: String) {
+                        if (url == PAGE) (view as LearningView).apply { pageReady = true; mountContent(mount) }
+                    }
                     override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) { if (request.isForMainFrame) failed = true }
                 }
                 if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
@@ -182,10 +187,19 @@ private fun LearningWebView(artifact: RichPart.Artifact, scope: String, onAsk: (
                             when (event["type"]?.jsonPrimitive?.content) {
                                 "height" -> {
                                     loaded = true
-                                    if (!fullScreen) event["height"]?.jsonPrimitive?.intOrNull?.let { height = it.coerceIn(160, 1800) + 2 }
+                                    if (!fullScreen) event["height"]?.jsonPrimitive?.intOrNull?.let {
+                                        // A full explanation can be taller than a chart. Keep all paragraphs visible.
+                                        height = if (textDocument) it.coerceIn(1, 100_000) + 2 else it.coerceIn(160, 1800) + 2
+                                    }
                                 }
                                 "state" -> (event["state"] as? JsonObject)?.let { store.save(key, it) }
                                 "copy" -> event["text"]?.jsonPrimitive?.content?.take(100_000)?.let { copyText(ctx, it) }
+                                "link" -> event["url"]?.jsonPrimitive?.content?.takeIf { it.length <= 4096 }?.let { url ->
+                                    val uri = Uri.parse(url)
+                                    if (uri.scheme in setOf("https", "http") && !uri.host.isNullOrBlank()) runCatching {
+                                        ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, uri))
+                                    }
+                                }
                                 "gesture" -> { gestureActive = event["active"]?.jsonPrimitive?.booleanOrNull == true; parent?.requestDisallowInterceptTouchEvent(gestureActive) }
                                 "fullscreen" -> expand()
                                 "ask" -> {
@@ -200,7 +214,7 @@ private fun LearningWebView(artifact: RichPart.Artifact, scope: String, onAsk: (
                 loadUrl(PAGE)
             }
         },
-        update = { view -> if (view.url == PAGE) view.evaluateJavascript("window.DshLearningApp && $mount", null) },
+        update = { view -> view.mountContent(mount) },
         onRelease = { view -> view.stopLoading(); view.loadUrl("about:blank"); view.removeAllViews(); view.destroy() },
     ) }
     if (!loaded) Column(Modifier.fillMaxSize().background(c.bgBase).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)) {
@@ -211,6 +225,13 @@ private fun LearningWebView(artifact: RichPart.Artifact, scope: String, onAsk: (
 }
 
 private class LearningView(context: android.content.Context) : WebView(context) {
+    var pageReady = false
+    private var mountedScript: String? = null
+    fun mountContent(script: String) {
+        if (!pageReady || mountedScript == script) return
+        mountedScript = script
+        evaluateJavascript(script, null)
+    }
     var gestureActive = false
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (gestureActive || event.pointerCount > 1) parent?.requestDisallowInterceptTouchEvent(true)

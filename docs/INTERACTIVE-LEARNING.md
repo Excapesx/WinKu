@@ -31,6 +31,12 @@ Use a complete, top-level fenced block. JSON is data, never an executable expres
 
 Other `type` values are `diagram`, `chart`, `quiz`, `math`, `table`, `code`, `html`. See `learning-ui/src/types.ts`, `schema.mjs`, `examples.ts` and `js/packages/plugin-guard/learning.js` for the fields. `mermaid`, `math` and explicit `dsh-html` fences are shortcuts. Ordinary `html` fences remain code. Incomplete streamed blocks, unsupported types and invalid JSON remain readable Markdown. Code fences that document another fence are not executed.
 
+### Textbook mathematics (WinKu, 2026-11-06)
+
+Conversation prose and every quiz text field support `$…$`, `$$…$$`, `\(…\)` and `\[…\]` using bundled KaTeX fonts. Use `\frac`, `\lim`, superscripts/subscripts and `aligned` derivations instead of programming-style fractions or `lim(x→0)`. Escape LaTeX backslashes in JSON. Clear legacy quiz limit expressions and standalone fraction options are converted with a bounded arithmetic AST; ordinary prose, code, dates and paths are not guessed or evaluated.
+
+Mathematical prose uses a private `markdown` view, not a ninth public artifact type. Native Markdown continues to handle ordinary chat. WebView snapshots update without replacing the view; an unfinished formula shows a short pending indicator, then settles when its delimiter closes. Marked parses Markdown with math tokens before escape processing, raw HTML is escaped, DOMPurify sanitizes the result, and KaTeX runs without trusted HTML commands. HTTP(S) links open externally only after a user click. Card height comes from the observed content rectangle, never the viewport-dependent document scroll height; mathematical prose can exceed the normal chart height limit.
+
 ## Implementation
 
 `RichContent.kt` splits completed blocks from Markdown. `LearningCard.kt` hosts packaged content through `WebViewAssetLoader` on an HTTPS app-assets origin. Its origin-restricted, main-frame-only `WebMessageListener` accepts bounded height/state/gesture/fullscreen/copy/follow-up events. It exposes no arbitrary method invocation or device tools. Outbound requests, file/content access and WebView permission requests are blocked. The HTML iframe has an opaque sandbox origin, a network-free CSP and no access to the native message listener. Mathematical expressions use a restricted mathjs AST: no assignment, object/property access, imports or evaluation functions.

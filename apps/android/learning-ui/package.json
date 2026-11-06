@@ -10,10 +10,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "dompurify": "3.4.17",
     "echarts": "6.0.0",
     "highlight.js": "11.11.1",
     "katex": "0.16.22",
     "lucide-react": "0.468.0",
+    "marked": "16.4.2",
     "mathjs": "14.8.1",
     "mermaid": "11.12.0",
     "react": "19.2.0",

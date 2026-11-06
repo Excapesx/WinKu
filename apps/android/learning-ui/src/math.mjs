@@ -4,6 +4,19 @@ const math = create(all, {number:'number', predictable:true});
 const functions = new Set(['sin','cos','tan','asin','acos','atan','sinh','cosh','tanh','sqrt','abs','exp','log','log10','log2','floor','ceil','round','sign','min','max','pow']);
 const operators = new Set(['+','-','*','/','^','%']);
 const constants = {pi:Math.PI, e:Math.E, tau:2*Math.PI};
+/** Convert only an unambiguous arithmetic expression; never evaluate generated content. */
+export function expressionToTex(expression) {
+  if(typeof expression!=='string'||expression.length>500||!/[a-zA-Z0-9]/.test(expression))throw new Error('Not an arithmetic expression');
+  const tree=math.parse(expression.replaceAll('²','^2').replaceAll('³','^3').replaceAll('−','-'));
+  let count=0;
+  tree.traverse(node=>{
+    if(++count>120||!['ConstantNode','SymbolNode','OperatorNode','FunctionNode','ParenthesisNode'].includes(node.type))throw new Error('Unsupported expression');
+    if(node.isOperatorNode&&!operators.has(node.op))throw new Error('Unsupported operator');
+    if(node.isFunctionNode&&(!node.fn?.isSymbolNode||!functions.has(node.fn.name)))throw new Error('Unsupported function');
+    if(node.isSymbolNode&&!functions.has(node.name)&&!/^(?:[a-zA-Z]|pi|infinity)$/.test(node.name))throw new Error('Not a math symbol');
+  });
+  return tree.toTex({parenthesis:'auto',implicit:'hide'});
+}
 export function compileExpression(expression, parameterNames = []) {
   if(typeof expression!=='string'||expression.length>500)throw new Error('表达式过长，请控制在 500 字以内');
   const normalized=expression.trim().replace(/^y\s*=\s*/i,'').replaceAll('π','pi').replaceAll('×','*').replaceAll('÷','/').replaceAll('−','-').replaceAll('²','^2').replaceAll('³','^3');

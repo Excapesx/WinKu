@@ -7,6 +7,7 @@ export function normalizeSpec(input) {
   if(input.version!==undefined&&input.version!==1)throw new Error('这个组件版本暂不支持');
   const base={version:1,id:text(input.id,100),title:text(input.title,160),description:text(input.description,1000)};
   switch(input.type){
+    case 'markdown':return {...base,type:'markdown',text:text(input.text,500000)};
     case 'function':{
       if(!Array.isArray(input.functions)||input.functions.length>8)throw new Error('请提供 1 到 8 个函数');
       const parameters=(Array.isArray(input.parameters)?input.parameters:[]).slice(0,12).map(p=>{

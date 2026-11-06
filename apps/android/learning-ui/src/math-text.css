@@ -1,0 +1,21 @@
+/* Match native 15/26 body text; use the bundled textbook math fonts for formulas. */
+.text-document{color:var(--foreground);font-size:.9375rem;line-height:1.7334;min-width:0;overflow-wrap:anywhere;display:flow-root}
+.math-text{min-width:0;overflow-wrap:anywhere;line-height:1.75}
+.math-text>:first-child{margin-top:0}.math-text>:last-child{margin-bottom:0}
+.math-text p{margin:.5em 0 .8em}
+.math-text h1,.math-text h2,.math-text h3{line-height:1.5;margin:1.2em 0 .6em;font-weight:700}
+.math-text h1{font-size:1.4em}.math-text h2{font-size:1.2667em}.math-text h3{font-size:1.2em}
+.math-text strong{font-weight:650}.math-text ul,.math-text ol{padding-left:1.6em}.math-text li{margin:.45em 0}
+.math-text a{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+.math-text blockquote{margin:1em 0;border-left:3px solid var(--border);padding-left:1em;color:var(--muted)}
+.math-text pre{overflow-x:auto;white-space:pre;padding:12px;background:var(--code);border-radius:12px}
+.math-text code{font:.875em ui-monospace,monospace;background:var(--code);border-radius:4px}
+.math-text table{display:block;overflow-x:auto;border-collapse:collapse}
+.math-text td,.math-text th{border:1px solid var(--border);padding:8px 12px}
+.math-text hr{border:0;border-top:1px solid var(--border);margin:1em 0}
+.math-inline{display:inline;overflow-wrap:normal}.math-inline .katex{font-size:1.1em;white-space:normal}
+.math-display{display:block;overflow-x:auto;overflow-y:hidden;padding:8px 2px;margin:.65em 0;max-width:100%;overflow-wrap:normal}
+.math-display .katex-display{margin:.25em 0;text-align:left}.math-display .katex-display>.katex{text-align:left}
+.math-text .katex{color:inherit}.math-pending,.math-error{color:var(--muted);font-size:.875em}
+.quiz-question .math-text{font-weight:500}.quiz-question .math-display{font-size:1.08em}
+.quiz-option>.math-text{flex:1;text-align:left}.quiz-option .math-text p{margin:0}.hint>.math-text{flex:1}
