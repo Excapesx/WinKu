@@ -116,6 +116,8 @@ lucide-react/dist/esm/defaultAttributes.js:
 lucide-react/dist/esm/Icon.js:
 lucide-react/dist/esm/createLucideIcon.js:
 lucide-react/dist/esm/icons/activity.js:
+lucide-react/dist/esm/icons/arrow-down-up.js:
+lucide-react/dist/esm/icons/arrow-down.js:
 lucide-react/dist/esm/icons/book-open.js:
 lucide-react/dist/esm/icons/chart-no-axes-combined.js:
 lucide-react/dist/esm/icons/check-check.js:
@@ -124,12 +126,15 @@ lucide-react/dist/esm/icons/chevron-down.js:
 lucide-react/dist/esm/icons/chevron-left.js:
 lucide-react/dist/esm/icons/chevron-right.js:
 lucide-react/dist/esm/icons/circle-help.js:
+lucide-react/dist/esm/icons/cloud.js:
 lucide-react/dist/esm/icons/code-xml.js:
-lucide-react/dist/esm/icons/copy.js:
 lucide-react/dist/esm/icons/expand.js:
 lucide-react/dist/esm/icons/eye-off.js:
 lucide-react/dist/esm/icons/eye.js:
+lucide-react/dist/esm/icons/folder.js:
 lucide-react/dist/esm/icons/git-branch.js:
+lucide-react/dist/esm/icons/laptop.js:
+lucide-react/dist/esm/icons/layers.js:
 lucide-react/dist/esm/icons/lightbulb.js:
 lucide-react/dist/esm/icons/locate-fixed.js:
 lucide-react/dist/esm/icons/message-circle.js:
@@ -138,6 +143,8 @@ lucide-react/dist/esm/icons/minus.js:
 lucide-react/dist/esm/icons/moon.js:
 lucide-react/dist/esm/icons/plus.js:
 lucide-react/dist/esm/icons/rotate-ccw.js:
+lucide-react/dist/esm/icons/server.js:
+lucide-react/dist/esm/icons/shield.js:
 lucide-react/dist/esm/icons/sun.js:
 lucide-react/dist/esm/icons/table-2.js:
 lucide-react/dist/esm/icons/trash-2.js:

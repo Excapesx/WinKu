@@ -29,6 +29,15 @@ test('the shipped prompt teaches textbook math for prose and every quiz field', 
   assert.doesNotMatch(prompt, /\u0008|\u000c/)
 })
 
+test('the packaged generation guide includes structured teaching and annotated chemistry examples', async () => {
+  const filename='@dsh-android/plugin-guard/learning-templates.js'
+  assert.equal(readFileSync(join(nm,filename),'utf8').replaceAll('\r',''),readFileSync('js/packages/plugin-guard/learning-templates.js','utf8').replaceAll('\r',''))
+  const {learningTemplates}=await import(pathToFileURL(join(nm,filename)))
+  const prompt=systemPromptSection('zh-CN',[])
+  for(const item of learningTemplates)assert.ok(prompt.includes(JSON.stringify(item.spec)),item.name)
+  for(const syntax of ['How to generate teaching components','\\underbrace','\\overbrace','\\xrightarrow','\\ce{','line-wrap'])assert.ok(prompt.includes(syntax),syntax)
+})
+
 test('the real prompt assembler identifies the product as WinKu for different models', async () => {
   const config = profile.find(row => row.id === 'system-prompt').config
   for (const model of ['provider-a/model-a', 'provider-b/model-b']) {

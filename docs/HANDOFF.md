@@ -85,6 +85,8 @@ $adb="<repo>\apps\android\toolchains\local\android-sdk\platform-tools\adb.exe"
 
 编译 → 装机 → 截图 → 看图。不看图不算改完（除非改的是纯逻辑）。
 
+交付约定：新版本构建并验证成功后，默认删除 `apps/android/build/winku-release/` 中的旧交付 APK，只保留最新真机包；用户明确要求保留时除外。测试预览包放本轮验证目录。不要把 `toolchains/` 中的构建依赖 APK 当作旧交付包清理。
+
 多模型运行时（2026-11-05）的验证：88 项直接相关 JVM 测试通过；扩大回归后，排除 `ShellFilesTest` 和 `ExtensionsStoreTest` 两个旧测试类，其余 370 项 JVM 测试全部通过。前者有 4 项 Windows 临时目录路径断言失败，后者在等待扩展激活事件时挂起，均未修改。
 197 项引擎测试通过，包含实际打包的提示词组装、SDK 拒绝未注册路由、请求头、网关回放和设备策略；4 项 Android 设备测试通过，使用隔离 Keystore 与本机 HTTP 服务验证密钥迁移及三种协议。
 预览包和 arm64 包均构建成功，APK 内嵌 engine.zip 校验一致，空模型配置与协议选择器已装机截图检查。产物在 `apps/android/build/winku-release/`（不入库）。预览包不启动真实 Node 引擎；通过 dsh 调用真实服务商仍需 arm64 真机与有效 API Key 验证。
@@ -96,6 +98,10 @@ $adb="<repo>\apps\android\toolchains\local\android-sdk\platform-tools\adb.exe"
 数学正文使用内部 `markdown` 视图（不属于模型可生成的交互组件），高度不沿用图表的 1800dp 上限；追加内容复用同一个 WebView，内容和主题没变时不重新 mount。普通聊天继续用原生流式 Markdown。公式尚未闭合时显示排版占位，错误公式显示短提示；不执行原始 HTML。Markdown 经 DOMPurify 清理，外部链接只在用户点按后交给浏览器。前端资源必须从 `learning-ui/src` 通过 `npm run build` 生成。
 本轮验证：4 项 RichContent JVM 测试、14 项前端测试、13 项实际打包提示词/多模型测试通过；前端另有 2 项依赖原始 APK 的可选测试跳过，最终 arm64 APK 已单独通过原生库依赖闭包检查。4 项真实 WebView 设备测试（高度伸缩、大字号、数学正文增量与长文、测验各文本区、原有双指缩放）和 1 项会话流式回归完整通过，截图已查看。模拟器曾在混合测试时退出，重启后使用 `-gpu swangle -feature -Vulkan` 分开执行，两组均完整通过。预览包和 arm64 包均已构建，APK 的前端资源及 engine.zip 校验一致；真实模型输出与物理手机显示仍需用户装机观察。
 数学表格补漏（2026-11-06）：用户真机截图发现 `TableBlock` 表头和单元格仍直接输出字符串，上一轮正文/测验的修复没有覆盖表格。现共用 `MathText`，卡片标题使用行内解析、说明使用正文解析；保留原始值排序，宽公式保持完整并由表格横向滚动。紧凑 `\\frac00` 可用，明确的分数参数和指数参数中的算术除法也用受限 AST 排为分式，不改写普通文本。按用户截图的五行表格新增真实 WebView 回归，覆盖各列、标题、说明、横向滚动和排序。前端 15 项测试通过（另 2 项可选原始 APK 测试跳过），学习组件 5 项设备测试全部通过，已查看左右两端截图。新真机包另存 `build/winku-release/WinKu-arm64-debug-table-fix.apk`，避免与上一版混淆。
+
+教学呈现（2026-11-06）：普通代码围栏、公式混排中的代码和 code 组件共用本地 Highlight.js 排版，支持 C/C++、Python、Java、JS/TS、Kotlin、SQL 等语言；带语言标签、复制反馈、自动换行和深浅色语法色。追加输出和切换主题保留换行选择，代码正文按原文复制。`ContentLayout.kt` 将含代码围栏（含尚未闭合的围栏）或公式的正文路由到同一个离线 WebView，其余正文仍用原生流式 Markdown。
+新增 `explanation` 数据组件：flow / steps / compare / summary 四种布局，支持短标签、语义色、步骤重点、连接命令和要点清单。公式支持上下括注、标注箭头及 mhchem 化学条件，保留本地字体与网络隔离。`learning-templates.js` 的 6 个完整模板同时用于模型生成规范、离线预览和校验；生成规则随 guard 提示词对所有服务商生效。使用和数据示例见 [教学组件与生成方法](TEACHING-COMPONENTS.md)。组件数据无效时显示错误提示并回传高度，避免一直停在加载状态。
+本轮验证：5 项 JVM 路由/协议测试、20 项前端测试、14 项实际打包提示词/多模型测试通过（另 2 项可选原始 APK 测试跳过）；7 项学习设备测试及 1 项会话流式回归通过。已查看深浅色代码、4 类讲解卡、公式括注和化学反应条件的截图。真实服务商输出选择、物理手机观感仍需真机观察。
 
 ## 4. 代码地图（`apps/android/`）
 

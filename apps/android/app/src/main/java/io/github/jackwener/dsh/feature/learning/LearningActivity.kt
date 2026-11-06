@@ -47,7 +47,7 @@ class LearningActivity : ComponentActivity() {
             DshTheme {
                 val entries = examples.values.map { it.jsonObject }
                 var selected by remember { mutableIntStateOf(entries.indexOfFirst { it["type"]?.jsonPrimitive?.content == intent.getStringExtra("component") }.coerceAtLeast(0)) }
-                val labels = listOf("函数", "流程图", "图表", "小测验", "公式", "表格", "代码", "交互内容")
+                val labels = listOf("函数", "流程图", "图表", "小测验", "公式", "表格", "代码", "交互内容", "知识地图", "分步讲解", "对照卡", "学习计划", "公式标注", "化学方程式")
                 Column(Modifier.fillMaxSize().background(Dsh.colors.bgBase).statusBarsPadding()) {
                     DTopBar(stringResource(R.string.learning_title), { finish() })
                     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

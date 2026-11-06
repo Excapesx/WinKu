@@ -4,6 +4,12 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class RichContentTest {
+    @Test fun ordinaryAndUnfinishedCodeFencesUseTheHighlightedRenderer() {
+        for (input in listOf("```cpp\nint* p = new int(10);", "~~~python\nprint(1)\n~~~", "    return value")) assertTrue(needsWebTextLayout(input))
+        assertFalse(needsWebTextLayout("普通的中文讲解。"))
+        val input = "```dsh-visual\n{\"type\":\"explanation\",\"layout\":\"steps\",\"items\":[{\"title\":\"声明\"}]}\n```"
+        assertTrue(RichContent.parse(input).single() is RichPart.Artifact)
+    }
     @Test fun completeComponentsPreserveSurroundingMarkdown() {
         val parts = RichContent.parse("Before\n```dsh-visual\n{\"type\":\"function\",\"functions\":[{\"expression\":\"x^2\"}]}\n```\nAfter")
         assertEquals(3, parts.size)

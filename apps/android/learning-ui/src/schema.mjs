@@ -2,12 +2,22 @@ const text=(v,max=20000)=>typeof v==='string'?v.slice(0,max):'';
 const finite=(v,fallback=0)=>typeof v==='number'&&Number.isFinite(v)?v:fallback;
 const names=/^[A-Za-z][A-Za-z0-9_]{0,15}$/;
 const reserved=new Set(['x','pi','e','tau','constructor','prototype','__proto__','sin','cos','tan','sqrt','log','exp','abs','min','max']);
+const tone=v=>['blue','green','purple','amber','red'].includes(v)?v:'neutral';
+const icon=v=>['book','code','folder','layers','cloud','shield','eye','server','laptop','check','bulb'].includes(v)?v:'book';
 export function normalizeSpec(input) {
   if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('组件内容必须是一个对象');
   if(input.version!==undefined&&input.version!==1)throw new Error('这个组件版本暂不支持');
   const base={version:1,id:text(input.id,100),title:text(input.title,160),description:text(input.description,1000)};
   switch(input.type){
     case 'markdown':return {...base,type:'markdown',text:text(input.text,500000)};
+    case 'explanation':{
+      if(!['flow','steps','compare','summary'].includes(input.layout))throw new Error('讲解卡片的布局无效');
+      const items=(Array.isArray(input.items)?input.items:[]).slice(0,8).map(item=>({title:text(item?.title,160),body:text(item?.body,4000),focus:text(item?.focus,1000),tone:tone(item?.tone),icon:icon(item?.icon),connector:text(item?.connector,120),direction:item?.direction==='both'?'both':'down'}));
+      const facts=(Array.isArray(input.facts)?input.facts:[]).slice(0,8).map(fact=>({label:text(fact?.label,120),value:text(fact?.value,500),tone:tone(fact?.tone)}));
+      const points=(Array.isArray(input.points)?input.points:[]).slice(0,12).map(point=>text(point,1000));
+      if(input.layout!=='summary'&&!items.length||!items.length&&!facts.length&&!points.length)throw new Error('讲解卡片缺少内容');
+      return {...base,type:'explanation',layout:input.layout,items,facts,points};
+    }
     case 'function':{
       if(!Array.isArray(input.functions)||input.functions.length>8)throw new Error('请提供 1 到 8 个函数');
       const parameters=(Array.isArray(input.parameters)?input.parameters:[]).slice(0,12).map(p=>{

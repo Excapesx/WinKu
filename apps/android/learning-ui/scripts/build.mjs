@@ -14,5 +14,11 @@ const {examples}=await import('data:text/javascript;base64,'+Buffer.from(example
 await writeFile(join(out,'examples.json'),JSON.stringify(examples));
 const pkg=JSON.parse(await readFile(join(root,'package.json'),'utf8'));
 const licenses=[];for(const name of Object.keys(pkg.dependencies)){const dir=join(root,'node_modules',name);const meta=JSON.parse(await readFile(join(dir,'package.json'),'utf8'));const candidates=(await readdir(dir)).filter(n=>/^licen[cs]e(\.|$)/i.test(n));licenses.push(`${name} ${meta.version}\nLicense: ${meta.license}\n${candidates[0]?await readFile(join(dir,candidates[0]),'utf8'):''}`);}
+// mhchem is bundled inside KaTeX but carries additional MathJax attribution.
+const chemistry=await readFile(join(root,'node_modules/katex/dist/contrib/mhchem.mjs'),'utf8');
+const noticeStart=chemistry.indexOf('/********');
+const noticeEnd=chemistry.indexOf('*/',noticeStart)+2;
+if(noticeStart<0||noticeEnd<=noticeStart)throw new Error('Missing mhchem license notice');
+licenses.push('KaTeX mhchem (bundled extension)\n'+chemistry.slice(noticeStart,noticeEnd));
 await writeFile(join(out,'THIRD-PARTY-LICENSES.txt'),licenses.join('\n\n----------------\n\n'));
 console.log(`Offline learning assets: ${out}`);

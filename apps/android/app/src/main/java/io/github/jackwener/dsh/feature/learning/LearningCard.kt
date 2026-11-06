@@ -81,7 +81,7 @@ fun LearningMarkdown(text: String, scope: String, onAsk: (String) -> Unit) {
     Column {
         parts.forEachIndexed { index, part ->
             when (part) {
-                is RichPart.Markdown -> if (needsMathLayout(part.text)) {
+                is RichPart.Markdown -> if (needsWebTextLayout(part.text)) {
                     val payload = remember(part.text) { buildJsonObject { put("type", "markdown"); put("id", "prose"); put("text", part.text) } }
                     LearningWebView(RichPart.Artifact(payload, "prose"), "$scope/prose/$index", null, {}, Modifier.fillMaxWidth(), textDocument = true)
                 } else SelectionContainer { DshMarkdown(part.text) }

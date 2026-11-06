@@ -1,26 +1,17 @@
 import {useContext,useEffect,useRef,useState} from 'react';
-import {Check,ChevronLeft,ChevronRight,Copy,Lightbulb,RotateCcw,CheckCheck,X} from 'lucide-react';
+import {Check,ChevronLeft,ChevronRight,Lightbulb,RotateCcw,CheckCheck,X} from 'lucide-react';
 import * as echarts from 'echarts/core';
 import {LineChart,BarChart,ScatterChart,PieChart} from 'echarts/charts';
 import {GridComponent,TooltipComponent,LegendComponent,DataZoomComponent} from 'echarts/components';
 import {SVGRenderer} from 'echarts/renderers';
 import {MathText} from './MathText';
 import {renderFormula} from './math-text.mjs';
-import hljs from 'highlight.js/lib/core';
-import python from 'highlight.js/lib/languages/python';
-import javascript from 'highlight.js/lib/languages/javascript';
-import json from 'highlight.js/lib/languages/json';
-import kotlin from 'highlight.js/lib/languages/kotlin';
-import xml from 'highlight.js/lib/languages/xml';
-import css from 'highlight.js/lib/languages/css';
-import bash from 'highlight.js/lib/languages/bash';
 import {Store,useStored} from './store';
 import {native,send} from './bridge';
 import {ZoomSurface} from './ZoomSurface';
 import type {Spec,ChartSpec,QuizSpec,DiagramSpec,Theme} from './types';
 
 echarts.use([LineChart,BarChart,ScatterChart,PieChart,GridComponent,TooltipComponent,LegendComponent,DataZoomComponent,SVGRenderer]);
-for(const [name,language] of Object.entries({python,javascript,json,kotlin,xml,html:xml,css,bash}))hljs.registerLanguage(name,language);
 
 export function Chart({spec,theme}:{spec:ChartSpec;theme:Theme}) {
   const host=useRef<HTMLDivElement>(null);const [chartState,setChartState]=useStored<any>('chart',{});const initial=useRef(chartState);
@@ -55,7 +46,7 @@ export function Quiz({spec}:{spec:QuizSpec}) {
 }
 
 export function MathBlock({latex}:{latex:string}) {return <div className="math-block" dangerouslySetInnerHTML={{__html:renderFormula(latex,true)}}/>;}
-export function CodeBlock({code,language='text'}:{code:string;language?:string}) {const [copied,setCopied]=useState(false);const html=hljs.getLanguage(language)?hljs.highlight(code,{language}).value:null;async function copy(){try{if(native())send({type:'copy',text:code});else await navigator.clipboard.writeText(code);setCopied(true);setTimeout(()=>setCopied(false),1800);}catch{setCopied(false);}}return <div className="code-block"><div className="code-header"><span>{language}</span><button className="text-button" onClick={copy}>{copied?<Check/>:<Copy/>}{copied?'已复制':'复制'}</button></div><pre>{html?<code dangerouslySetInnerHTML={{__html:html}}/>:<code>{code}</code>}</pre></div>;}
+export {CodeBlock} from './CodeBlock';
 export function TableBlock({columns,rows}:{columns:string[];rows:(string|number|null)[][]}) {const [sort,setSort]=useState<{column:number;direction:1|-1}|null>(null);const ordered=sort?[...rows].sort((a,b)=>{const aa=a[sort.column],bb=b[sort.column];return sort.direction*(typeof aa==='number'&&typeof bb==='number'?aa-bb:String(aa??'').localeCompare(String(bb??''),undefined,{numeric:true}));}):rows;return <div className="table-scroll"><table><thead><tr>{columns.map((column,i)=><th key={i} aria-sort={sort?.column===i?(sort.direction===1?'ascending':'descending'):'none'}><button onClick={()=>setSort({column:i,direction:sort?.column===i&&sort.direction===1?-1:1})}><MathText text={column} inline/>{sort?.column===i?(sort.direction===1?' ↑':' ↓'):''}</button></th>)}</tr></thead><tbody>{ordered.map((row,i)=><tr key={i}>{columns.map((_,j)=><td key={j}><MathText text={String(row[j]??'')}/></td>)}</tr>)}</tbody></table></div>;}
 export function HtmlBlock({html,dark=false}:{html:string;dark?:boolean}) {
   const frame=useRef<HTMLIFrameElement>(null),loaded=useRef(false),sent=useRef('');
