@@ -869,4 +869,8 @@
     <string name="polish_too_long">Shorten the prompt to 8000 characters before polishing.</string>
     <string name="polish_timeout">Polishing timed out. Your original draft was kept. Try again later.</string>
     <string name="polish_failed">Could not polish. Your draft was kept. Check model settings or your connection and retry.</string>
+    <string name="regenerate_reply">Regenerate response</string>
+    <string name="tools_title">Tools</string>
+    <string name="tools_empty_title">No study tools yet</string>
+    <string name="tools_empty_body">Your study tools will appear here.</string>
 </resources>

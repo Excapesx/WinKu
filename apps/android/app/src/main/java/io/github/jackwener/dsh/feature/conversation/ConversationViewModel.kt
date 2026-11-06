@@ -125,6 +125,7 @@ open class ConversationController(
 
     fun stop() = viewModelScope.launch { store.stop() }
     fun retry(e: TurnError) = viewModelScope.launch { store.retry(sessionId.value, e) }
+    fun regenerate(turnKey: String) = viewModelScope.launch { store.regenerate(sessionId.value, turnKey) }
     /** 继续 on a turn's end card (work remains). */
     fun continueTask() = viewModelScope.launch { store.continueTask(sessionId.value) }
     fun approve(a: PendingApproval, outcome: ApprovalOutcome) = store.answerApproval(a.requestKey, outcome)

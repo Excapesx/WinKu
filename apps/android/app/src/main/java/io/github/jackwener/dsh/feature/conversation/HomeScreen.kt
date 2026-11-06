@@ -60,7 +60,7 @@ import kotlinx.coroutines.launch
  * 对话 / 轨迹 toggle for the same session.
  */
 @Composable
-fun HomeScreen(vm: HomeViewModel, onSettings: (String?) -> Unit, onAutomation: () -> Unit) {
+fun HomeScreen(vm: HomeViewModel, onSettings: (String?) -> Unit, onAutomation: () -> Unit, onTools: () -> Unit) {
     val c = Dsh.colors
     val drawer = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -82,6 +82,7 @@ fun HomeScreen(vm: HomeViewModel, onSettings: (String?) -> Unit, onAutomation: (
                     onNew = { vm.newSession(null); scope.launch { drawer.close() } },
                     onOpen = { vm.open(it); scope.launch { drawer.close() } },
                     onAutomation = { scope.launch { drawer.close() }; onAutomation() },
+                    onTools = { scope.launch { drawer.close() }; onTools() },
                     onSettings = { section -> scope.launch { drawer.close() }; onSettings(section) },
                     onClose = { scope.launch { drawer.close() } },
                     onRename = vm::rename, onPin = vm::pin, onMute = vm::mute, onArchive = vm::archive, onDelete = vm::delete,
@@ -139,7 +140,7 @@ private fun ConversationPane(vm: HomeViewModel, onMenu: () -> Unit, onSettings: 
                     view == SessionView.Trajectory -> TrajectoryView(vm)
                     empty -> EmptyHero(vm, composer, settings, live, conv, onAutomation, onSettings)
                     // One list state per session, so positions never leak across sessions.
-                    else -> ChatStream(conv, live, settings.workDetails, rememberLazyListState(), onInspect = vm::inspect, onRetry = vm::retry, onContinue = { vm.continueTask() }, onOpenSettings = { onSettings(it) }, modifier = Modifier.fillMaxSize(), onLearningAsk = { vm.send(it) })
+                    else -> ChatStream(conv, live, settings.workDetails, rememberLazyListState(), onInspect = vm::inspect, onRetry = vm::retry, onContinue = { vm.continueTask() }, onOpenSettings = { onSettings(it) }, modifier = Modifier.fillMaxSize(), onLearningAsk = { vm.send(it) }, onRegenerate = { vm.regenerate(it) })
                 }
             }
         }

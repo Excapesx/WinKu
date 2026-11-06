@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -84,6 +83,7 @@ import io.github.jackwener.dsh.core.provider.NetDiagnose
 import io.github.jackwener.dsh.core.session.TurnError
 import io.github.jackwener.dsh.core.session.TurnStatus
 import io.github.jackwener.dsh.core.session.UserMsg
+import io.github.jackwener.dsh.core.session.canRegenerate
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -105,6 +105,7 @@ fun ChatStream(
     onContinue: () -> Unit = {},
     compact: Boolean = false,
     onLearningAsk: (String) -> Unit = {},
+    onRegenerate: (String) -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     var follow by remember { mutableStateOf(true) }
@@ -145,7 +146,7 @@ fun ChatStream(
         LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp)) {
             items(conv.turns, key = { it.key }) { turn ->
                 val isLast = turn === conv.turns.last()
-                TurnView(turn, isLast, live, details, onInspect, onRetry, onOpenSettings, onContinue, compact, onLearningAsk)
+                TurnView(turn, isLast, live, details, onInspect, onRetry, onOpenSettings, onContinue, compact, onLearningAsk, onRegenerate)
             }
             // Sent into the running turn, not logged yet: the logged user/message takes its place.
             items(live.steers, key = { "steer/${it.id}" }) { PendingSteer(it) }
@@ -172,6 +173,7 @@ fun ChatStream(
 private fun TurnView(
     turn: Turn, isLast: Boolean, live: SessionLive, details: WorkDetails,
     onInspect: (String) -> Unit, onRetry: (TurnError) -> Unit, onOpenSettings: (String) -> Unit, onContinue: () -> Unit, compact: Boolean, onLearningAsk: (String) -> Unit,
+    onRegenerate: (String) -> Unit,
 ) {
     val running = turn.status == TurnStatus.Running
     // Keep the visible answer in the same slot while streaming and after durable settlement.
@@ -203,7 +205,7 @@ private fun TurnView(
         }
         if (end != null && end.continuable) EndCard(turn, end, canContinue = isLast && !live.running, onContinue, onOpenSettings)
         turn.error?.let { ErrorRow(it, onRetry, onOpenSettings, retryable = isLast && !live.running) }
-        if (turn.reply != null && !running) TailActions(turn)
+        if (turn.reply != null && !running) TailActions(turn, isLast && turn.user != null, turn.canRegenerate(live)) { onRegenerate(turn.key) }
     }
 }
 
@@ -293,10 +295,10 @@ private fun PendingSteer(m: SteerMessage) {
 }
 
 @Composable
-private fun TailActions(turn: Turn) {
+private fun TailActions(turn: Turn, showRegenerate: Boolean, canRegenerate: Boolean, onRegenerate: () -> Unit) {
     val c = Dsh.colors
     val context = LocalContext.current
-    Row(Modifier.padding(top = 10.dp).offset(x = (-6).dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         IconBtn(R.drawable.dsw_copy_outline, { copyText(context, turn.reply?.text ?: "") }, iconSize = 17.dp, tint = c.labelTertiary, contentDescription = stringResource(R.string.copy_reply))
         if (!turn.usage.isEmpty) {
             Spacer(Modifier.width(4.dp))
@@ -305,6 +307,9 @@ private fun TailActions(turn: Turn) {
         }
         Spacer(Modifier.width(8.dp))
         turn.endTime?.let { Text(Fmt.stamp(context, it), style = DshType.xxs12, color = c.labelCaption) }
+        Spacer(Modifier.weight(1f))
+        if (showRegenerate) IconBtn(R.drawable.dsw_refresh_outline, onRegenerate, size = 44.dp, iconSize = 18.dp,
+            tint = c.labelTertiary, enabled = canRegenerate, contentDescription = stringResource(R.string.regenerate_reply))
     }
 }
 

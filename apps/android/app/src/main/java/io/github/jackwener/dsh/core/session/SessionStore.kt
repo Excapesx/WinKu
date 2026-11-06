@@ -92,6 +92,8 @@ class SessionStore @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + CoroutineExceptionHandler { _, e -> android.util.Log.e(TAG, "session task crashed", e) })
     private val states = ConcurrentHashMap<String, MutableStateFlow<SessionLive>>()
     private val loadLock = Mutex()
+    private val regenerationLock = Mutex()
+    private val regenerationRequests = ConcurrentHashMap.newKeySet<String>()
     private val approvals = ConcurrentHashMap<String, CompletableDeferred<ApprovalOutcome>>()
     private val questions = ConcurrentHashMap<String, CompletableDeferred<JsonElement>>()
     private val permissions = ConcurrentHashMap<String, CompletableDeferred<Boolean>>()
@@ -236,19 +238,20 @@ class SessionStore @Inject constructor(
     }
 
     /** Exercise the real chat UI in the isolated development app without starting Node or a provider. */
-    private suspend fun previewPrompt(sessionId: String, text: String) {
+    private suspend fun previewPrompt(sessionId: String, text: String, regeneration: Boolean = false, originalQuestion: String = "") {
         val live = flowOf(sessionId).value
-        if (live.running || text.isBlank()) return
+        if ((live.running && !regeneration) || text.isBlank()) return
         val time = maxOf(System.currentTimeMillis(), (live.events.maxOfOrNull { it.time } ?: 0) + 1)
         val title = live.title.ifBlank { text.lineSequence().first().take(40) + " · 预览" }
         if (dao.get(sessionId) == null) dao.upsert(SessionEntity(sessionId, title, time, time))
         ownedRoots += sessionId
-        val reply = "**界面预览的本地示例回复**\n\n这里可以检查消息气泡、Markdown、输入框和滚动效果。你刚才输入了：\n\n> ${text.take(200).replace("\n", "\n> ")}\n\n切换侧栏会话、打开设置或新建对话，都使用应用本身的页面。"
+        val reply = if (regeneration) "**重新生成的本地示例回复**\n\n这是同一问题的新一版回答，用于检查重新生成、流式输出和消息位置。\n\n原问题：${originalQuestion.take(200)}"
+            else "**界面预览的本地示例回复**\n\n这里可以检查消息气泡、Markdown、输入框和滚动效果。你刚才输入了：\n\n> ${text.take(200).replace("\n", "\n> ")}\n\n切换侧栏会话、打开设置或新建对话，都使用应用本身的页面。"
         val events = io.github.jackwener.dsh.feature.preview.AppPreviewData.turnEvents(
             text, reply, live.events.count { it.type == "turn/start" } + 1,
             (live.events.maxOfOrNull { it.seq } ?: 0) + 1, time,
         )
-        mutate(sessionId) { it.copy(title = title, exists = true, running = true, runStartedAt = time, events = it.events + events.take(2)) }
+        mutate(sessionId) { it.copy(title = title, exists = true, running = true, startingEngine = false, runStartedAt = time, events = it.events + events.take(2)) }
         delay(200)
         // The isolated preview exercises the same transient reducer and projection as the SDK.
         // Only the final event is stored; no token-level database writes or synthetic history.
@@ -430,6 +433,27 @@ class SessionStore @Inject constructor(
             if (!flowOf(sessionId).value.running) return
         }
         prompt(sessionId, error.retryText ?: context.getString(R.string.retry_continue_prompt))
+    }
+
+    /** Only the latest answer may be regenerated; reserve it before any I/O to reject double taps. */
+    suspend fun regenerate(sessionId: String, turnKey: String) {
+        val question = regenerationLock.withLock {
+            val live = flowOf(sessionId).value
+            val turn = Projector.conversation(live.events, live.running).turns.lastOrNull()
+                ?.takeIf { it.key == turnKey && it.canRegenerate(live) } ?: return
+            if (!regenerationRequests.add(sessionId)) return
+            mutate(sessionId) { it.copy(running = true, startingEngine = true, runStartedAt = System.currentTimeMillis(), assistantStream = null) }
+            turn.user!!.text
+        }
+        try {
+            autoContinued.remove(sessionId)
+            appendLocal(sessionId, "app/notice", buildJsonObject { put("kind", USER_REGENERATE) })
+            // Stop may have been tapped while the local journal write was pending.
+            if (!flowOf(sessionId).value.running) return
+            if (io.github.jackwener.dsh.feature.preview.AppPreviewData.enabled) {
+                previewPrompt(sessionId, REGENERATE_REPLY, regeneration = true, originalQuestion = question)
+            } else prompt(sessionId, REGENERATE_REPLY)
+        } finally { regenerationRequests.remove(sessionId) }
     }
 
     /**

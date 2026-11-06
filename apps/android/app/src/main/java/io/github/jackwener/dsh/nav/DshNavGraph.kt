@@ -44,7 +44,8 @@ import io.github.jackwener.dsh.feature.settings.shellAccessOf
  */
 fun NavGraphBuilder.dshGraph(nav: NavHostController, home: () -> HomeViewModel) {
     val open: (Route) -> Unit = { nav.navigate(it) }
-    composable<HomeRoute> { HomeScreen(home(), onSettings = { nav.openSettings(it) }, onAutomation = { nav.navigate(AutomationRoute) }) }
+    composable<HomeRoute> { HomeScreen(home(), onSettings = { nav.openSettings(it) }, onAutomation = { nav.navigate(AutomationRoute) }, onTools = { nav.navigate(ToolsRoute) }) }
+    composable<ToolsRoute> { e -> io.github.jackwener.dsh.feature.tools.ToolsScreen(onBack = { nav.up(e) }) }
     composable<OnboardingRoute> { OnboardingPage(nav) }
     composable<EnhanceRoute> { e -> EnhanceStep(onDone = { nav.up(e) }) }
     composable<AutomationRoute> { e ->

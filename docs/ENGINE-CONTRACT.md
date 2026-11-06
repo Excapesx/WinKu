@@ -308,6 +308,23 @@ started while the session is idle, which the app showed as the run ending; long 
   `app/notice { kind: "user_continue" }` and sends an app prompt (`[DSH] …`, do not repeat what succeeded); the
   continuation turn folds into the ended one. The nudge shows as a notice inside the turn.
 
+### 2.8 Regenerate the latest answer
+
+- The latest user-backed answer exposes `重新生成` in its footer. Running sessions, pending
+  interactions and queued/steered messages disable it; SessionStore also rejects duplicate or
+  stale callbacks. Home and the quick panel use the same controller action.
+- The app appends `app/notice { kind: "user_regenerate" }`, then sends a marked `[DSH] …`
+  prompt via the existing `session/prompt` method. This asks for a fresh complete answer to the
+  original question in the existing context, including its images; it does not fork, truncate
+  or roll back the engine journal. The prompt instructs the model not to repeat completed
+  device/file/external actions. Existing permission and tool policies still apply.
+- Conversation projection folds this attempt into the same user turn. The previous answer stays
+  visible until replacement text arrives; streaming and final text replace that answer in place.
+  Failure or Stop before a durable replacement retains the last durable answer. The original
+  question is shown once. Both attempts remain in the journal/trajectory, and all usage counts.
+- `工具` is a separate student-tools destination above automations in the drawer. Its contents
+  are intentionally empty until the requested tools are specified; Back retains the conversation.
+
 ## 3. Capability channel (`DSH_BRIDGE_FD`)
 
 A `socketpair(AF_UNIX, SOCK_STREAM)`; Node opens it with `new net.Socket({ fd })`. Newline-delimited JSON-RPC 2.0, both directions.

@@ -84,7 +84,10 @@ const val ENGINE_RECOVERING = "engine_recovering"
 /** `kind` of the `app/notice` logged when the user taps 继续 on a turn's end card (SessionStore.continueTask). */
 const val USER_CONTINUE = "user_continue"
 
-val CONTINUATION_NOTICES = setOf(NETWORK_WAIT, ENGINE_RECOVERING, USER_CONTINUE)
+/** A new answer to the same user question, retaining the durable attempts and their usage. */
+const val USER_REGENERATE = "user_regenerate"
+
+val CONTINUATION_NOTICES = setOf(NETWORK_WAIT, ENGINE_RECOVERING, USER_CONTINUE, USER_REGENERATE)
 
 /** [Block.Notice.kind] of plugin-guard's continuation nudge (a `user/message` with this `source.kind`, ENGINE-CONTRACT §2.7). */
 const val AUTO_CONTINUE = "android-continue"
@@ -180,6 +183,8 @@ data class Turn(
     val outcome: TurnOutcome? = null,
     /** This turn's own todo list (dsh's todos are turn-scoped); null when it wrote none. */
     val todos: List<TodoItem>? = null,
+    /** Keep the old answer until the replacement actually starts arriving. */
+    val regenerating: Boolean = false,
 ) {
     val todoCounts: TodoCounts? get() = todos?.let { TodoCounts.of(it) } ?: outcome?.todos
     val endReason: EndReason? get() = endReasonOf(status, outcome, todoCounts)
@@ -211,7 +216,8 @@ object Projector {
         var usage = Usage()
         var outcome: TurnOutcome? = null
         var todos: List<TodoItem>? = null
-        fun build() = Turn(key, number, user, blocks.toList(), start, end, status, error, usage, outcome, todos)
+        var regenerating = false
+        fun build() = Turn(key, number, user, blocks.toList(), start, end, status, error, usage, outcome, todos, regenerating)
     }
 
     fun conversation(events: List<LoggedEvent>, running: Boolean): Conversation {
@@ -277,6 +283,11 @@ object Projector {
                 "assistant/message" -> {
                     val t = current(e.time, e.seq)
                     val content = d.o("message")?.get("content")
+                    if (t.regenerating && textOf(content).isNotBlank()) {
+                        val previousAnswer = t.blocks.indexOfLast { it is Block.Text }
+                        if (previousAnswer >= 0) t.blocks.removeAt(previousAnswer)
+                        t.regenerating = false
+                    }
                     reasoningOf(content).takeIf { it.isNotBlank() }?.let { t.blocks += Block.Reasoning("r${e.seq}", it) }
                     textOf(content).takeIf { it.isNotBlank() }?.let { t.blocks += Block.Text("x${e.seq}", it, d.b("interrupted") == true) }
                     Usage.of(d.o("usage"))?.let { u -> t.usage += u; total += u; if (u.input > 0) context = u.input }
@@ -357,9 +368,12 @@ object Projector {
                     val kind = d.s("kind")
                     if (kind == NETWORK_WAIT) turns.lastOrNull()?.takeIf { it.status == TurnStatus.Failed }?.let { it.end = null; it.status = TurnStatus.Running; it.error = null }
                     // 继续 on an end card: the continuation is the rest of the same task.
-                    if (kind == USER_CONTINUE) turns.lastOrNull()?.takeIf { it.end != null }?.let { it.end = null; it.status = TurnStatus.Running; it.error = null; it.outcome = null }
+                    if (kind == USER_CONTINUE || kind == USER_REGENERATE) turns.lastOrNull()?.takeIf { it.end != null }?.let {
+                        it.end = null; it.status = TurnStatus.Running; it.error = null; it.outcome = null
+                        if (kind == USER_REGENERATE) it.regenerating = true
+                    }
                     val t = current(e.time, e.seq)
-                    t.blocks += Block.Notice("n${e.seq}", d.s("text") ?: "", kind)
+                    if (kind != USER_REGENERATE) t.blocks += Block.Notice("n${e.seq}", d.s("text") ?: "", kind)
                     if (kind in CONTINUATION_NOTICES) awaiting = t
                 }
             }

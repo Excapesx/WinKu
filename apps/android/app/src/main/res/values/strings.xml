@@ -871,4 +871,8 @@
     <string name="polish_too_long">请将提示词缩短到 8000 字以内再润色。</string>
     <string name="polish_timeout">润色超时，已保留原文，请稍后重试。</string>
     <string name="polish_failed">未能完成润色，已保留原文。请检查模型配置或网络后重试。</string>
+    <string name="regenerate_reply">重新生成</string>
+    <string name="tools_title">工具</string>
+    <string name="tools_empty_title">暂无学习工具</string>
+    <string name="tools_empty_body">学习工具将在这里集中展示。</string>
 </resources>

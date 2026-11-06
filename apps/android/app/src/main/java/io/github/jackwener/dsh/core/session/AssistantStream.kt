@@ -42,7 +42,10 @@ internal fun SessionLive.withAssistantStream(data: JsonObject, generation: Int):
 fun Conversation.withAssistantStream(stream: AssistantStream?): Conversation {
     if (stream == null || stream.blocks.isEmpty()) return this
     val turn = turns.lastOrNull()?.takeIf { it.status == TurnStatus.Running && (it.number == null || it.number == stream.turn) } ?: return this
-    return copy(turns = turns.dropLast(1) + turn.copy(blocks = turn.blocks + stream.blocks))
+    val replacing = turn.regenerating && stream.blocks.any { it is Block.Text }
+    val previousAnswer = if (replacing) turn.blocks.indexOfLast { it is Block.Text } else -1
+    val previous = turn.blocks.filterIndexed { index, _ -> index != previousAnswer }
+    return copy(turns = turns.dropLast(1) + turn.copy(blocks = previous + stream.blocks))
 }
 
 /** The journal changes once per event, whereas transient display snapshots can arrive every frame. */

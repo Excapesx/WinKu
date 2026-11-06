@@ -27,6 +27,8 @@ sealed interface Route
 @Serializable data object EnhanceRoute : Route
 
 @Serializable data object AutomationRoute : Route
+/** Student tools hub; individual tools will be added as their scope is agreed. */
+@Serializable data object ToolsRoute : Route
 /** A rule; id as a string (AutomationViewModel reads it from the SavedStateHandle). */
 @Serializable data class RuleRoute(val id: String) : Route
 

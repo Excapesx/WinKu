@@ -837,4 +837,8 @@
     <string name="onb_setup_models">Настроить модели</string>
     <string name="onb_models_body">Помощник для учёбы, соревнований и повседневных задач. Выберите своего провайдера моделей.</string>
     <string name="prov_protocol">Протокол API</string>
+    <string name="regenerate_reply">Создать ответ заново</string>
+    <string name="tools_title">Инструменты</string>
+    <string name="tools_empty_title">Учебных инструментов пока нет</string>
+    <string name="tools_empty_body">Здесь будут собраны учебные инструменты.</string>
 </resources>

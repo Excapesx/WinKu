@@ -138,7 +138,7 @@ class QuickActivity : ComponentActivity() {
                         if (!conv.isEmpty || live.running) {
                             // weight(fill = false): the stream gives way first, so the composer / approval buttons stay on screen.
                             ChatStream(conv, live, settings.workDetails, list, onInspect = { open(vm.id) }, onRetry = vm::retry, onContinue = { vm.continueTask() }, onOpenSettings = { openSettings(it) },
-                                modifier = Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = 380.dp), compact = true, onLearningAsk = { vm.send(it) })
+                                modifier = Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = 380.dp), compact = true, onLearningAsk = { vm.send(it) }, onRegenerate = { vm.regenerate(it) })
                         }
                         Box(Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
                             ComposerSlot(vm, composer, settings, live, conv, hero = false, prepare = { text ->

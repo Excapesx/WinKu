@@ -68,6 +68,7 @@ fun SessionDrawer(
     onNew: () -> Unit,
     onOpen: (String) -> Unit,
     onAutomation: () -> Unit,
+    onTools: () -> Unit,
     /** Opens Settings, optionally at a section (SettingsSection name). */
     onSettings: (String?) -> Unit,
     onClose: () -> Unit,
@@ -100,6 +101,7 @@ fun SessionDrawer(
             Spacer(Modifier.width(6.dp))
             Text(stringResource(R.string.new_session), style = DshType.s14, color = c.labelPrimary)
         }
+        PanelEntry(R.drawable.dsw_apps_add_outline, stringResource(R.string.tools_title), onTools)
         PanelEntry(R.drawable.dsw_clock_outline, stringResource(R.string.automation), onAutomation)
         PanelEntry(R.drawable.dsw_shield_outline, stringResource(R.string.drawer_permissions)) { onSettings("Phone") }
         Row(Modifier.fillMaxWidth().heightIn(min = 40.dp).padding(start = 8.dp, top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -143,7 +145,7 @@ fun SessionDrawer(
 @Composable
 private fun PanelEntry(@DrawableRes icon: Int, label: String, onClick: () -> Unit) {
     val c = Dsh.colors
-    Row(Modifier.fillMaxWidth().heightIn(min = 40.dp).pressable(onClick, Radius.md).padding(horizontal = 8.dp, vertical = 7.dp),
+    Row(Modifier.fillMaxWidth().heightIn(min = 44.dp).pressable(onClick, Radius.md).padding(horizontal = 8.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         DIcon(icon, size = 16.dp, tint = c.labelSecondary)
         Text(label, style = DshType.s14, color = c.labelPrimary)
