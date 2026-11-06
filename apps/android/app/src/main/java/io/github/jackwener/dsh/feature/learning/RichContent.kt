@@ -17,7 +17,7 @@ sealed interface RichPart {
 object RichContent {
     private val opening = Regex("^ {0,3}(`{3,}|~{3,})([^\\r\\n]*)$")
     private val supported = setOf("dsh-visual", "mermaid", "math", "dsh-html")
-    private val types = setOf("function", "diagram", "chart", "quiz", "math", "table", "code", "html")
+    private val types = setOf("function", "diagram", "chart", "quiz", "math", "table", "code", "html", "explanation")
     private val json = Json { ignoreUnknownKeys = true }
 
     fun parse(text: String): List<RichPart> {

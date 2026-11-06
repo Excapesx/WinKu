@@ -13,7 +13,7 @@
     "./continuation": "./continuation.js",
     "./package.json": "./package.json"
   },
-  "files": ["index.js", "learning.js", "hardline.js", "experience.js", "continuation.js", "assistant-stream.js", "package.json"],
+  "files": ["index.js", "learning.js", "learning-templates.js", "hardline.js", "experience.js", "continuation.js", "assistant-stream.js", "package.json"],
   "engines": {
     "dsh": "0.2.1-rc.5"
   }

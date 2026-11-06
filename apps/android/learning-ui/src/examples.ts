@@ -1,4 +1,5 @@
 import type {Spec} from './types';
+import {learningTemplates} from '../../js/packages/plugin-guard/learning-templates.js';
 export const examples:Record<string,Spec> = {
   function:{type:'function',id:'parabola',title:'函数画板',description:'改变参数，看看抛物线怎样移动。',functions:[{id:'f1',expression:'a*(x-h)^2+k',label:'抛物线'},{id:'f2',expression:'sin(x)',label:'正弦曲线',visible:false}],parameters:[{name:'a',value:1,min:-3,max:3,step:0.1},{name:'h',value:0,min:-4,max:4,step:0.1},{name:'k',value:0,min:-4,max:4,step:0.1}],xDomain:[-5,5],yDomain:[-3,7]},
   diagram:{type:'diagram',id:'learning-loop',title:'把一个问题学明白',source:'flowchart TD\n A[提出问题] --> B[观察图像]\n B --> C[改变参数]\n C --> D{能解释变化吗？}\n D -->|还不确定| B\n D -->|能| E[试一道小题]\n E --> F[根据答案继续讲解]'},
@@ -9,3 +10,4 @@ export const examples:Record<string,Spec> = {
   code:{type:'code',title:'把函数写成代码',language:'python',code:'def parabola(x, a=1, h=0, k=0):\n    return a * (x - h) ** 2 + k\n\nfor x in range(-2, 3):\n    print(x, parabola(x))'},
   html:{type:'html',title:'交互内容',html:'<style>body{font:16px system-ui;margin:24px;color:CanvasText;background:Canvas}button{padding:14px 24px;border:0;border-radius:12px;background:#0e8a4a;color:white;font:inherit}</style><p id="count">已经尝试 0 次</p><button id="try">试一下</button><script>let n=0;document.getElementById("try").onclick=()=>document.getElementById("count").textContent="已经尝试 "+(++n)+" 次";</script>'}
 };
+for(const [index,template] of learningTemplates.entries())examples[`teaching-${index}`]=template.spec as Spec;

@@ -1,6 +1,8 @@
 import {Marked} from 'marked';
 import katex from 'katex';
+import 'katex/contrib/mhchem';
 import {expressionToTex} from './math.mjs';
+import {renderCodeBlock} from './code-block.mjs';
 
 const escape=text=>text.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function textbookArguments(source) {
@@ -51,7 +53,7 @@ const renderMath=token=>{
   const display=token.display||/\\displaystyle\b/.test(token.latex)||(token.latex.length>70&&/\\(?:frac|lim)\b/.test(token.latex));
   return `<${tag} class="${display?'math-display':'math-inline'}">${renderFormula(token.latex,display)}</${tag}>`;
 };
-const parser=new Marked({gfm:true,breaks:false,renderer:{html:({text})=>escape(text),image:({text})=>escape(text),link:function({tokens,href}){
+const parser=new Marked({gfm:true,breaks:false,renderer:{code:({text,lang})=>renderCodeBlock(text,lang),html:({text})=>escape(text),image:({text})=>escape(text),link:function({tokens,href}){
   const label=this.parser.parseInline(tokens);
   return /^https?:\/\//i.test(href)?`<a href="${escape(href)}">${label}</a>`:label;
 }}});

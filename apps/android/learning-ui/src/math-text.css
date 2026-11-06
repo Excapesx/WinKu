@@ -8,7 +8,7 @@
 .math-text strong{font-weight:650}.math-text ul,.math-text ol{padding-left:1.6em}.math-text li{margin:.45em 0}
 .math-text a{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
 .math-text blockquote{margin:1em 0;border-left:3px solid var(--border);padding-left:1em;color:var(--muted)}
-.math-text pre{overflow-x:auto;white-space:pre;padding:12px;background:var(--code);border-radius:12px}
+
 .math-text code{font:.875em ui-monospace,monospace;background:var(--code);border-radius:4px}
 .math-text table{display:block;overflow-x:auto;border-collapse:collapse}
 .math-text td,.math-text th{border:1px solid var(--border);padding:8px 12px}

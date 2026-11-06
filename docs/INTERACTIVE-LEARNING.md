@@ -6,7 +6,7 @@ For installation and everyday use in Chinese, see [安装与使用](INTERACTIVE-
 
 ## Use
 
-Open **交互学习** on the sign-in screen, or **Settings → 交互学习**, to try the eight offline component examples without starting the agent. In a conversation, ask for an explanation with an interactive function, diagram or quiz. The engine prompt describes the format automatically.
+Open **Settings → 交互学习** to try the offline component examples without starting the agent. In a conversation, ask for an explanation with an interactive function, diagram, quiz or teaching card. The engine prompt describes the format automatically. See [教学组件与生成方法](TEACHING-COMPONENTS.md) for the built-in generation guide and complete examples.
 
 - Functions: add/remove/show/hide up to eight expressions; edit expressions; add parameters; change parameter values, bounds and step; pinch zoom; pan; tap a coordinate; fit/reset the viewport; fullscreen.
 - Diagrams: Mermaid, pan, pinch zoom and reset.
@@ -15,6 +15,7 @@ Open **交互学习** on the sign-in screen, or **Settings → 交互学习**, t
 - Math: KaTeX, with locally packaged fonts.
 - Tables: sortable headers and horizontal scrolling.
 - Code: syntax highlighting and copy; display only.
+- Teaching cards: flows, step-by-step explanations, comparisons and learning summaries, with labelled semantic colors and mathematical text.
 - HTML: a separate opaque sandbox for self-contained interactions, with no network or native access.
 
 `结合我的操作讲解` sends the current functions/parameters/viewport or quiz state as an ordinary user follow-up in the same conversation. It does not send on every gesture. The offline gallery hides agent actions because it has no active conversation. Interaction snapshots are stored privately on the device, scoped by conversation, message, block position and payload fingerprint. At most 64 snapshots of 48 KB each are retained. Fullscreen and normal views share the snapshot.
@@ -29,7 +30,7 @@ Use a complete, top-level fenced block. JSON is data, never an executable expres
 ```
 ````
 
-Other `type` values are `diagram`, `chart`, `quiz`, `math`, `table`, `code`, `html`. See `learning-ui/src/types.ts`, `schema.mjs`, `examples.ts` and `js/packages/plugin-guard/learning.js` for the fields. `mermaid`, `math` and explicit `dsh-html` fences are shortcuts. Ordinary `html` fences remain code. Incomplete streamed blocks, unsupported types and invalid JSON remain readable Markdown. Code fences that document another fence are not executed.
+Other `type` values are `diagram`, `chart`, `quiz`, `math`, `table`, `code`, `html`, `explanation`. See `learning-ui/src/types.ts`, `schema.mjs`, `examples.ts` and `js/packages/plugin-guard/learning.js` for the fields. `mermaid`, `math` and explicit `dsh-html` fences are shortcuts. Ordinary `html` fences remain code. Incomplete streamed blocks, unsupported types and invalid JSON remain readable Markdown. Code fences that document another fence are not executed.
 
 ### Textbook mathematics (WinKu, 2026-11-06)
 
