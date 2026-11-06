@@ -17,6 +17,7 @@ import io.github.jackwener.dsh.core.engine.EngineState
 import io.github.jackwener.dsh.core.model.PermissionPreset
 import io.github.jackwener.dsh.core.session.ApprovalOutcome
 import io.github.jackwener.dsh.core.session.Conversation
+import io.github.jackwener.dsh.core.session.LiveConversationProjector
 import io.github.jackwener.dsh.core.session.PendingApproval
 import io.github.jackwener.dsh.core.session.PendingQuestion
 import io.github.jackwener.dsh.core.session.Projector
@@ -80,10 +81,10 @@ open class ConversationController(
         differs && status.values.any { it != RowStatus.Idle }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    private val conversationProjector = LiveConversationProjector()
     val conversation: StateFlow<Conversation> = live
-        .distinctUntilChangedBy { Triple(it.sessionId, it.events.size, it.running) }
+        .map { conversationProjector.project(it) }
         .conflate()
-        .map { Projector.conversation(it.events, it.running) }
         .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.Eagerly, Conversation())
 

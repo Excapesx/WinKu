@@ -1,10 +1,6 @@
 package io.github.jackwener.dsh.feature.conversation
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +31,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.key
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -135,11 +132,13 @@ private fun ConversationPane(vm: HomeViewModel, onMenu: () -> Unit, onSettings: 
         val agentDisplay by vm.agentDisplay.collectAsStateWithLifecycle()
         agentDisplay?.takeIf { live.running }?.let { AgentPreview(vm, it) }
         Box(Modifier.weight(1f).fillMaxWidth()) {
-            AnimatedContent(Triple(view, empty, live.sessionId), transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "pane") { (v, isEmpty, _) ->
+            // A live response must replace the empty hero immediately. Crossfading both panes
+            // keeps two composers alive and delays the first visible text during the transition.
+            key(view, live.sessionId) {
                 when {
-                    v == SessionView.Trajectory -> TrajectoryView(vm)
-                    isEmpty -> EmptyHero(vm, composer, settings, live, conv, onAutomation, onSettings)
-                    // One list state per session (and per crossfading pane), so positions never leak across sessions.
+                    view == SessionView.Trajectory -> TrajectoryView(vm)
+                    empty -> EmptyHero(vm, composer, settings, live, conv, onAutomation, onSettings)
+                    // One list state per session, so positions never leak across sessions.
                     else -> ChatStream(conv, live, settings.workDetails, rememberLazyListState(), onInspect = vm::inspect, onRetry = vm::retry, onContinue = { vm.continueTask() }, onOpenSettings = { onSettings(it) }, modifier = Modifier.fillMaxSize(), onLearningAsk = { vm.send(it) })
                 }
             }

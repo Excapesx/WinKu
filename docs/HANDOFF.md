@@ -1,6 +1,6 @@
 # 交接说明（给下一个接手的人 / agent）
 
-> 最后更新 2026-11-05。读完这份再动代码，能省你半天。
+> 最后更新 2026-11-06。读完这份再动代码，能省你半天。
 
 ## 0. 先说你面对的是什么
 
@@ -89,6 +89,9 @@ $adb="<repo>\apps\android\toolchains\local\android-sdk\platform-tools\adb.exe"
 197 项引擎测试通过，包含实际打包的提示词组装、SDK 拒绝未注册路由、请求头、网关回放和设备策略；4 项 Android 设备测试通过，使用隔离 Keystore 与本机 HTTP 服务验证密钥迁移及三种协议。
 预览包和 arm64 包均构建成功，APK 内嵌 engine.zip 校验一致，空模型配置与协议选择器已装机截图检查。产物在 `apps/android/build/winku-release/`（不入库）。预览包不启动真实 Node 引擎；通过 dsh 调用真实服务商仍需 arm64 真机与有效 API Key 验证。
 
+流式显示（2026-11-06）：376 项 JVM 回归通过（同样排除上述两个旧测试类），211 项引擎测试通过，实际 SDK 通道验证首段先于最终日志送达、24ms 合并和终止清理。设备测试包含流式会话、原有模型配置与学习触摸共 6 项；模型真实联网和物理手机帧率仍待真机验证。
+本机模拟器在旧 `swiftshader_indirect` 图形配置下曾退出，改用 `-gpu swiftshader -feature -Vulkan` 后设备测试完整通过。预览包的本地示例现在也逐步输出，便于离线检查排版、自动滚动与停止；正式包仍使用实际引擎增量。
+
 ## 4. 代码地图（`apps/android/`）
 
 | 位置 | 责任 |
@@ -105,6 +108,8 @@ $adb="<repo>\apps\android\toolchains\local\android-sdk\platform-tools\adb.exe"
 
 ## 5. 已经做过的架构改动（别改回去）
 
+- **真实流式显示**：`plugin-guard/assistant-stream.js` 将内核增量通过 `session.assistant-stream` 送给 App；首段立即转发，后续 24ms 合并。临时快照不写数据库，最终日志仍是历史与用量的唯一来源。停止、失败、重试和引擎更换时清理旧状态；不要改成收到整条消息后再慢放
+- 会话投影缓存已完成的日志，逐帧只叠加当前输出；Markdown 使用现有 0.46.0 库的增量解析，取消逐次尺寸动画和首页/聊天的整页交叉淡入。跟随滚动监听实际内容高度，用户拖动即停止跟随。协议见 ENGINE-CONTRACT §2.3；设备回归 `StreamingOutputTest` 只在独立预览包运行
 - **DeepSeek 账号登录整体移除**：`core/account`、`feature/account` 已删，引擎里
   `plugin-account` 已从 `engine.zip` 和 `cordis.patch.yml` 移除，`llm-deepseek-account` 路由已 disabled
 - 模型配置统一存在 `Settings.providers`，全部经过 `llm-service-lite`；支持 Chat Completions、Responses、Messages。Anthropic 预设使用 Messages，DeepSeek 只是普通可选预设，新安装没有默认服务商或模型

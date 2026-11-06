@@ -29,6 +29,7 @@ import { checkCommand, isReadOnlyCommand, refusalText } from './hardline.js'
 import { setupExperience } from './experience.js'
 import { setupContinuation } from './continuation.js'
 import { learningPrompt } from './learning.js'
+import { setupAssistantStream } from './assistant-stream.js'
 
 export { checkCommand, isReadOnlyCommand, refusalText } from './hardline.js'
 
@@ -327,6 +328,7 @@ export async function reasoningLevels(llm, models) {
 }
 
 export function apply(ctx, config = {}) {
+  setupAssistantStream(ctx)
   const askTools = new Set(Array.isArray(config.askTools) ? config.askTools : ['bash', 'write', 'edit'])
   const prices = { ...DEFAULT_PRICES, ...(config.prices ?? {}) }
   const locale = typeof config.locale === 'string' ? config.locale : (process.env.DSH_ANDROID_LOCALE ?? '')

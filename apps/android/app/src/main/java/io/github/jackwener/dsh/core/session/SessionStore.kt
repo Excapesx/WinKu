@@ -248,10 +248,29 @@ class SessionStore @Inject constructor(
             text, reply, live.events.count { it.type == "turn/start" } + 1,
             (live.events.maxOfOrNull { it.seq } ?: 0) + 1, time,
         )
-        mutate(sessionId) { it.copy(title = title, exists = true, running = true, events = it.events + events.take(2)) }
-        delay(400)
+        mutate(sessionId) { it.copy(title = title, exists = true, running = true, runStartedAt = time, events = it.events + events.take(2)) }
+        delay(200)
+        // The isolated preview exercises the same transient reducer and projection as the SDK.
+        // Only the final event is stored; no token-level database writes or synthetic history.
+        val attempt = "preview/$sessionId/$time"
+        val turn = live.events.count { it.type == "turn/start" } + 1
+        val generation = flowOf(sessionId).value.assistantStreamGeneration.coerceAtLeast(0)
+        var revision = flowOf(sessionId).value.assistantStreamRevision + 1
+        var offset = 0
+        while (offset < reply.length) {
+            if (flowOf(sessionId).value.runStartedAt != time) return
+            offset = reply.offsetByCodePoints(offset, minOf(5, reply.codePointCount(offset, reply.length)))
+            val snapshot = buildJsonObject {
+                put("attemptId", attempt); put("revision", revision++); put("phase", "streaming")
+                put("turn", turn); put("step", 1); put("startedAt", time)
+                putJsonArray("blocks") { add(buildJsonObject { put("index", 0); put("type", "text"); put("text", reply.substring(0, offset)) }) }
+            }
+            mutate(sessionId) { it.withAssistantStream(snapshot, generation) }
+            delay(24)
+        }
+        if (flowOf(sessionId).value.runStartedAt != time) return
         for (event in events) dao.insertEvent(EventEntity(sessionId, event.seq, event.type, event.data.toString(), event.time))
-        mutate(sessionId) { it.copy(running = false, events = it.events + events.drop(2)) }
+        mutate(sessionId) { it.copy(running = false, runStartedAt = null, assistantStream = null, events = it.events + events.drop(2)) }
     }
 
     fun removeQueued(sessionId: String, id: String) = scope.launch { mutate(sessionId) { s -> s.copy(queue = s.queue.filterNot { it.id == id }) } }
@@ -579,6 +598,10 @@ class SessionStore @Inject constructor(
         if (method == "user-question.cancelled") { params.s("requestId")?.let(::cancelQuestion); return }
         val sessionId = params.s("sessionId") ?: return
         when (method) {
+            "session.assistant-stream" -> {
+                if (gen <= engine.retiredGeneration) return
+                mutate(sessionId) { it.withAssistantStream(params, gen) }
+            }
             "session.event" -> {
                 val event = params.o("event") ?: return
                 val type = event.s("type") ?: return
@@ -603,7 +626,7 @@ class SessionStore @Inject constructor(
                 // A repeated idle while the session waits for the network must not end (or re-arm) the wait.
                 if (!running && flowOf(sessionId).value.waitingForNetwork) return
                 dao.setRunning(sessionId, running)
-                mutate(sessionId) { it.copy(running = running, startingEngine = false, runStartedAt = if (running) (it.runStartedAt ?: System.currentTimeMillis()) else null) }
+                mutate(sessionId) { it.copy(running = running, assistantStream = if (running) it.assistantStream else null, startingEngine = false, runStartedAt = if (running) (it.runStartedAt ?: System.currentTimeMillis()) else null) }
                 if (!running) onTurnFinished(sessionId)
             }
         }
@@ -880,6 +903,7 @@ class SessionStore @Inject constructor(
      */
     suspend fun onEngineLost(gen: Int, retryInMs: Long?) {
         if (stopping) return
+        states.keys.forEach { id -> mutate(id) { if (it.assistantStreamGeneration <= gen) it.copy(assistantStream = null) else it } }
         android.util.Log.w(TAG, "engine gen $gen lost; retry in $retryInMs ms")
         cancelPending()
         // A session waiting for the network has no turn in the engine; its continuation starts a new one.

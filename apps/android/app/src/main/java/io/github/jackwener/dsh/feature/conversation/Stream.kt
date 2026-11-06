@@ -1,6 +1,10 @@
 package io.github.jackwener.dsh.feature.conversation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -33,6 +37,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,6 +62,7 @@ import io.github.jackwener.dsh.core.designsystem.DButton
 import io.github.jackwener.dsh.core.designsystem.Dsh
 import io.github.jackwener.dsh.core.designsystem.DshMarkdown
 import io.github.jackwener.dsh.core.designsystem.DshType
+import io.github.jackwener.dsh.core.designsystem.LocalReducedMotion
 import io.github.jackwener.dsh.core.designsystem.Fmt
 import io.github.jackwener.dsh.core.designsystem.HDivider
 import io.github.jackwener.dsh.core.designsystem.IconBtn
@@ -102,12 +108,38 @@ fun ChatStream(
 ) {
     val scope = rememberCoroutineScope()
     var follow by remember { mutableStateOf(true) }
+    var dragging by remember { mutableStateOf(false) }
+    val reducedMotion = LocalReducedMotion.current
     val atBottom by remember { derivedStateOf { !listState.canScrollForward } }
-    LaunchedEffect(listState.isScrollInProgress) { if (listState.isScrollInProgress) follow = atBottom }
-    LaunchedEffect(atBottom) { if (atBottom) follow = true }
+    LaunchedEffect(listState) {
+        listState.interactionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is DragInteraction.Start -> { dragging = true; follow = false }
+                is DragInteraction.Stop, is DragInteraction.Cancel -> { dragging = false; if (!listState.canScrollForward) follow = true }
+            }
+        }
+    }
+    LaunchedEffect(atBottom, dragging) { if (atBottom && !dragging) follow = true }
     val lastIndex = conv.turns.size + live.steers.size
-    val tailKey = conv.turns.lastOrNull()?.let { it.blocks.size to it.status } to (live.running to live.steers.size)
-    LaunchedEffect(tailKey, live.sessionId) { if (follow && lastIndex >= 0) listState.scrollToItem(lastIndex, Int.MAX_VALUE / 2) }
+    LaunchedEffect(follow, live.sessionId, listState, reducedMotion) {
+        if (!follow) return@LaunchedEffect
+        // Follow measured content growth, including text in the same block. Programmatic scrolling
+        // must not be mistaken for a user drag, and text must not restart a scrolling animation.
+        snapshotFlow {
+            val info = listState.layoutInfo
+            val last = info.visibleItemsInfo.lastOrNull()
+            Triple(info.totalItemsCount, last?.index ?: -1,
+                (last?.let { it.offset + it.size } ?: 0) + info.afterContentPadding - info.viewportEndOffset)
+        }.collect { (count, index, gap) ->
+            if (count > 0 && index >= 0) {
+                if (index < count - 2) listState.scrollToItem(count - 1, Int.MAX_VALUE / 2)
+                else if (gap > 0) {
+                    if (reducedMotion) listState.scrollBy(gap.toFloat())
+                    else listState.animateScrollBy(gap.toFloat(), tween(80))
+                }
+            }
+        }
+    }
 
     Box(modifier) {
         LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp)) {
@@ -126,7 +158,7 @@ fun ChatStream(
         AnimatedVisibility(!follow && !atBottom, Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 12.dp), enter = fadeIn(), exit = fadeOut()) {
             val c = Dsh.colors
             Box(Modifier.size(34.dp).elevated(CircleShape, c.borderL2).clip(CircleShape).background(c.floating)
-                .pressable({ follow = true; scope.launch { listState.animateScrollToItem(lastIndex, Int.MAX_VALUE / 2) } }, CircleShape),
+                .pressable({ scope.launch { listState.animateScrollToItem(lastIndex, Int.MAX_VALUE / 2); follow = true } }, CircleShape),
                 contentAlignment = Alignment.Center) {
                 Chevron(size = 16.dp, tint = c.labelSecondary)
                 val label = stringResource(R.string.back_to_bottom)
@@ -142,7 +174,9 @@ private fun TurnView(
     onInspect: (String) -> Unit, onRetry: (TurnError) -> Unit, onOpenSettings: (String) -> Unit, onContinue: () -> Unit, compact: Boolean, onLearningAsk: (String) -> Unit,
 ) {
     val running = turn.status == TurnStatus.Running
-    val process = turn.process
+    // Keep the visible answer in the same slot while streaming and after durable settlement.
+    val reply = turn.blocks.lastOrNull() as? Block.Text
+    val process = if (reply != null) turn.blocks.dropLast(1) else turn.blocks
     val defaultOpen = when (details) {
         WorkDetails.Compact -> false
         WorkDetails.Standard -> isLast
@@ -159,7 +193,7 @@ private fun TurnView(
                 ProcessBlocks(turn.key, process, running, live.sessionId, onInspect, onLearningAsk)
             }
         }
-        turn.reply?.let { reply ->
+        reply?.let { reply ->
             Spacer(Modifier.height(12.dp))
             LearningMarkdown(reply.text, "${live.sessionId}/${turn.key}/${reply.key}", onLearningAsk)
         }

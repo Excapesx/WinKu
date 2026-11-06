@@ -108,6 +108,9 @@ data class SessionLive(
     /** SessionMode id from the session row (or picked for a new conversation); null = 默认. */
     val modeId: String? = null,
     val exists: Boolean = false,
+    val assistantStream: AssistantStream? = null,
+    val assistantStreamGeneration: Int = -1,
+    val assistantStreamRevision: Long = -1,
 ) {
     /** The mode can be picked only before the conversation's first message (see [modeChangeable]). */
     val modeChangeable: Boolean get() = io.github.jackwener.dsh.core.model.modeChangeable(exists, running, events.any { it.seq >= 0 })
@@ -143,6 +146,7 @@ data class SessionLive(
      * drops them, ENGINE-CONTRACT §2).
      */
     fun idle(): SessionLive = copy(
+        assistantStream = null,
         running = false, startingEngine = false, runStartedAt = null, waitingForUnlock = false, waitingForNetwork = false, queue = emptyList(), steers = emptyList(),
         restoredDraft = (listOfNotNull(restoredDraft) + steers.map { it.text } + queue.map { it.text }).joinToString("\n\n").ifEmpty { null },
     )
@@ -156,6 +160,9 @@ data class SessionLive(
 
     /** [e] was just logged: a steer it carries is now part of the conversation (no second bubble). */
     fun withLogged(e: LoggedEvent): SessionLive {
+        if (e.type == "turn/start" || e.type == "turn/end" || e.type == "assistant/message" || e.type == "assistant/attempt") {
+            return if (assistantStream == null) this else copy(assistantStream = null)
+        }
         if (e.type != "user/message" || steers.isEmpty()) return this
         val id = e.data.s("id") ?: return this
         return if (steers.none { it.messageId == id }) this else copy(steers = steers.filterNot { it.messageId == id })

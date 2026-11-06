@@ -173,6 +173,34 @@ an offset past its log (`LogSeqs`), never treating a seq as a cross-generation i
   for them — plugin-guard answers "nobody is available" itself. No engine-side auto-allow of writes there.
 - dsh 0.2.1-rc.5's SDK server (the 0.2.1 release line) lacks SDK approval/question requests; `js/patches/08` backports them from the upstream development line (drop once a bundled dsh ships them).
 
+### 2.3 Transient assistant output
+
+`plugin-guard/assistant-stream.js` bridges dsh's `agent/assistant-stream` through the existing
+SDK extension notification hook as `session.assistant-stream`:
+
+```
+{ sessionId, attemptId, revision, turn, step, startedAt, phase: "streaming" | "end",
+  blocks: [{ index, type: "text" | "reasoning", text }] }
+```
+
+The first text/reasoning delta is published immediately. Subsequent updates are coalesced within
+24 ms per session. Revisions are monotonic across Agent reattachments for the whole engine
+generation; the Android generation/revision watermark rejects old updates. Block-end content is
+authoritative, and a closed block ignores late deltas. Terminal frames cancel pending snapshots.
+
+These snapshots are in-memory display state only. Durable `assistant/message` or `assistant/attempt`
+settlement clears the overlay atomically with the journal update; stop, idle and engine loss clear
+unfinished state. Only durable records supply history and usage. The view model caches the journal
+projection and overlays the current attempt, avoiding a complete history replay for each token.
+
+The Compose renderer appends to the existing markdown library's StreamingMarkdownState sequentially,
+retains parsed stable blocks and reparses the unfinished tail. Replacement content resets that parser.
+Text-size animations and the empty-page crossfade are disabled; measured content growth drives
+bottom following, while a user drag cancels following. Reduced motion uses immediate scrolling.
+There is no fixed typing-speed cap or delayed terminal-message animation.
+
+Renderer API: [upstream streaming documentation](https://github.com/mikepenz/multiplatform-markdown-renderer#streaming).
+
 ### 2.4 Account — removed
 
 WinKu has no account login module or account RPC. The account plugin is omitted from the engine archive;

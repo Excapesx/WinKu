@@ -27,10 +27,14 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +57,8 @@ import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
 import com.mikepenz.markdown.model.markdownPadding
+import com.mikepenz.markdown.model.markdownAnimations
+import com.mikepenz.markdown.model.rememberStreamingMarkdownState
 import io.github.jackwener.dsh.R
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -77,22 +83,47 @@ fun DshMarkdown(text: String, modifier: Modifier = Modifier, compact: Boolean = 
     val body = (if (compact) DshType.xs13 else DshType.body).copy(color = color)
     fun h(size: Int, line: Int, w: Int) = body.copy(fontSize = size.sp, lineHeight = line.sp, fontWeight = FontWeight(w))
     val code = DshType.mono12.copy(fontSize = 11.sp, lineHeight = 19.sp, color = c.labelPrimary)
-    Markdown(
-        text,
-        colors = markdownColor(text = color, codeBackground = c.codeBlock, inlineCodeBackground = c.inlineCode, dividerColor = c.borderL2, tableBackground = c.bgModule),
-        typography = markdownTypography(
-            h1 = if (compact) body.copy(fontWeight = FontWeight(600)) else h(21, 30, 700),
-            h2 = if (compact) body.copy(fontWeight = FontWeight(600)) else h(19, 28, 700),
-            h3 = if (compact) body.copy(fontWeight = FontWeight(600)) else h(18, 26, 700),
-            h4 = body.copy(fontWeight = FontWeight(600)), h5 = body.copy(fontWeight = FontWeight(600)), h6 = body.copy(fontWeight = FontWeight(600)),
-            text = body, code = code, inlineCode = body.copy(fontFamily = FontFamily.Monospace, fontSize = body.fontSize * 0.875f),
-            quote = body.copy(color = c.labelSecondary), paragraph = body, ordered = body, bullet = body, list = body,
-            textLink = androidx.compose.ui.text.TextLinkStyles(androidx.compose.ui.text.SpanStyle(color = c.link, fontWeight = FontWeight(500))),
-            table = body.copy(fontSize = 13.sp, lineHeight = 22.sp),
-        ),
-        padding = markdownPadding(block = if (compact) 2.dp else 6.dp, codeBlock = androidx.compose.foundation.layout.PaddingValues(14.dp, 10.dp)),
-        modifier = modifier,
-    )
+    val source = remember { MarkdownSource() }
+    // Replacement (retry, pruning, switching content) gets a fresh parser. Ordinary appended
+    // tokens preserve the stable AST and only reparse its unfinished tail, without loading flashes.
+    key(source.update(text)) {
+        val state = rememberStreamingMarkdownState()
+        val latest by rememberUpdatedState(text)
+        LaunchedEffect(state) {
+            // Sequential collection: a new token must not cancel an in-flight append and lose text.
+            snapshotFlow { latest }.collect { target ->
+                val offset = state.content.length
+                if (target.length > offset) state.append(target.substring(offset))
+            }
+        }
+        Markdown(
+            streamingMarkdownState = state,
+            animations = markdownAnimations(animateTextSize = { this }),
+            colors = markdownColor(text = color, codeBackground = c.codeBlock, inlineCodeBackground = c.inlineCode, dividerColor = c.borderL2, tableBackground = c.bgModule),
+            typography = markdownTypography(
+                h1 = if (compact) body.copy(fontWeight = FontWeight(600)) else h(21, 30, 700),
+                h2 = if (compact) body.copy(fontWeight = FontWeight(600)) else h(19, 28, 700),
+                h3 = if (compact) body.copy(fontWeight = FontWeight(600)) else h(18, 26, 700),
+                h4 = body.copy(fontWeight = FontWeight(600)), h5 = body.copy(fontWeight = FontWeight(600)), h6 = body.copy(fontWeight = FontWeight(600)),
+                text = body, code = code, inlineCode = body.copy(fontFamily = FontFamily.Monospace, fontSize = body.fontSize * 0.875f),
+                quote = body.copy(color = c.labelSecondary), paragraph = body, ordered = body, bullet = body, list = body,
+                textLink = androidx.compose.ui.text.TextLinkStyles(androidx.compose.ui.text.SpanStyle(color = c.link, fontWeight = FontWeight(500))),
+                table = body.copy(fontSize = 13.sp, lineHeight = 22.sp),
+            ),
+            padding = markdownPadding(block = if (compact) 2.dp else 6.dp, codeBlock = androidx.compose.foundation.layout.PaddingValues(14.dp, 10.dp)),
+            modifier = modifier,
+        )
+    }
+}
+
+private class MarkdownSource {
+    private var previous = ""
+    private var revision = 0
+    fun update(text: String): Int {
+        if (!text.startsWith(previous)) revision++
+        previous = text
+        return revision
+    }
 }
 
 /** dsh CodeBlock / TerminalBlock: R16 card on the code-block fill with a banner and copy button. */
