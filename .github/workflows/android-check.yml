@@ -26,6 +26,9 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
       - name: Test and compile Android UI
         working-directory: apps/android
         run: bash gradlew :app:testDebugUnitTest :app:assembleDebug -Pdsh.fetchShizuku=false --console=plain
