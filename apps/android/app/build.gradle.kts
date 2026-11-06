@@ -24,8 +24,8 @@ android {
         applicationId = "io.github.jackwener.dsh"
         minSdk = 29
         targetSdk = 36
-        versionCode = 27
-        versionName = "0.3.8"
+        versionCode = 28
+        versionName = "1.0"
         ndk { abiFilters += if (learningPreview) "x86_64" else "arm64-v8a" }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "LEARNING_PREVIEW", learningPreview.toString())
@@ -59,7 +59,7 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = if (learningPreview) ".learning.preview" else ".learning"
-            versionNameSuffix = "-learning.1"
+            if (learningPreview) versionNameSuffix = "-preview"
             resValue("string", "app_name", "WinKu")
         }
         release {

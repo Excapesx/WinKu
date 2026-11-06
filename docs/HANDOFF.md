@@ -87,6 +87,10 @@ $adb="<repo>\apps\android\toolchains\local\android-sdk\platform-tools\adb.exe"
 
 交付约定：新版本构建并验证成功后，默认删除 `apps/android/build/winku-release/` 中的旧交付 APK，只保留最新真机包；用户明确要求保留时除外。测试预览包放本轮验证目录。不要把 `toolchains/` 中的构建依赖 APK 当作旧交付包清理。
 
+资源约定：编译与模拟器测试分开执行；验证结束关闭本轮 Gradle/Kotlin 后台进程和 `dsh-learning-test` 模拟器。仅改版本等构建元数据时直接核对 APK 清单，不为此启动模拟器。内存紧张时可使用 `--no-daemon --no-parallel --max-workers=2 "-Dorg.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8" "-Pkotlin.compiler.execution.strategy=in-process"`，避免编译结束后后台继续占用内存。
+
+当前交付版本为 v1.0（`versionName=1.0`，`versionCode=28`）；真机包移除旧 `-learning.1` 版本后缀，独立模拟器预览包保留 `-preview` 后缀，applicationId 不变。
+
 多模型运行时（2026-11-05）的验证：88 项直接相关 JVM 测试通过；扩大回归后，排除 `ShellFilesTest` 和 `ExtensionsStoreTest` 两个旧测试类，其余 370 项 JVM 测试全部通过。前者有 4 项 Windows 临时目录路径断言失败，后者在等待扩展激活事件时挂起，均未修改。
 197 项引擎测试通过，包含实际打包的提示词组装、SDK 拒绝未注册路由、请求头、网关回放和设备策略；4 项 Android 设备测试通过，使用隔离 Keystore 与本机 HTTP 服务验证密钥迁移及三种协议。
 预览包和 arm64 包均构建成功，APK 内嵌 engine.zip 校验一致，空模型配置与协议选择器已装机截图检查。产物在 `apps/android/build/winku-release/`（不入库）。预览包不启动真实 Node 引擎；通过 dsh 调用真实服务商仍需 arm64 真机与有效 API Key 验证。
