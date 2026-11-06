@@ -35,6 +35,60 @@ class LearningTouchTest {
         while (SystemClock.uptimeMillis() < until) { if (condition()) return; Thread.sleep(100) }
         fail("Timed out waiting for packaged learning content")
     }
+    @Test fun inlineHeightFollowsContentWhenFormulaGrowsAndShrinks() {
+        val context = instrumentation.targetContext
+        val activity = instrumentation.startActivitySync(Intent(context, LearningActivity::class.java)
+            .putExtra("component", "math").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        try {
+            var web: WebView? = null
+            waitFor {
+                instrumentation.runOnMainSync { web = findWebView(activity.window.decorView) }
+                web != null && js(web!!, "!!document.querySelector('.math-block .katex') && document.fonts.status === 'loaded'") == "true"
+            }
+            fun mount(latex: String, fontScale: Float = 1f) {
+                js(web!!, "window.DshLearningApp.mount({id:'height-regression',type:'math',title:'函数极限的 ε-δ 定义',latex:${kotlinx.serialization.json.JsonPrimitive(latex)}},{},{canAsk:true,fontScale:$fontScale})")
+            }
+            fun measurements(): Pair<Float, Float> {
+                val content = js(web!!, "Math.ceil(document.querySelector('.component-shell').getBoundingClientRect().height)").toFloat()
+                var native = 0f
+                instrumentation.runOnMainSync { native = web!!.height / context.resources.displayMetrics.density }
+                return native to content
+            }
+            fun assertFits(label: String) {
+                waitFor { val (native, content) = measurements(); kotlin.math.abs(native - (content.coerceIn(160f, 1800f) + 2)) < 3f }
+                val (native, content) = measurements()
+                android.util.Log.i("LearningHeightTest", "$label: native=$native dp, card=$content CSS px")
+            }
+            val short = "\\forall\\varepsilon>0,\\exists\\delta>0:0<|x-x_0|<\\delta\\Rightarrow|f(x)-A|<\\varepsilon"
+            mount(short)
+            // A short, horizontally scrollable formula must release the initial 420dp placeholder.
+            assertFits("short formula")
+            if (InstrumentationRegistry.getArguments().getString("screenshots") == "true") {
+                instrumentation.uiAutomation.takeScreenshot().let { bitmap ->
+                    java.io.File(context.externalCacheDir, "formula-height-fixed.png").outputStream().use {
+                        bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+                    }
+                    bitmap.recycle()
+                }
+            }
+            val shortHeight = measurements().first
+            assertEquals("Long formula stays horizontally scrollable", "true", js(web!!,
+                "(()=>{const el=document.querySelector('.math-block');return el.scrollWidth>el.clientWidth})()"))
+            mount("\\begin{aligned}" + (1..12).joinToString("\\\\") { "x_{$it}&=$it" } + "\\end{aligned}")
+            waitFor { measurements().second > shortHeight + 100 }
+            assertFits("tall formula")
+            mount(short)
+            assertFits("short formula restored")
+            assertTrue("Shrinks after tall content", measurements().first < shortHeight + 3)
+            mount(short, 1.6f)
+            waitFor { measurements().second > shortHeight + 10 }
+            assertFits("large text")
+            mount(short)
+            assertFits("normal text restored")
+        } finally {
+            instrumentation.runOnMainSync { activity.finish() }
+        }
+    }
     @Test fun pinchChangesDomainAndPersistsAcrossReopen() {
         val context = instrumentation.targetContext
         val store = ArtifactStateStore(context)

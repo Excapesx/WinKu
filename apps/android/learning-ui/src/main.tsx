@@ -25,7 +25,13 @@ function LearningView({spec,initialState,theme}:{spec:Spec;initialState?:Artifac
   const persist=useCallback(()=>{if(!changed.current)return;const snapshot=latest.current;const serialized=JSON.stringify(snapshot);if(serialized.length>48000)return;send({type:'state',state:snapshot});if(!native())try{localStorage.setItem(`dsh-learning:${spec.id||spec.type}`,serialized);}catch{}},[spec.id,spec.type]);
   useEffect(()=>{const timer=setTimeout(persist,250);return()=>clearTimeout(timer);},[state,persist]);
   useEffect(()=>{const hidden=()=>{if(document.hidden)persist();};window.addEventListener('pagehide',persist);document.addEventListener('visibilitychange',hidden);return()=>{window.removeEventListener('pagehide',persist);document.removeEventListener('visibilitychange',hidden);};},[persist]);
-  useEffect(()=>{if(!host.current)return;const observer=new ResizeObserver(()=>send({type:'height',height:Math.ceil(document.documentElement.scrollHeight)}));observer.observe(host.current);return()=>observer.disconnect();},[]);
+  useEffect(()=>{
+    const card=host.current;if(!card)return;
+    // The document is at least as tall as the native WebView viewport. Measuring it
+    // feeds that reserved height back to Android, so short cards can never shrink.
+    const observer=new ResizeObserver(()=>send({type:'height',height:Math.ceil(card.getBoundingClientRect().height)}));
+    observer.observe(card);return()=>observer.disconnect();
+  },[]);
   useEffect(()=>{const key=(event:KeyboardEvent)=>{if(event.key==='Escape'){setExpanded(false);send({type:'fullscreen',expanded:false});}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[]);
   const store=useMemo(()=>({state,canAsk:theme.canAsk!==false,flush:()=>queueMicrotask(persist),update:(key:string,value:unknown)=>{changed.current=true;setState(old=>({...old,[key]:value}));},ask:(prompt:string)=>{
     if(native()){send({type:'ask',prompt,context:{component:spec.type,title:spec.title,state}});}else{navigator.clipboard?.writeText(prompt).then(()=>setNotice('问题已复制，可粘贴到对话中继续讨论。')).catch(()=>setNotice('这是组件预览；在 DSH 中可继续向 Agent 提问。'));setNotice('这是组件预览；在 DSH 中可继续向 Agent 提问。');}
