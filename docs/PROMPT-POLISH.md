@@ -16,6 +16,10 @@ Android 输入栏模型选择左侧提供 34dp 魔法棒按钮，与发送键同
 
 单元测试：`PromptPolishTest` 覆盖三种协议的请求/响应、截断拒绝、引用保真与推理参数；`PolishDraftTest` 覆盖修改后回退、旧请求与新请求竞争、撤销失效。
 
+本次已独立编译现有 provider 源码与新增状态类，使用与项目一致的协程/序列化版本运行 10 项测试（包含本地 HTTP 请求），全部通过。该检查仅为 Android 生成的资源常量与 BuildConfig 提供占位，不代替 Compose 编译、整包构建或真机验证。
+
+GitHub Actions 随后已通过完整 `:app:testDebugUnitTest :app:assembleDebug` 检查，覆盖 Compose 前端编译。检查记录：https://github.com/Excapesx/WinKu/actions/runs/42207655985 。CI 不包含同学电脑上的完整引擎资源和正式签名，不发布其生成的 APK；真实界面截图、模型速度与装机仍需在完整环境补验。`src/debug/.../PromptPolishPreviews.kt` 提供空闲、加载、完成状态的浅色/深色/窄屏大字预览。
+
 ```powershell
 cd apps/android
 .\gradlew.bat :app:testDebugUnitTest :app:assembleDebug "-Pdsh.fetchShizuku=false" --console=plain

@@ -41,7 +41,7 @@ object PromptPolish {
         when (reasoning?.decl?.control) {
             ReasoningControl.EnableThinking -> if (protocol == ProviderProtocol.ChatCompletions) put("enable_thinking", false)
             ReasoningControl.ThinkingType -> if (protocol != ProviderProtocol.Responses) putJsonObject("thinking") { put("type", "disabled") }
-            ReasoningControl.Effort -> reasoning?.levels.orEmpty().firstOrNull { it.id in listOf("minimal", "low") }?.let {
+            ReasoningControl.Effort -> reasoning.levels.firstOrNull { it.id in listOf("minimal", "low") }?.let {
                 if (protocol == ProviderProtocol.Responses) putJsonObject("reasoning") { put("effort", it.id) }
                 else if (protocol == ProviderProtocol.ChatCompletions) put("reasoning_effort", it.id)
             }
