@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {renderMathText,renderFormula,textbookQuizText} from '../src/math-text.mjs';
+import {renderMathText,renderMathInline,renderFormula,textbookQuizText} from '../src/math-text.mjs';
 
 test('screenshot examples render real fractions and limits, including all four delimiters',()=>{
   for(const text of [String.raw`① 用一次洛必达：$\displaystyle\lim_{x\to0}\frac{\sin x}{x}=1$`,String.raw`\[\lim_{x\to0}\frac{1-\cos x}{x^2}=\frac12\]`,String.raw`结果为 \(\frac{1}{2}\)。`,String.raw`$$\lim_{x\to0^+}x\ln x=0$$`]){
@@ -41,4 +41,15 @@ test('malformed math stays readable and generated markup cannot inject HTML',()=
   const html=renderMathText('<img src=x onerror="window.DshLearning.postMessage(1)"><script>alert(1)</script>');
   assert.doesNotMatch(html,/<img|<script/);assert.match(html,/&lt;/);
   assert.doesNotMatch(renderMathText('[x](javascript:alert(1))'),/href=/);
+});
+test('table screenshot formulas and inline headers support compact fractions and mixed text',()=>{
+  for(const formula of [String.raw`$\frac00$ 或 $\frac{\infty}{\infty}$`,String.raw`$\frac1x-\frac1{\sin x}=\frac{\sin x-x}{x\sin x}$`,String.raw`取对数：$y=f^g\Rightarrow\ln y=g\ln f$`]){
+    const html=renderMathText(formula);assert.match(html,/class="katex"/);assert.doesNotMatch(html,/math-error|math-pending/);
+  }
+  const heading=renderMathInline(String.raw`例子 $\frac00$`);
+  assert.match(heading,/class="mfrac"/);assert.match(heading,/displaystyle/);assert.doesNotMatch(heading,/<p>|<div>/);
+  assert.equal((renderFormula(String.raw`x\ln x=\frac{\ln x}{1/x}`).match(/class="mfrac"/g)||[]).length,2);
+  assert.equal((renderFormula(String.raw`\frac{a/b}{c/d}`).match(/class="mfrac"/g)||[]).length,3);
+  assert.match(renderFormula(String.raw`x^{1/x}`),/class="mfrac"/);
+  assert.doesNotMatch(renderFormula(String.raw`\text{1/2}`),/class="mfrac"/);
 });

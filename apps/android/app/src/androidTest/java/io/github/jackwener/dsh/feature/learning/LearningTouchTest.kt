@@ -217,6 +217,63 @@ class LearningTouchTest {
             capture("math-quiz-feedback-fixed")
         } finally { instrumentation.runOnMainSync { activity.finish() } }
     }
+    @Test fun tableTypesMethodsExamplesHeadersAndDescriptionsRenderMath() {
+        val context = instrumentation.targetContext
+        val activity = instrumentation.startActivitySync(Intent(context, LearningActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as ComponentActivity
+        // The actual five-row payload from the reported screenshot, including compact TeX arguments.
+        val payload = Json.parseToJsonElement("""
+            {"type":"table","id":"math-table-regression","title":"五类未定式的转化 §x§",
+             "description":"从 §\\frac00§ 型开始，检查适用条件。",
+             "columns":["类型","转化方法","例子 §x§"],"rows":[
+               ["§\\frac00§ 或 §\\frac{\\infty}{\\infty}§","直接用洛必达法则","§\\lim_{x\\to0}\\frac{\\sin x}{x}§"],
+               ["§0\\cdot\\infty§","把一个因子写成倒数移到分母","§x\\ln x=\\frac{\\ln x}{1/x}§"],
+               ["§\\infty-\\infty§","通分或有理化，提出公因子","§\\frac1x-\\frac1{\\sin x}=\\frac{\\sin x-x}{x\\sin x}§"],
+               ["§1^\\infty§、§0^0§、§\\infty^0§","取对数：§y=f^g\\Rightarrow\\ln y=g\\ln f§","§(1+x)^{1/x}\\to e§"],
+               ["§\\infty^0§","同上，先算 §\\lim g\\ln f§","§x^{1/x}\\to1§"]
+             ]}
+        """.trimIndent().replace('§', '$')).jsonObject
+        instrumentation.runOnMainSync { activity.setContent { DshTheme {
+            Column(Modifier.fillMaxSize().background(Dsh.colors.bgBase).statusBarsPadding()
+                .verticalScroll(rememberScrollState()).padding(16.dp)) {
+                LearningCard(RichPart.Artifact(payload, "math-table"), "math-table-regression", {})
+            }
+        } } }
+        try {
+            var web: WebView? = null
+            waitFor {
+                instrumentation.runOnMainSync { web = findWebView(activity.window.decorView) }
+                web != null && js(web!!, "document.querySelectorAll('.table-scroll .katex').length >= 16 && document.fonts.status==='loaded'") == "true"
+            }
+            assertEquals("All five rows survive rendering", "5", js(web!!, "document.querySelectorAll('tbody tr').length"))
+            assertEquals("Fractions in the type and example columns", "true", js(web!!,
+                "document.querySelector('tbody tr td').querySelectorAll('.mfrac').length===2 && !!document.querySelectorAll('tbody tr td')[2].querySelector('.mfrac')"))
+            assertEquals("Math is supported in shared title, description and table header", "true", js(web!!,
+                "!!document.querySelector('.component-heading .katex') && !!document.querySelector('.component-description .mfrac') && !!document.querySelector('thead .katex')"))
+            assertEquals("No leaked math source in any student-facing cell", "false", js(web!!, """
+                (()=>{
+                    const root=document.querySelector('.component-shell');
+                    if(root.querySelector('.math-error,.math-pending'))return true;
+                    const nodes=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+                    while(nodes.nextNode()){
+                        const node=nodes.currentNode;
+                        if(!node.parentElement.closest('.katex,code,pre') && /\§|\\(?:frac|lim|infty|Rightarrow)/.test(node.textContent))return true;
+                    }
+                    return false;
+                })()
+            """.trimIndent().replace('§', '$')))
+            capture("math-table-fixed")
+            assertEquals("Wide equations have horizontal scroll instead of broken symbols", "true", js(web!!,
+                "(()=>{const table=document.querySelector('.table-scroll');table.scrollLeft=table.scrollWidth;return table.scrollWidth>table.clientWidth && table.scrollLeft>0})()"))
+            capture("math-table-examples-fixed")
+            js(web!!, "document.querySelectorAll('thead button')[1].click()")
+            waitFor { js(web!!, "document.querySelectorAll('th')[1].getAttribute('aria-sort')") == "\"ascending\"" }
+            js(web!!, "document.querySelectorAll('thead button')[1].click()")
+            waitFor { js(web!!, "document.querySelectorAll('th')[1].getAttribute('aria-sort')") == "\"descending\"" }
+            assertEquals("Math remains rendered after sorting", "true", js(web!!,
+                "document.querySelectorAll('.table-scroll .katex').length >= 16 && !document.querySelector('.math-error,.math-pending')"))
+        } finally { instrumentation.runOnMainSync { activity.finish() } }
+    }
     @Test fun pinchChangesDomainAndPersistsAcrossReopen() {
         val context = instrumentation.targetContext
         val store = ArtifactStateStore(context)

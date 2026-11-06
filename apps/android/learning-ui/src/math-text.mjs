@@ -3,13 +3,24 @@ import katex from 'katex';
 import {expressionToTex} from './math.mjs';
 
 const escape=text=>text.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function textbookArguments(source) {
+  const convert=(match,prefix,argument)=>{
+    try{return `${prefix}{${expressionToTex(argument)}}`;}
+    catch{return match;}
+  };
+  // Only complete arithmetic arguments of fractions and powers are converted.
+  // Ordinary slash-separated prose and text such as \text{1/2} are left alone.
+  for(let pass=0;pass<2;pass++)source=source.replace(
+    /(\\(?:frac|dfrac|tfrac)(?![a-zA-Z])(?:\s*\{[^{}]*\}|\s*[a-zA-Z0-9])?\s*)\{([^{}\\]*\/[^{}\\]*)\}/g,convert);
+  return source.replace(/([_^]\s*)\{([^{}\\]*\/[^{}\\]*)\}/g,convert);
+}
 export function renderFormula(latex,displayMode=false) {
-  let source=latex.trim();
+  let source=textbookArguments(latex.trim());
   // Legacy answers often contain ASCII ratios even inside math delimiters.
   // Parse a complete arithmetic expression, rather than guessing fraction boundaries in prose.
   if(source.includes('/')&&!source.includes('\\'))try{source=expressionToTex(source);}catch{}
   if(/^\\infty\s*\/\s*\\infty$/.test(source))source='\\frac{\\infty}{\\infty}';
-  if(!displayMode&&/\\frac\b/.test(source))source='\\displaystyle '+source;
+  if(!displayMode&&/\\frac(?:\b|\d)/.test(source))source='\\displaystyle '+source;
   try{return katex.renderToString(source,{displayMode,throwOnError:true,trust:false,maxExpand:200,maxSize:20,strict:'ignore'});}
   catch{return '<span class="math-error" role="status">公式暂时无法排版</span>';}
 }
@@ -51,6 +62,7 @@ parser.use({extensions:[
   {name:'cjkStrong',level:'inline',start:src=>src.indexOf('**'),tokenizer(src){const m=/^\*\*([^*\n]+?)\*\*/.exec(src);if(m)return {type:'cjkStrong',raw:m[0],tokens:this.lexer.inlineTokens(m[1])};},renderer(token){return `<strong>${this.parser.parseInline(token.tokens)}</strong>`;}}
 ]});
 export function renderMathText(text){return parser.parse(text,{async:false});}
+export function renderMathInline(text){return parser.parseInline(text,{async:false});}
 
 /** Old quiz payloads used e.g. lim(x→0) (e^x - 1 - x)/x² 等于?. */
 export function textbookQuizText(text){

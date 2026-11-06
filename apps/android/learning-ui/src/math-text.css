@@ -19,3 +19,8 @@
 .math-text .katex{color:inherit}.math-pending,.math-error{color:var(--muted);font-size:.875em}
 .quiz-question .math-text{font-weight:500}.quiz-question .math-display{font-size:1.08em}
 .quiz-option>.math-text{flex:1;text-align:left}.quiz-option .math-text p{margin:0}.hint>.math-text{flex:1}
+/* Keep an equation together; scroll the table rather than breaking TeX across cells. */
+.table-scroll .math-inline .katex{white-space:nowrap}
+.table-scroll td>.math-text{min-width:100px;overflow-wrap:normal}
+.table-scroll .math-text p{margin:.4em 0}.table-scroll .math-text p:first-child{margin-top:0}
+.table-scroll .math-text p:last-child{margin-bottom:0}
