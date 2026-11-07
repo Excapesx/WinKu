@@ -22,9 +22,10 @@ conversation with the file tools enabled. Do not try to install Python or downlo
    important numbers and claims. If source material is absent, use the prompt and clearly mark
    any missing specifics for the user to fill in.
 2. Infer the audience, time and presentation type from the request. If unspecified, use a
-   six-minute Chinese undergraduate course presentation with about eight slides. When the
-   user asks to review an outline, give page titles and key evidence and wait for feedback.
-   Otherwise proceed with a draft directly. Use concrete, speakable titles. Tell the story
+   six-minute Chinese undergraduate course presentation with about eight slides. Give a short
+   editable outline with page titles and key evidence, then wait for confirmation. If the user
+   already approved an outline or explicitly asks for direct generation, draft the slides.
+   Use concrete, speakable titles. Tell the story
    in the order that fits the work: the question, what the group actually did, what it found,
    and what remains uncertain. Use a result, decision or next step on the final slide.
 3. Keep a consistent type scale, margins and palette, but vary layout with the evidence.
