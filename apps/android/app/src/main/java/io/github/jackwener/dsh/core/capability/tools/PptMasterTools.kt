@@ -58,7 +58,7 @@ class PptMasterTools @Inject constructor(@ApplicationContext private val context
                             ZipFile(file).use { zip ->
                                 var expanded = 0L
                                 for (entry in zip.entries()) {
-                                    check(entry.size in 0..MAX_SOURCE - expanded) { "The expanded document is too large." }
+                                    check(entry.size in 0L..(MAX_SOURCE - expanded)) { "The expanded document is too large." }
                                     expanded += entry.size
                                 }
                             }
@@ -155,7 +155,7 @@ object PptMasterFiles {
         .digest(id.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
 
     fun directory(context: Context, sessionId: String, callId: String): File =
-        File(context.filesDir, "presentations/${hash(sessionId.substringBefore('/'))}/${hash(callId)}")
+        File(context.filesDir, "presentations/${hash(sessionId)}/${hash(callId)}")
 
     fun result(context: Context, sessionId: String, callId: String): File? =
         directory(context, sessionId, callId).listFiles()?.firstOrNull { it.isFile && it.extension.equals("pptx", true) }
