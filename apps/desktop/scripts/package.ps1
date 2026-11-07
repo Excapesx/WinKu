@@ -4,6 +4,9 @@ $env:PATH="$env:USERPROFILE\.cargo\bin;$env:PATH"
 $env:CARGO_BUILD_JOBS='2'
 node scripts/prepare-engine.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Engine preparation failed' }
+if ($env:WINKU_BUILD_PYTHON) { & $env:WINKU_BUILD_PYTHON scripts/package-study-runtime.py }
+else { py -3.12 scripts/package-study-runtime.py }
+if ($LASTEXITCODE -ne 0) { throw 'Study runtime preparation failed' }
 node scripts/sync-android-design.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Android design sync failed' }
 npx tauri icon app-icon.svg --output .tools/generated-icons

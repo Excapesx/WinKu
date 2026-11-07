@@ -30,6 +30,12 @@ import java.util.zip.ZipInputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@Synchronized
+internal fun appPython(context: Context): Python {
+    if (!Python.isStarted()) Python.start(AndroidPlatform(context))
+    return Python.getInstance()
+}
+
 @Singleton
 class PptMasterTools @Inject constructor(@ApplicationContext private val context: Context) : ToolSet {
     private val home = File(context.filesDir, "home")
@@ -102,8 +108,7 @@ class PptMasterTools @Inject constructor(@ApplicationContext private val context
                     val staging = File.createTempFile("export-", ".tmp", output)
                     try {
                         val renderer = prepareRenderer()
-                        if (!Python.isStarted()) Python.start(AndroidPlatform(context))
-                        val count = Python.getInstance().getModule("winku_ppt_master").callAttr(
+                        val count = appPython(context).getModule("winku_ppt_master").callAttr(
                             "export_deck", renderer.path, dir.path, attachments.path, staging.path, language,
                         ).toInt()
                         ensureActive()

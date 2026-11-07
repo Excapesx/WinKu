@@ -2,7 +2,7 @@ name: Android checks
 
 on:
   push:
-    branches: [main, 'codex/prompt-polish', 'codex/android-ppt-master']
+    branches: [main, 'codex/prompt-polish', 'codex/android-ppt-master', 'codex/windows-android-release']
     paths: ['apps/android/**', '.github/workflows/android-check.yml']
   pull_request:
     paths: ['apps/android/**', '.github/workflows/android-check.yml']

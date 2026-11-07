@@ -4,8 +4,7 @@ object SkillShortcuts {
     const val limit = 3
     private val skillName = Regex("[a-z0-9]+(?:-[a-z0-9]+)*")
 
-    // The product's recommended list will be selected separately.
-    val defaults: List<String> = emptyList()
+    val defaults: List<String> = listOf("lecture-notes", "ppt-master")
 
     fun normalize(names: List<String>): List<String> = names.filter(skillName::matches).distinct().take(limit)
 

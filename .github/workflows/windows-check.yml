@@ -1,0 +1,47 @@
+name: Windows checks
+
+on:
+  push:
+    branches: [main, 'codex/windows-android-release']
+    paths: ['apps/desktop/**', 'apps/android/**', '.github/workflows/windows-check.yml']
+  pull_request:
+    paths: ['apps/desktop/**', 'apps/android/**', '.github/workflows/windows-check.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install locked dependencies
+        run: |
+          npm ci --prefix apps/android/learning-ui
+          npm ci --prefix apps/desktop
+          npm ci --prefix apps/desktop/engine --install-links
+      - name: Check the desktop client and engine
+        working-directory: apps/desktop
+        run: |
+          npm run prepare:engine
+          npx tsc --noEmit
+          npm test
+      - name: Build the Windows installer
+        working-directory: apps/desktop
+        run: |
+          $env:WINKU_BUILD_PYTHON = (Get-Command python.exe).Source
+          npm run package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WinKu-Windows-x64
+          path: apps/desktop/out/*-setup.exe
+          if-no-files-found: error

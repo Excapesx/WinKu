@@ -30,6 +30,9 @@ dist/
 /apps/desktop/engine/learning-templates.js
 /apps/desktop/engine/assistant-stream.js
 /apps/desktop/engine/prompt-polish.md
+/apps/desktop/engine/bundled-skills/
+/apps/desktop/engine/winku_ppt_master.py
+/apps/desktop/engine/winku_speech_assets.py
 /out/
 /apps/android/out/
 *.keystore

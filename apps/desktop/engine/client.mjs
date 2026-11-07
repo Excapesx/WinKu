@@ -106,6 +106,7 @@ export class EngineClient {
         id: "skill-filesystem",
         config: {
           includeDefaultRoots: false,
+          bundledSkillDir: join(here, "bundled-skills"),
           customSkillDirs: [
             ...(desktop.skillsDir ? [desktop.skillsDir] : []),
             join(workspace, ".agents", "skills"),
@@ -158,6 +159,7 @@ export class EngineClient {
             name: pathToFileURL(join(here, "desktop-plugin.mjs")).href,
             config: {
               preferences: prefs,
+              skills: desktop.mode?.skills !== false,
               workspace,
               providerId: provider.id,
               extensions: desktop.extensions ?? [],

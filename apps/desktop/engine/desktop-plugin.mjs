@@ -1,6 +1,7 @@
 import { setupAssistantStream } from "./assistant-stream.js";
 import { learningPrompt } from "./learning.js";
 import { registerWindowsTools } from "./windows-tools.mjs";
+import { registerStudyTools } from "./study.mjs";
 import { createHash } from "node:crypto";
 import * as mcp from "@deepseek-ai/dsh-mcp-client";
 export const name = "winku-desktop";
@@ -68,6 +69,7 @@ export async function apply(ctx, config = {}) {
     if (!response.ok) throw Error(result.error || "任务操作失败");
     return result;
   };
+  registerStudyTools(ctx, config, (file) => rpc("presentation.publish", file));
   ctx.on("tools/pre-execute", async (exec, next) =>
     exec.name.startsWith("automation_") &&
     exec.name !== "automation_list" &&

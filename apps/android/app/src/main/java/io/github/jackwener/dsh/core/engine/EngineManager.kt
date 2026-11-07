@@ -434,19 +434,21 @@ class EngineManager @Inject constructor(
         val files = context.filesDir
         putString("DSH_HOME", File(files, "dsh-home").path)
         val bundledSkills = File(files, "bundled-skills")
-        runCatching {
-            val pptSkill = File(bundledSkills, "ppt-master/SKILL.md")
-            context.assets.open("skills/ppt-master/SKILL.md").use { asset ->
-                val content = asset.readBytes()
-                if (!pptSkill.isFile || !pptSkill.readBytes().contentEquals(content)) {
-                    pptSkill.parentFile?.mkdirs()
-                    val staged = File(pptSkill.parentFile, "SKILL.md.tmp")
-                    staged.writeBytes(content)
-                    check(staged.renameTo(pptSkill)) { "Could not update the bundled PPT Master skill" }
+        for (name in listOf("ppt-master", "lecture-notes")) {
+            runCatching {
+                val skill = File(bundledSkills, "$name/SKILL.md")
+                context.assets.open("skills/$name/SKILL.md").use { asset ->
+                    val content = asset.readBytes()
+                    if (!skill.isFile || !skill.readBytes().contentEquals(content)) {
+                        skill.parentFile?.mkdirs()
+                        val staged = File(skill.parentFile, "SKILL.md.tmp")
+                        staged.writeBytes(content)
+                        check(staged.renameTo(skill)) { "Could not update bundled skill $name" }
+                    }
                 }
-            }
-            putString("DSH_BUNDLED_SKILL_DIR", bundledSkills.path)
-        }.onFailure { Log.w(TAG, "Could not load bundled PPT Master skill", it) }
+            }.onFailure { Log.w(TAG, "Could not load bundled skill $name", it) }
+        }
+        putString("DSH_BUNDLED_SKILL_DIR", bundledSkills.path)
         putString("HOME", File(files, "home").path)
         putString("TMPDIR", File(context.cacheDir, "tmp").path)
         putString("SHELL", "/system/bin/sh")

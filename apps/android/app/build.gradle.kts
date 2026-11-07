@@ -12,6 +12,13 @@ val thirdPartyOut: String = providers.gradleProperty("dsh.thirdPartyOut").orElse
 val learningPreview = providers.gradleProperty("dsh.learningPreview").orElse("false").get().toBoolean()
 val pptMasterPython = providers.gradleProperty("dsh.pptMasterPython").orElse("python3.12")
 val pptMasterAssets = layout.buildDirectory.dir("generated/ppt-master-assets")
+val speechAar = layout.buildDirectory.file("generated/speech/sherpa-onnx-2.0.1.aar")
+val prepareSpeech = tasks.register<Exec>("prepareSpeech") {
+    val script = rootProject.file("tools/package-sherpa-aar.py")
+    inputs.files(script, file("src/main/python/winku_speech_assets.py"))
+    outputs.file(speechAar)
+    commandLine(pptMasterPython.get(), script, speechAar.get().asFile)
+}
 val preparePptMaster = tasks.register<Exec>("preparePptMaster") {
     val script = rootProject.file("tools/package-ppt-master.py")
     inputs.file(script)
@@ -144,6 +151,7 @@ kotlin { jvmToolchain(21) }
 room { schemaDirectory("$projectDir/schemas") }
 
 dependencies {
+    implementation(files(speechAar).builtBy(prepareSpeech))
     implementation("androidx.webkit:webkit:1.16.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)

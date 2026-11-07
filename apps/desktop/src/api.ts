@@ -13,7 +13,8 @@ export type Provider = {
 };
 export type Attachment = {
   name: string;
-  kind: "image" | "document";
+  kind: "image" | "document" | "file";
+  fileKey?: string;
   mimeType?: string;
   data?: string;
   text?: string;
@@ -27,6 +28,7 @@ export type Message = {
   interrupted?: boolean;
   pending?: boolean;
   attachments?: Attachment[];
+  presentations?: { id: string; name: string }[];
 };
 export type Session = {
   id: string;
@@ -39,7 +41,7 @@ export type Session = {
   events?: any[];
   messages: Message[];
   artifacts?: Record<string, any>;
-  mode?: {id: string; name: string};
+  mode?: {id: string; name: string; skills?: boolean};
   queue?: {id: string; text: string; attachments: Attachment[]}[];
 };
 export type Snapshot = {

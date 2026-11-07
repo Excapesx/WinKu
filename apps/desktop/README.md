@@ -12,7 +12,9 @@ Windows x64 首版，版本 v1.0。Tauri + React 提供桌面窗口，随安装�
 
 - 流式聊天、停止、重新生成，以及本地历史会话。重新生成替换最新回答，使用原会话上下文，不回滚 dsh 日志。
 - 生成中可排队、编辑或删除待发消息，也可立即引导当前回答（真实 SDK steer）。队列持久化；失败或停止保留待发内容。有排队消息或待确认交互时先处理它们再重新生成。会话首次运行后绑定模式，修改全局默认模式不改动已有会话。
-- 图片、文本/代码和 PDF 附件。每次最多 4 个；图片上限 8 MB，文档上限 20 MB / 12 万字符，PDF 上限 60 页。PDF 首版提取文字，扫描 PDF 请改发截图给视觉模型。
+- 图片、文本/代码、PDF、Word、Excel、PPT 和录音附件。每次最多 4 个。图片上限 8 MB，文档上限 20 MB，录音上限 192 MB，PDF 上限 60 页。扫描 PDF 可改发截图给视觉模型。
+- 「课堂录音笔记」在本机转写 M4A、MP3、WAV、AAC、FLAC 和 OGG/Opus，按请求整理笔记或导图。首次使用下载离线模型约 163 MB。选择云端聊天模型时，模型会收到转写文字，录音保存在本机。
+- 「PPT Master」从提示词和附件生成可编辑的 PPTX，支持先确认提纲，文件可在聊天中打开。导出需要开启工作区写入权限。输入框可固定三项技能快捷方式。
 - 复用 Android 的数学/化学公式、代码高亮、函数图、流程图、图表、讲解与小测组件；阅读面板按需打开。
 - API Key 存于 Windows 凭据管理器；配置、附件与聊天内容保存在当前用户的 `%LOCALAPPDATA%/io.github.excapesx.winku.desktop`，应视为私有资料。
 - “工具”保留学生工具入口，内容待用户指定。当前源码支持 Windows 读屏/截图、点按/输入、PowerShell、文件写入、桌面通知；默认只读，电脑操作需要开启相应工具和权限。云同步与自动更新尚未实现。
@@ -25,12 +27,14 @@ Windows x64 首版，版本 v1.0。Tauri + React 提供桌面窗口，随安装�
 
 ## 开发与打包
 
-需要 Windows x64、Node 24、Rust MSVC 工具链和 Visual Studio C++ 构建工具。在本目录运行：
+需要 Windows x64、Node 24、Python 3.12 x64、Rust MSVC 工具链和 Visual Studio C++ 构建工具。在本目录运行：
 
 ```powershell
 npm ci
+npm ci --prefix ../android/learning-ui
 npm ci --prefix engine --install-links
 npm run prepare:engine
+py -3.12 scripts/package-study-runtime.py
 npm run tauri -- dev
 ```
 
@@ -66,6 +70,10 @@ npm run package
 | `scripts/package.ps1` | NSIS 安装包 |
 
 渲染器直接引用 `../android/learning-ui/src`，不复制实现；生成指引直接从 Android 插件源构建。不要把 Android 的 native、shell、profile 补丁套到 Windows 上。安装后的资源路径必须指向安装目录内的 `engine` 和 `runtime`。
+
+## 与 Android 的功能范围
+
+两端均有聊天、模型配置、提示词润色、附件、交互学习、技能快捷方式、扩展、录音笔记和 PPT 导出。设备控制使用各平台接口。Windows 提供桌面读屏、输入和 PowerShell，Android 提供 Shizuku、手机通知与通话、短信、系统媒体、浏览器和手机自动化接口。Windows 当前仍缺少 Android 的应用内更新、手机触发器和独立的手机浏览器操作工具。两端的权限模式和自动化触发方式也有差异。
 
 ## 验证范围
 

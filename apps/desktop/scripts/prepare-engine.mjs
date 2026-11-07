@@ -29,18 +29,6 @@ const selected = new Set([
   "24",
 ]);
 const marker = join(nm, ".winku-patched");
-// Some OpenAI-compatible streams explicitly send usage:null before their final
-// usage frame. Keep this desktop fix reproducible after npm ci replaces packages.
-const adapterFile = join(nm, "@snnh/dsh-llm-service-lite/lib/index.js");
-const adapter = readFileSync(adapterFile, "utf8");
-const usageGuard =
-  'if (usage === void 0 || typeof usage.prompt_tokens !== "number"';
-const fixedGuard =
-  'if (usage == null || typeof usage.prompt_tokens !== "number"';
-if (adapter.includes(usageGuard))
-  writeFileSync(adapterFile, adapter.replace(usageGuard, fixedGuard));
-else if (!adapter.includes(fixedGuard))
-  throw Error("LLM usage compatibility patch context changed");
 if (!existsSync(marker)) {
   for (const filename of readdirSync(patches)
     .filter((n) => selected.has(n.slice(0, 2)))
@@ -86,8 +74,11 @@ if (!existsSync(marker)) {
           const candidates = [];
           for (let n = 0; n <= source.length - old.length; n++)
             if (matches(n)) candidates.push(n);
-          if (candidates.length !== 1)
+          if (candidates.length !== 1) {
+            const applied = source.join("\n").split(replacement.join("\n")).length - 1;
+            if (replacement.length && applied === 1) continue;
             throw Error("Patch context mismatch: " + filename + " " + line);
+          }
           at = candidates[0];
         }
         source.splice(at, old.length, ...replacement);
@@ -111,6 +102,22 @@ cpSync(
   join(root, "../android/app/src/main/assets/skills/prompt-polish/SKILL.md"),
   join(root, "engine/prompt-polish.md"),
 );
+const android = join(root, "../android/app/src/main");
+for (const name of ["lecture-notes", "ppt-master"]) {
+  const dir = join(root, "engine/bundled-skills", name);
+  mkdirSync(dir, { recursive: true });
+  let skill = readFileSync(join(android, "assets/skills", name, "SKILL.md"), "utf8");
+  if (name === "ppt-master") {
+    skill = skill.replaceAll("$HOME/ppt-drafts/", "the session workspace's ppt-drafts/ folder")
+      .replace("(expand HOME\n   to the app's home path, normally the session working directory)", "(use the session working directory)");
+    skill += "\nOn Windows, PDF and text attachments are already supplied inline. For Office documents, pass the local attachment key to `ppt_read_source`. Use `attachment:<local attachment key>` for uploaded PNG/JPEG images. PowerPoint export requires the workspace-write permission and file tools.\n";
+  } else {
+    skill += "\nOn Windows, pass the local attachment key as `path`. The transcript is returned by the tool.\n";
+  }
+  writeFileSync(join(dir, "SKILL.md"), skill);
+}
+for (const name of ["winku_ppt_master.py", "winku_speech_assets.py"])
+  cpSync(join(android, "python", name), join(root, "engine", name));
 mkdirSync(runtime, { recursive: true });
 cpSync(process.execPath, join(runtime, "node.exe"));
 if (!existsSync(join(runtime, "NODE-LICENSE"))) {

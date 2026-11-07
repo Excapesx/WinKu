@@ -100,6 +100,14 @@ function App() {
     [fullConfirm, setFullConfirm] = useState(false);
   const [polishing, setPolishing] = useState(false),
     [undo, setUndo] = useState<{ before: string; after: string } | null>(null);
+  const [selectedSkill, setSelectedSkill] = useState("");
+  const [skillPins, setSkillPins] = useState<string[]>(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("winku-skill-shortcuts") ?? "null");
+      if (Array.isArray(stored)) return stored.filter((value) => typeof value === "string").slice(0, 3);
+    } catch { /* An old preference can be replaced by the defaults. */ }
+    return ["lecture-notes", "ppt-master"];
+  });
   const polishJob = useRef<string | null>(null),
     draftRef = useRef("");
   const [ready, setReady] = useState(false),
@@ -131,6 +139,13 @@ function App() {
     );
   const pref = snapshot.preferences ?? {},
     mode = snapshot.modes?.find((m) => m.id === pref.modeId);
+  const skillsEnabled = (session?.mode ?? mode)?.skills !== false;
+  const availableSkills = [...new Map([
+    ["lecture-notes", t("课堂录音笔记")], ["ppt-master", "PPT Master"],
+    ...(snapshot.extensions ?? []).filter((item) => item.type === "skill" && item.enabled && /^[a-z0-9-]+$/.test(item.name))
+      .map((item): [string, string] => [item.name, item.name]),
+  ] as [string, string][]).entries()];
+  const skillLabels = new Map(availableSkills);
   const [systemLanguage, setSystemLanguage] = useState(navigator.language);
   const language = setUILanguage(pref.language ?? "system", systemLanguage);
   useEffect(() => {
@@ -333,6 +348,7 @@ function App() {
   }, []);
   function newChat() {
     cancelPolish();
+    setSelectedSkill("");
     setUndo(null);
     draftRef.current = "";
     setSessionId(null);
@@ -363,6 +379,8 @@ function App() {
       modelSettings();
       return;
     }
+    const skill = !regenerate && selectedSkill && skillsEnabled && skillLabels.has(selectedSkill) ? selectedSkill : "";
+    if (skill) text = `/${skill}\n${text}`.trimEnd();
     cancelPolish();
     setUndo(null);
     setSubmitting(true);
@@ -375,13 +393,17 @@ function App() {
           sessionId,
           providerId: provider.id,
           text,
-          attachments: regenerate ? [] : files,
+          attachments: regenerate ? [] : skill === "ppt-master"
+            ? files.map((file) => file.kind === "image" && file.fileKey
+              ? { name: file.name, kind: "file", fileKey: file.fileKey } : file)
+            : files,
           now,
         },
       );
       setSessionId(result.sessionId);
       setPage("chat");
       if (!regenerate) {
+        setSelectedSkill("");
         setDraft("");
         setFiles([]);
       }
@@ -735,7 +757,7 @@ function App() {
                               <button
                                 className="attachment"
                                 key={n}
-                                onClick={() => setReading(a)}
+                                onClick={() => a.kind !== "file" && setReading(a)}
                               >
                                 {a.kind === "image" ? <Image /> : <FileText />}
                                 <span>{a.name}</span>
@@ -773,6 +795,11 @@ function App() {
                             <p>{message.error}</p>
                           </div>
                         )}
+                        {message.presentations?.map((file) => (
+                          <button className="attachment" key={file.id} onClick={() => act("presentation.open", { id: file.id })}>
+                            <FileText /> <span>{file.name}</span>
+                          </button>
+                        ))}
                         {message.interrupted && (
                           <p className="muted">{t("已停止生成")}</p>
                         )}
@@ -897,12 +924,35 @@ function App() {
                     send();
                   }}
                 >
+                  {skillsEnabled && <div className="attachment-list" aria-label={t("技能快捷方式")}>
+                    {skillPins.filter((name) => skillLabels.has(name)).map((name) => (
+                      <button className="attachment" type="button" key={name} aria-pressed={selectedSkill === name}
+                        onClick={() => setSelectedSkill(selectedSkill === name ? "" : name)}>{skillLabels.get(name)}</button>
+                    ))}
+                    <Menu label={t("技能快捷方式")} trigger={<span>{t("更多技能")}</span>}>
+                      {availableSkills.map(([name, label]) => (
+                        <MenuItem key={name} selected={selectedSkill === name} onClick={() => setSelectedSkill(name)}>{label}</MenuItem>
+                      ))}
+                      <div className="a-note">{t("固定快捷方式，最多 3 项")}</div>
+                      {availableSkills.map(([name, label]) => (
+                        <label key={name} className="a-note">
+                          <input type="checkbox" checked={skillPins.includes(name)} disabled={skillPins.length >= 3 && !skillPins.includes(name)}
+                            onChange={() => {
+                              const next = skillPins.includes(name) ? skillPins.filter((item) => item !== name) : [...skillPins, name];
+                              setSkillPins(next);
+                              localStorage.setItem("winku-skill-shortcuts", JSON.stringify(next));
+                            }} /> {label}
+                        </label>
+                      ))}
+                    </Menu>
+                    {selectedSkill && !skillPins.includes(selectedSkill) && <button className="attachment" type="button" aria-pressed="true" onClick={() => setSelectedSkill("")}>{skillLabels.get(selectedSkill)} ×</button>}
+                  </div>}
                   {files.length > 0 && (
                     <div className="attachment-list">
                       {files.map((file, i) => (
                         <div className="draft-attachment" key={i}>
                           <button
-                            onClick={() => setReading(file)}
+                            onClick={() => file.kind !== "file" && setReading(file)}
                             type="button"
                           >
                             {file.kind === "image" ? <Image /> : <FileText />}
@@ -967,7 +1017,7 @@ function App() {
                       type="file"
                       multiple
                       hidden
-                      accept=".pdf,.txt,.md,.csv,.json,.js,.jsx,.ts,.tsx,.py,.java,.kt,.kts,.c,.cpp,.h,.hpp,.rs,.go,.html,.css,.yml,.yaml,.xml,.log,image/png,image/jpeg,image/webp"
+                      accept=".pdf,.docx,.xlsx,.pptx,.m4a,.mp3,.wav,.aac,.flac,.ogg,.opus,.txt,.md,.csv,.json,.js,.jsx,.ts,.tsx,.py,.java,.kt,.kts,.c,.cpp,.h,.hpp,.rs,.go,.html,.css,.yml,.yaml,.xml,.log,image/png,image/jpeg,image/webp"
                       onChange={(e) => {
                         addFiles([...(e.target.files ?? [])]);
                         e.target.value = "";

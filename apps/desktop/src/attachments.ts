@@ -1,19 +1,23 @@
 import { t } from "./i18n";
-import type { Attachment } from "./api";
+import { request, type Attachment } from "./api";
 const textExtensions =
   /\.(txt|md|csv|json|js|jsx|ts|tsx|py|java|kt|kts|c|cpp|h|hpp|rs|go|html|css|yml|yaml|xml|log)$/i;
 export async function readAttachment(file: File): Promise<Attachment> {
+  const recording = /\.(m4a|mp3|wav|aac|flac|ogg|opus)$/i.test(file.name);
+  const office = /\.(docx|xlsx|pptx)$/i.test(file.name);
+  if (recording || office) {
+    if (file.size > (recording ? 192 : 20) * 1024 * 1024)
+      throw Error(file.name + t(" 文件过大，请先拆分。"));
+    return { name: file.name, kind: "file", fileKey: await stageFile(file, file.name) };
+  }
   if (file.size > 20 * 1024 * 1024)
     throw Error(file.name + t(" 超过 20 MB，请先拆分文件。"));
   if (["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
     if (file.size > 8 * 1024 * 1024) throw Error(t("图片不能超过 8 MB。"));
-    const data = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result).split(",")[1]);
-      reader.onerror = () => reject(Error(t("图片读取失败")));
-      reader.readAsDataURL(file);
-    });
-    return { name: file.name, kind: "image", mimeType: file.type, data };
+    const data = await encode(file);
+    const extension = file.type === "image/png" ? ".png" : ".jpg";
+    const fileKey = file.type === "image/webp" ? undefined : await stageFile(file, "image" + extension);
+    return { name: file.name, kind: "image", mimeType: file.type, data, fileKey };
   }
   if (/\.pdf$/i.test(file.name)) {
     const pdfjs = await import("pdfjs-dist");
@@ -63,4 +67,29 @@ export async function readAttachment(file: File): Promise<Attachment> {
   if (text.length > 120000)
     throw Error(t("文字超过 12 万字符，请先拆分文件。"));
   return { name: file.name, kind: "document", text };
+}
+
+function encode(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1]);
+    reader.onerror = () => reject(Error(t("附件读取失败")));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function stageFile(file: File, name: string) {
+  if (!file.size) throw Error(t("附件为空。"));
+  const key = crypto.randomUUID() + name.slice(name.lastIndexOf(".")).toLowerCase();
+  try {
+    const chunk = 256 * 1024;
+    for (let offset = 0; offset < file.size; offset += chunk) {
+      const data = await encode(file.slice(offset, offset + chunk));
+      await request("attachment.stage", { key, name, size: file.size, offset, data });
+    }
+    return key;
+  } catch (error) {
+    await request("attachment.stage", { key, name, cancel: true }).catch(() => {});
+    throw error;
+  }
 }

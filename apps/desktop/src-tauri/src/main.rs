@@ -102,7 +102,14 @@ async fn desktop_request(
             | "mode.save" | "mode.delete" | "extension.toggle"
             | "plugins.list" | "plugins.inspect" | "plugins.install" | "plugins.toggle" | "plugins.delete"
             | "market.save" | "market.read" | "skill.preview" | "skill.import"
+            | "attachment.stage"
             | "automation.save" | "automation.toggle" | "automation.delete" | "automation.failure" => {}
+            "presentation.open" => {
+                let file = backend.call("presentation.path", params)?;
+                let path = file.get("path").and_then(Value::as_str).ok_or("演示文稿路径无效")?;
+                open::that_detached(path).map_err(|e| e.to_string())?;
+                return Ok(json!({"ok": true}));
+            }
             "extension.save" | "mcp.test" => {
                 let mut secret=params.as_object_mut().ok_or("参数错误")?.remove("secrets");
                 let confirm=params.get("confirmLaunch").cloned();

@@ -11,6 +11,7 @@ import io.github.jackwener.dsh.core.capability.tools.ClipboardTools
 import io.github.jackwener.dsh.core.capability.tools.CommsTools
 import io.github.jackwener.dsh.core.capability.tools.FileTools
 import io.github.jackwener.dsh.core.capability.tools.PptMasterTools
+import io.github.jackwener.dsh.core.capability.tools.LectureNotesTools
 import io.github.jackwener.dsh.core.capability.tools.KnowledgeTools
 import io.github.jackwener.dsh.core.capability.tools.MediaTools
 import io.github.jackwener.dsh.core.capability.tools.NotificationTools
@@ -76,7 +77,7 @@ class CapabilityHub @Inject constructor(
     private val sessions: Lazy<SessionStore>,
     files: FileTools, apps: AppTools, screen: ScreenTools, system: SystemTools, notifications: NotificationTools,
     comms: CommsTools, media: MediaTools, clipboard: ClipboardTools, browser: BrowserTools, ruleTools: RuleTools,
-    knowledge: KnowledgeTools, pptMaster: PptMasterTools,
+    knowledge: KnowledgeTools, pptMaster: PptMasterTools, lectureNotes: LectureNotesTools,
     private val shellGate: ShellGate,
     private val guard: ActionGuard,
     private val agentScreen: AgentScreen,
@@ -84,7 +85,7 @@ class CapabilityHub @Inject constructor(
     private val experience: AppExperience,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    val allTools: Map<String, Tool> = listOf(files, apps, screen, system, notifications, comms, media, clipboard, browser, ruleTools, knowledge, pptMaster)
+    val allTools: Map<String, Tool> = listOf(files, apps, screen, system, notifications, comms, media, clipboard, browser, ruleTools, knowledge, pptMaster, lectureNotes)
         .flatMap { it.tools }.associateBy { it.name }
     @Volatile private var bridge: JsonRpcPeer? = null
     private val liveSeq = java.util.concurrent.atomic.AtomicLong()

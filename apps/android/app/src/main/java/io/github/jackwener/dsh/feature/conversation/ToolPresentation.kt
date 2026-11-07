@@ -49,7 +49,7 @@ enum class BodyKind { InOut, Terminal, Read, Search, Web, Todo, Screen, Gesture,
 
 object ToolPresentation {
     fun info(name: String): ToolInfo = when (name) {
-        "read", "file_read", "read_image", "ppt_read_source" -> ToolInfo(R.drawable.dsw_browse_outline, R.string.tool_read, Activity.Read, BodyKind.Read)
+        "read", "file_read", "read_image", "ppt_read_source", "lecture_transcribe" -> ToolInfo(R.drawable.dsw_browse_outline, R.string.tool_read, Activity.Read, BodyKind.Read)
         "ppt_export" -> ToolInfo(R.drawable.dsw_folder_open_outline, R.string.tool_ppt_export, Activity.Files, BodyKind.Text)
         "file_stat" -> ToolInfo(R.drawable.dsw_browse_outline, R.string.tool_file_stat, Activity.Read, BodyKind.Text)
         "file_list" -> ToolInfo(R.drawable.dsw_folder_open_outline, R.string.tool_file_list, Activity.Read, BodyKind.Text)
