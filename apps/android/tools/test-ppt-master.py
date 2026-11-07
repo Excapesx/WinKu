@@ -1,6 +1,7 @@
 """Exercise the packaged renderer with Chinese editable text, notes and an attachment."""
 
 import sys
+from importlib.abc import MetaPathFinder
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from zipfile import ZipFile
@@ -10,6 +11,13 @@ from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 
 from winku_ppt_master import export_deck
+
+
+class NoProcessPool(MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname == "concurrent.futures.process":
+            raise ImportError("The Android exporter must not load multiprocessing")
+        return None
 
 
 def main(archive):
@@ -50,4 +58,5 @@ def main(archive):
 
 
 if __name__ == "__main__":
+    sys.meta_path.insert(0, NoProcessPool())
     main(sys.argv[1])
