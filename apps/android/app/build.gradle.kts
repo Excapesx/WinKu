@@ -5,10 +5,33 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.room)
+    id("com.chaquo.python") version "17.2.0"
 }
 
 val thirdPartyOut: String = providers.gradleProperty("dsh.thirdPartyOut").orElse("../toolchains/out/third-party").get()
 val learningPreview = providers.gradleProperty("dsh.learningPreview").orElse("false").get().toBoolean()
+val pptMasterPython = providers.gradleProperty("dsh.pptMasterPython").orElse("python3.12")
+val pptMasterAssets = layout.buildDirectory.dir("generated/ppt-master-assets")
+val preparePptMaster = tasks.register<Exec>("preparePptMaster") {
+    val script = rootProject.file("tools/package-ppt-master.py")
+    inputs.file(script)
+    outputs.dir(pptMasterAssets)
+    commandLine(pptMasterPython.get(), script, pptMasterAssets.get().asFile)
+}
+
+chaquopy {
+    defaultConfig {
+        version = "3.12"
+        buildPython(pptMasterPython.get())
+        pip {
+            install("python-pptx==1.0.2")
+            install("lxml==5.3.0")
+            install("Pillow==11.0.0")
+            install("typing-extensions==4.15.0")
+            install("XlsxWriter==3.2.9")
+        }
+    }
+}
 
 fun shizukuPin(name: String): String =
     Regex("^$name=(\\S+)$", RegexOption.MULTILINE).find(rootProject.file("tools/fetch-shizuku.sh").readText())?.groupValues?.get(1)
@@ -98,7 +121,10 @@ android {
     sourceSets["main"].assets.directories += providers.gradleProperty("dsh.engineOut").orElse("../toolchains/out/engine").get()
     // assets/shizuku/{shizuku.apk,LICENSE}, written by tools/fetch-shizuku.sh (task fetchShizuku below).
     sourceSets["main"].assets.directories += "$thirdPartyOut/assets"
+    sourceSets["main"].assets.directories += pptMasterAssets.get().asFile.path
 }
+
+tasks.named("preBuild") { dependsOn(preparePptMaster) }
 
 // Downloads + verifies (sha256 and signing cert) the pinned Shizuku release; a no-op once it is there.
 // -Pdsh.fetchShizuku=false skips it: the app then falls back to Play Store / GitHub for installing Shizuku.

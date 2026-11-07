@@ -9,6 +9,7 @@ app/schemas/
 apps/android/app/schemas/
 apps/android/toolchains/
 apps/android/build/
+__pycache__/
 
 # Node / JS
 node_modules/
