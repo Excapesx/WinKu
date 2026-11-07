@@ -875,4 +875,25 @@
     <string name="tools_title">工具</string>
     <string name="tools_empty_title">暂无学习工具</string>
     <string name="tools_empty_body">学习工具将在这里集中展示。</string>
+    <string name="skill_shortcuts_title">技能</string>
+    <string name="skill_shortcuts_more">更多技能</string>
+    <string name="skill_shortcuts_edit">编辑</string>
+    <string name="skill_shortcuts_edit_title">编辑快捷栏</string>
+    <string name="skill_shortcuts_selected">本次使用 · %1$s</string>
+    <string name="skill_shortcuts_clear">取消选择技能</string>
+    <string name="skill_shortcuts_limit">最多固定 %1$d 项，已选 %2$d 项</string>
+    <string name="skill_shortcuts_disabled">已停用</string>
+    <string name="skill_shortcuts_missing">未找到该技能</string>
+    <string name="skill_shortcuts_not_invocable">不支持手动调用</string>
+    <string name="skill_shortcuts_move_up">上移 %1$s</string>
+    <string name="skill_shortcuts_move_down">下移 %1$s</string>
+    <string name="skill_shortcuts_restore">恢复默认</string>
+    <string name="skill_shortcuts_save_failed">未能保存快捷栏，请重试。</string>
+    <string name="skill_shortcuts_loading">正在读取技能</string>
+    <string name="skill_shortcuts_load_failed">无法读取技能列表</string>
+    <string name="skill_shortcuts_empty">暂无可用技能</string>
+    <string name="skill_shortcuts_empty_hint">在扩展设置的「技能」页导入后即可选用。</string>
+    <string name="skill_shortcuts_manage">打开扩展设置</string>
+    <string name="skill_shortcuts_unavailable_send">所选技能当前不可用，请重新选择或移除后发送。</string>
+    <string name="skill_shortcuts_mode_disabled">当前会话模式禁用了技能，请切换模式或移除所选技能后发送。</string>
 </resources>

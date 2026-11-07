@@ -12,6 +12,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.jackwener.dsh.core.extensions.McpServer
 import io.github.jackwener.dsh.core.extensions.RegistryMode
+import io.github.jackwener.dsh.core.extensions.SkillShortcuts
 import io.github.jackwener.dsh.core.model.PermissionPreset
 import io.github.jackwener.dsh.core.model.SessionMode
 import io.github.jackwener.dsh.core.model.SessionModes
@@ -86,6 +87,8 @@ data class Settings(
     val extUpdateBadge: Int = 0,
     /** 自动检查更新: a background check for a new WinKu release at most once a day (core/update/AppUpdater). */
     val autoUpdateCheck: Boolean = true,
+    /** Null follows the recommended list. An empty list is an explicit user choice. */
+    val skillShortcuts: List<String>? = null,
 ) {
     /** Built-in then user modes, in display order. */
     val allModes: List<SessionMode> get() = SessionModes.all(modes)
@@ -111,6 +114,7 @@ private val modeList = ListSerializer(SessionMode.serializer())
 private val mcpList = ListSerializer(McpServer.serializer())
 private val choiceMap = MapSerializer(String.serializer(), String.serializer())
 private val catalogMap = MapSerializer(String.serializer(), ModelReasoning.serializer())
+private val shortcutList = ListSerializer(String.serializer())
 
 @Singleton
 class SettingsRepository @Inject constructor(@ApplicationContext private val context: Context) {
@@ -140,6 +144,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val autoUpdateCheck = booleanPreferencesKey("auto_update_check")
         val reasoningChoices = stringPreferencesKey("reasoning_choices_json")
         val reasoningCatalog = stringPreferencesKey("reasoning_catalog_json")
+        val skillShortcuts = stringPreferencesKey("skill_shortcuts_json")
     }
 
     val settings: Flow<Settings> = context.store.data.map { it.toSettings() }
@@ -172,7 +177,15 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         mcpServers = decodeMcp(this[K.mcpServers]),
         extUpdateBadge = this[K.extUpdateBadge] ?: 0,
         autoUpdateCheck = this[K.autoUpdateCheck] ?: true,
+        skillShortcuts = this[K.skillShortcuts]?.let { saved ->
+            runCatching { SkillShortcuts.normalize(json.decodeFromString(shortcutList, saved)) }.getOrNull()
+        },
     )
+
+    suspend fun setSkillShortcuts(names: List<String>?) = context.store.edit {
+        if (names == null) it.remove(K.skillShortcuts)
+        else it[K.skillShortcuts] = json.encodeToString(shortcutList, SkillShortcuts.normalize(names))
+    }
 
     /** Both ids belong to an explicit user selection; an empty provider means no selection. */
     suspend fun setModel(provider: String, model: String) = context.store.edit {

@@ -14,6 +14,7 @@ import io.github.jackwener.dsh.core.data.Settings
 import io.github.jackwener.dsh.core.data.SettingsRepository
 import io.github.jackwener.dsh.core.engine.EngineManager
 import io.github.jackwener.dsh.core.engine.EngineState
+import io.github.jackwener.dsh.core.extensions.ExtensionsRepository
 import io.github.jackwener.dsh.core.model.PermissionPreset
 import io.github.jackwener.dsh.core.session.ApprovalOutcome
 import io.github.jackwener.dsh.core.session.Conversation
@@ -159,9 +160,16 @@ open class ConversationController(
 class HomeViewModel @Inject constructor(
     store: SessionStore,
     engine: EngineManager,
-    settings: SettingsRepository,
+    private val preferences: SettingsRepository,
     private val agentScreen: AgentScreen,
-) : ConversationController(store, engine, settings) {
+    extensions: ExtensionsRepository,
+) : ConversationController(store, engine, preferences) {
+    val shortcutSkills = io.github.jackwener.dsh.feature.extensions.SkillsState(extensions.client, viewModelScope)
+
+    suspend fun saveSkillShortcuts(names: List<String>?) {
+        preferences.setSkillShortcuts(names)
+    }
+
     /** The open conversation's agent display (live preview), or null. */
     val agentDisplay: StateFlow<Int?> = combine(currentId, agentScreen.displays) { id, m -> m[id] }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)

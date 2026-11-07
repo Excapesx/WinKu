@@ -475,6 +475,7 @@ data class SkillInfo(
     val enabled: Boolean = true,
     /** Script files that likely won't run on a phone (`*.py`, `*.sh` …). */
     val scripts: List<String> = emptyList(),
+    val userInvocable: Boolean = true,
 ) {
     val editable: Boolean get() = removable || origin == SkillOrigin.IMPORTED || origin == SkillOrigin.DISABLED
 }
