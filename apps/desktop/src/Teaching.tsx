@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Activity,
@@ -31,18 +32,18 @@ import type { Session } from "./api";
 import { request } from "./api";
 import { parseRichContent } from "./rich-content.mjs";
 // Match the Android LearningView vocabulary, including formula-aware card titles.
-const titles = {
-  function: "函数画板",
-  diagram: "流程图",
-  chart: "交互图表",
-  quiz: "小测验",
-  math: "数学公式",
-  table: "数据表格",
-  code: "代码",
-  html: "交互内容",
-  explanation: "学习讲解",
-  markdown: "学习讲解",
-};
+const titles = () => ({
+  function: t("函数画板"),
+  diagram: t("流程图"),
+  chart: t("交互图表"),
+  quiz: t("小测验"),
+  math: t("数学公式"),
+  table: t("数据表格"),
+  code: t("代码"),
+  html: t("交互内容"),
+  explanation: t("学习讲解"),
+  markdown: t("学习讲解"),
+});
 const icons = {
   function: Activity,
   diagram: GitBranch,
@@ -73,7 +74,7 @@ class Boundary extends React.Component<
   render() {
     return this.state.failed ? (
       <p role="alert" className="component-error">
-        这段组件数据无法显示，请让 WinKu 修正。
+        {t("这段组件数据无法显示，请让 WinKu 修正。")}
       </p>
     ) : (
       this.props.children
@@ -140,19 +141,20 @@ function Artifact({
       ask: (text: string) =>
         ask(
           text +
-            "\n组件：" +
+            t("\n组件：") +
             (spec.title ?? spec.type) +
-            "\n当前操作：" +
+            t("\n当前操作：") +
             JSON.stringify(state),
         ),
       update: (key: string, value: any) =>
         setState((old: any) => {
           const next = { ...old, [key]: value };
-          if(session.id!=='learning-preview')request("artifact.save", {
-            sessionId: session.id,
-            id,
-            value: next,
-          }).catch((e) => setError(String(e)));
+          if (session.id !== "learning-preview")
+            request("artifact.save", {
+              sessionId: session.id,
+              id,
+              value: next,
+            }).catch((e) => setError(String(e)));
           return next;
         }),
     }),
@@ -201,7 +203,7 @@ function Artifact({
         ref={shell}
         role={expanded ? "dialog" : undefined}
         aria-modal={expanded || undefined}
-        aria-label={expanded ? spec.title || titles[spec.type] : undefined}
+        aria-label={expanded ? spec.title || titles()[spec.type] : undefined}
         className={"component-shell " + (expanded ? "desktop-expanded" : "")}
         onKeyDown={(e) => {
           if (e.key === "Escape") setExpanded(false);
@@ -211,12 +213,12 @@ function Artifact({
           <div className="component-heading">
             <Icon />
             <h2>
-              <MathText text={spec.title || titles[spec.type]} inline />
+              <MathText text={spec.title || titles()[spec.type]} inline />
             </h2>
           </div>
           <button
             className="icon-button"
-            aria-label={expanded ? "退出全屏" : "全屏查看"}
+            aria-label={expanded ? t("退出全屏") : t("全屏查看")}
             onClick={() => setExpanded(!expanded)}
           >
             {expanded ? <Minimize /> : <Expand />}
@@ -234,17 +236,20 @@ function Artifact({
             disabled={!canAsk}
             onClick={() =>
               store.ask(
-                "请结合我在这个交互组件中的当前操作和结果，继续解释这个概念。",
+                t(
+                  "请结合我在这个交互组件中的当前操作和结果，继续解释这个概念。",
+                ),
               )
             }
           >
             <MessageCircle />
-            结合我的操作讲解
+            {t("结合我的操作讲解")}
           </button>
         </footer>
         {error && (
           <p className="error" role="alert">
-            组件状态未保存：{error}
+            {t("组件状态未保存：")}
+            {error}
           </p>
         )}
       </section>
@@ -276,7 +281,7 @@ export function Teaching({
       } catch {
         return {
           text: JSON.stringify(part.spec),
-          error: "组件格式有误，已显示原文。",
+          error: t("组件格式有误，已显示原文。"),
         };
       }
     });

@@ -50,6 +50,8 @@ impl Backend {
         let result = rx
             .recv_timeout(Duration::from_secs(if method == "shutdown" {
                 5
+            } else if method.starts_with("plugins.") {
+                240
             } else {
                 65
             }))
@@ -77,7 +79,7 @@ impl Drop for Backend {
 }
 fn credential(id: &str) -> Result<keyring::Entry, String> {
     if id.is_empty()
-        || id.len() > 64
+        || id.len() > 128
         || !id
             .bytes()
             .all(|x| x.is_ascii_lowercase() || x.is_ascii_digit() || x == b'-')
@@ -96,9 +98,51 @@ async fn desktop_request(
     tauri::async_runtime::spawn_blocking(move || {
         match method.as_str() {
             "state" | "provider.select" | "session.delete" | "artifact.save" | "stop"
-            | "question.answer" | "prompt.polish.cancel" | "preferences.save" | "session.update"
-            | "mode.save" | "mode.delete" | "extension.save" | "extension.toggle" | "extension.delete"
+            | "question.answer" | "prompt.polish.cancel" | "preferences.save" | "session.update" | "queue.remove"
+            | "mode.save" | "mode.delete" | "extension.toggle"
+            | "plugins.list" | "plugins.inspect" | "plugins.install" | "plugins.toggle" | "plugins.delete"
+            | "market.save" | "market.read" | "skill.preview" | "skill.import"
             | "automation.save" | "automation.toggle" | "automation.delete" | "automation.failure" => {}
+            "extension.save" | "mcp.test" => {
+                let mut secret=params.as_object_mut().ok_or("参数错误")?.remove("secrets");
+                let confirm=params.get("confirmLaunch").cloned();
+                params=backend.call("extension.validate",params)?;
+                let id=params.get("id").and_then(Value::as_str).ok_or("扩展 ID 无效")?.to_string();
+                let slot=credential(&format!("mcp-{id}"))?;
+                if let Some(update)=secret.take() {
+                    if !update.is_object(){return Err("认证配置应为 JSON 对象".into());}
+                    let mut merged=slot.get_password().ok().and_then(|s|serde_json::from_str::<Value>(&s).ok()).unwrap_or(json!({"headers":{},"env":{}}));
+                    for group in ["headers","env"] {if let Some(value)=update.get(group) {merged.as_object_mut().ok_or("认证配置无效")?.insert(group.into(),value.clone());}}
+                    secret=Some(merged);
+                }
+                if let Some(ref value)=secret {
+                    if value.to_string().len()>32000 {return Err("认证配置过长".into());}
+                    for group in ["headers","env"] {
+                        let map=value.get(group).and_then(Value::as_object).ok_or("认证配置应为 JSON 对象")?;
+                        for (name,v) in map {
+                            let text=v.as_str().ok_or("认证值必须是字符串")?;
+                            if name.is_empty()||name.len()>200||!name.bytes().all(|b|b.is_ascii_alphanumeric()||b==b'-'||b==b'_')||text.contains(['\r','\n']) {return Err("认证字段无效".into());}
+                        }
+                    }
+                }
+                if method=="extension.save" {
+                    if let Some(value)=secret {
+                        let has=value.get("headers").and_then(Value::as_object).is_some_and(|m|!m.is_empty())||value.get("env").and_then(Value::as_object).is_some_and(|m|!m.is_empty());
+                        if has {slot.set_password(&value.to_string()).map_err(|e|format!("认证保存失败：{e}"))?;} else {let _=slot.delete_credential();}
+                        params.as_object_mut().unwrap().insert("hasSecrets".into(),json!(has));
+                    }
+                } else {
+                    let value=secret.or_else(||slot.get_password().ok().and_then(|s|serde_json::from_str(&s).ok())).unwrap_or(json!({}));
+                    params.as_object_mut().unwrap().insert("_secrets".into(),value);
+                    if let Some(confirm)=confirm {params.as_object_mut().unwrap().insert("confirmLaunch".into(),confirm);}
+                }
+            }
+            "extension.delete" => {
+                let id=params.get("id").and_then(Value::as_str).ok_or("缺少扩展 ID")?.to_string();
+                let result=backend.call("extension.delete",params)?;
+                let _=credential(&format!("mcp-{id}"))?.delete_credential();
+                return Ok(result);
+            }
             "provider.save" => {
                 let key = params
                     .get("apiKey")
@@ -118,7 +162,7 @@ async fn desktop_request(
                         .map_err(|e| format!("API Key 保存失败：{e}"))?;
                 }
             }
-            "send" | "regenerate" | "prompt.polish" | "provider.test" | "provider.models" | "automation.run" => {
+            "send" | "queue.send" | "regenerate" | "prompt.polish" | "provider.test" | "provider.models" | "automation.run" => {
                 let snapshot = backend.call("state", json!({}))?;
                 let task_provider = if method=="automation.run" { snapshot.get("automations").and_then(Value::as_array).and_then(|items| items.iter().find(|task|task.get("id")==params.get("id"))).and_then(|task|task.get("providerId")).and_then(Value::as_str) } else { None };
                 let id = task_provider.or_else(||params
@@ -134,6 +178,18 @@ async fn desktop_request(
                     .as_object_mut()
                     .ok_or("参数错误")?
                     .insert("_key".into(), json!(key));
+                let mut secrets=serde_json::Map::new();
+                if let Some(items)=snapshot.get("extensions").and_then(Value::as_array) {
+                    for item in items {
+                        if item.get("type").and_then(Value::as_str)!=Some("mcp") {continue;}
+                        if let Some(id)=item.get("id").and_then(Value::as_str) {
+                            if let Ok(value)=credential(&format!("mcp-{id}"))?.get_password() {
+                                if let Ok(parsed)=serde_json::from_str::<Value>(&value) {secrets.insert(id.into(),parsed);}
+                            }
+                        }
+                    }
+                }
+                params.as_object_mut().unwrap().insert("_mcpSecrets".into(),Value::Object(secrets));
             }
             "provider.delete" => {
                 let id=params.get("id").and_then(Value::as_str).ok_or("缺少服务商 ID")?;

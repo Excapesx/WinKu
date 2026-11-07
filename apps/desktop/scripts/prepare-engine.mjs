@@ -29,6 +29,18 @@ const selected = new Set([
   "24",
 ]);
 const marker = join(nm, ".winku-patched");
+// Some OpenAI-compatible streams explicitly send usage:null before their final
+// usage frame. Keep this desktop fix reproducible after npm ci replaces packages.
+const adapterFile = join(nm, "@snnh/dsh-llm-service-lite/lib/index.js");
+const adapter = readFileSync(adapterFile, "utf8");
+const usageGuard =
+  'if (usage === void 0 || typeof usage.prompt_tokens !== "number"';
+const fixedGuard =
+  'if (usage == null || typeof usage.prompt_tokens !== "number"';
+if (adapter.includes(usageGuard))
+  writeFileSync(adapterFile, adapter.replace(usageGuard, fixedGuard));
+else if (!adapter.includes(fixedGuard))
+  throw Error("LLM usage compatibility patch context changed");
 if (!existsSync(marker)) {
   for (const filename of readdirSync(patches)
     .filter((n) => selected.has(n.slice(0, 2)))
@@ -95,7 +107,10 @@ for (const name of [
 ])
   cpSync(join(shared, name), join(root, "engine", name));
 const runtime = join(root, "runtime");
-cpSync(join(root,"../android/app/src/main/assets/skills/prompt-polish/SKILL.md"),join(root,"engine/prompt-polish.md"));
+cpSync(
+  join(root, "../android/app/src/main/assets/skills/prompt-polish/SKILL.md"),
+  join(root, "engine/prompt-polish.md"),
+);
 mkdirSync(runtime, { recursive: true });
 cpSync(process.execPath, join(runtime, "node.exe"));
 if (!existsSync(join(runtime, "NODE-LICENSE"))) {

@@ -1,9 +1,11 @@
 import { setupAssistantStream } from "./assistant-stream.js";
 import { learningPrompt } from "./learning.js";
 import { registerWindowsTools } from "./windows-tools.mjs";
+import { createHash } from "node:crypto";
+import * as mcp from "@deepseek-ai/dsh-mcp-client";
 export const name = "winku-desktop";
 export const inject = ["systemPrompt", "tools"];
-export function apply(ctx, config = {}) {
+export async function apply(ctx, config = {}) {
   setupAssistantStream(ctx);
   ctx.systemPrompt.section({
     name: "winku:learning",
@@ -13,6 +15,45 @@ export function apply(ctx, config = {}) {
       .replaceAll("phone diagrams", "desktop diagrams"),
   });
   registerWindowsTools(ctx, config);
+  const secrets = JSON.parse(process.env.WINKU_MCP_SECRETS || "{}");
+  for (const ext of config.extensions ?? [])
+    if (
+      ext.type === "mcp" &&
+      (ext.transport !== "stdio" || config.preferences?.access !== "read-only")
+    ) {
+      const serverName = createHash("sha256")
+        .update(ext.id)
+        .digest("hex")
+        .slice(0, 32);
+      if (ext.askBeforeCall !== false)
+        ctx.on("tools/pre-execute", (exec, next) =>
+          exec.name.startsWith("mcp__" + serverName + "__") &&
+          config.preferences?.access === "full"
+            ? {
+                kind: "ask",
+                reason:
+                  ext.name +
+                  " 请求调用工具：" +
+                  exec.name +
+                  "\n" +
+                  JSON.stringify(exec.arguments ?? {}).slice(0, 8000),
+              }
+            : next(),
+        );
+      await ctx.plugin(mcp, {
+        transport: ext.transport,
+        serverName,
+        failOnStartupError: true,
+        ...(ext.transport === "stdio"
+          ? {
+              command: ext.command,
+              args: ext.args,
+              env: secrets[ext.id]?.env ?? {},
+              cwd: config.workspace,
+            }
+          : { url: ext.url, headers: secrets[ext.id]?.headers ?? {} }),
+      });
+    }
   const rpc = async (method, params) => {
     const response = await fetch(process.env.WINKU_APP_RPC, {
       method: "POST",

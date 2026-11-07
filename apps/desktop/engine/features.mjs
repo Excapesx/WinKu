@@ -5,7 +5,9 @@ import { mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 export const defaults = {
   theme: "system",
+  language: "system",
   sendKey: "enter",
+  busySend: "queue",
   workDetails: "standard",
   access: "read-only",
   modeId: "study",
@@ -61,7 +63,7 @@ export class Features {
   }
   tick(now = Date.now()) {
     const h = this.host;
-    if (h.busy) return;
+    if (h.busy || h.managing) return;
     const task = h.state.automations.find(
       (x) => x.enabled && x.nextAt <= now && !this.pending.has(x.id),
     );
@@ -70,9 +72,10 @@ export class Features {
       h.notify("automation.due", { id: task.id, providerId: task.providerId });
     }
   }
-  route() {
+  route(session) {
     const s = this.host.state;
-    const mode = s.modes.find((x) => x.id === s.preferences.modeId),
+    const mode =
+        session?.mode ?? s.modes.find((x) => x.id === s.preferences.modeId),
       preferences = structuredClone(s.preferences);
     for (const key of Object.keys(defaults.tools))
       if (mode?.groups?.[key] === false) preferences.tools[key] = false;
@@ -136,10 +139,19 @@ export class Features {
           throw Error("当前模型不支持这个思考强度。");
         next.effort = p.effort;
       }
-      for (const key of ["theme", "sendKey", "workDetails", "access"])
+      for (const key of [
+        "theme",
+        "language",
+        "busySend",
+        "sendKey",
+        "workDetails",
+        "access",
+      ])
         if (p[key] !== undefined) {
           const options = {
             theme: ["light", "dark", "system"],
+            language: ["system", "zh", "en"],
+            busySend: ["queue", "steer"],
             sendKey: ["enter", "ctrl-enter"],
             workDetails: ["compact", "standard", "detailed"],
             access: ["read-only", "ask", "full"],
@@ -238,71 +250,6 @@ export class Features {
       if (s.preferences.modeId === p.id) s.preferences.modeId = "study";
       return changed();
     }
-    if (method === "extension.save") {
-      if (h.busy) throw Error("请等待当前回答完成。");
-      const id = p.id || randomUUID();
-      if (!/^[a-zA-Z0-9-]{1,64}$/.test(id)) throw Error("扩展 ID 无效。");
-      const name = String(p.name ?? "")
-        .trim()
-        .slice(0, 80);
-      if (!name) throw Error("请输入扩展名称。");
-      let value;
-      if (p.type === "skill") {
-        const text = String(p.text ?? "");
-        if (!text.trim() || text.length > 120000)
-          throw Error("技能内容为空或过长。");
-        if (
-          !/^---\r?\n[\s\S]*?name:\s*\S+[\s\S]*?description:\s*\S+[\s\S]*?\r?\n---/.test(
-            text,
-          )
-        )
-          throw Error("技能需要包含 name 和 description 的 YAML 文件头。");
-        value = { id, name, type: "skill", text, enabled: p.enabled !== false };
-        const dir = join(h.home, "skills", id);
-        mkdirSync(dir, { recursive: true });
-        if (value.enabled) writeFileSync(join(dir, "SKILL.md"), text);
-        else rmSync(join(dir, "SKILL.md"), { force: true });
-      } else if (p.type === "mcp") {
-        if (!["stdio", "streamable-http"].includes(p.transport))
-          throw Error("请选择 MCP 连接方式。");
-        if (p.transport === "stdio" && s.preferences.access === "read-only")
-          throw Error("启动本地 MCP 需要先开启询问或完全访问权限。");
-        if (p.transport === "streamable-http") {
-          const url = new URL(p.url);
-          if (
-            !["https:", "http:"].includes(url.protocol) ||
-            url.username ||
-            url.password ||
-            url.search ||
-            url.hash
-          )
-            throw Error("MCP 地址无效，请勿在 URL 中放密钥。");
-          if (
-            url.protocol === "http:" &&
-            !["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
-          )
-            throw Error("远程 MCP 请使用 HTTPS。");
-        }
-        if (p.transport === "stdio" && !String(p.command ?? "").trim())
-          throw Error("请输入命令。");
-        value = {
-          id,
-          name,
-          type: "mcp",
-          enabled: p.enabled !== false,
-          transport: p.transport,
-          url: String(p.url ?? ""),
-          command: String(p.command ?? ""),
-          args: Array.isArray(p.args) ? p.args.map(String) : [],
-        };
-      } else throw Error("扩展类型无效。");
-      const old = s.extensions.find((x) => x.id === id);
-      if (old?.type === "skill" && value.type !== "skill")
-        rmSync(join(h.home, "skills", id, "SKILL.md"), { force: true });
-      if (old) Object.assign(old, value);
-      else s.extensions.push(value);
-      return changed();
-    }
     if (method === "extension.toggle") {
       if (h.busy) throw Error("请等待当前回答完成。");
       const item = s.extensions.find((x) => x.id === p.id);
@@ -314,14 +261,6 @@ export class Features {
         if (item.enabled) writeFileSync(join(dir, "SKILL.md"), item.text);
         else rmSync(join(dir, "SKILL.md"), { force: true });
       }
-      return changed();
-    }
-    if (method === "extension.delete") {
-      if (h.busy) throw Error("请等待当前回答完成。");
-      const item = s.extensions.find((x) => x.id === p.id);
-      if (item?.type === "skill" && /^[a-zA-Z0-9-]{1,64}$/.test(item.id))
-        rmSync(join(h.home, "skills", item.id, "SKILL.md"), { force: true });
-      s.extensions = s.extensions.filter((x) => x.id !== p.id);
       return changed();
     }
     if (method === "automation.save") {
@@ -394,7 +333,12 @@ export class Features {
       if (!task) throw Error("任务不存在。");
       try {
         const result = await h.run(
-          { providerId: task.providerId, text: task.prompt, _key: p._key },
+          {
+            providerId: task.providerId,
+            text: task.prompt,
+            _key: p._key,
+            _mcpSecrets: p._mcpSecrets,
+          },
           false,
         );
         task.runs.unshift({ time: Date.now(), sessionId: result.sessionId });

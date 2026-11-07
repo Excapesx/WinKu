@@ -1,6 +1,6 @@
 # WinKu
 
-> **状态：未完成（WIP）** — 正在重建中。目前只有 Android 能跑，其余平台只有骨架。
+> **状态：测试版（WIP）** — Android 与 Windows x64 已有可运行版本，其余平台仍在规划中。
 > 接口、目录、数据格式都还会变。
 
 > **来源**：Android 端衍生自 [jackwener/DSH-Android](https://github.com/jackwener/DSH-Android)（Apache-2.0），

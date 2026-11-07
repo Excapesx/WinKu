@@ -7,7 +7,7 @@
     "build": "node scripts/build.mjs",
     "dev": "node scripts/build.mjs --serve",
     "tauri": "tauri",
-    "test": "node --test test/*.test.mjs",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
     "prepare:engine": "node scripts/prepare-engine.mjs",
     "package": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package.ps1"
   },

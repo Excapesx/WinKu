@@ -13,7 +13,7 @@ export class EngineClient {
     this.next = 1;
     this.opened = new Set();
   }
-  async start(provider, key, home) {
+  async start(provider, key, home, control = false) {
     const desktop = provider.desktop ?? {},
       prefs = desktop.preferences ?? {
         access: "read-only",
@@ -80,7 +80,9 @@ export class EngineClient {
         id: "tool-fs",
         config: {
           read: !!tools.files && prefs.engineTools?.files_read !== false,
-          readImage: !!(tools.files || tools.screen)&&prefs.engineTools?.files_read!==false,
+          readImage:
+            !!(tools.files || tools.screen) &&
+            prefs.engineTools?.files_read !== false,
           write: !!writable && prefs.engineTools?.files_write !== false,
           edit: !!writable && prefs.engineTools?.files_write !== false,
         },
@@ -104,7 +106,11 @@ export class EngineClient {
         id: "skill-filesystem",
         config: {
           includeDefaultRoots: false,
-          customSkillDirs: desktop.skillsDir ? [desktop.skillsDir] : [],
+          customSkillDirs: [
+            ...(desktop.skillsDir ? [desktop.skillsDir] : []),
+            join(workspace, ".agents", "skills"),
+            join(workspace, ".dsh", "skills"),
+          ],
           watch: false,
         },
       },
@@ -114,6 +120,10 @@ export class EngineClient {
       },
       {
         insert: [
+          {
+            id: "winku-extension-control",
+            name: pathToFileURL(join(here, "extension-control.mjs")).href,
+          },
           {
             id: "llm-service-lite",
             name: pathToFileURL(
@@ -146,44 +156,16 @@ export class EngineClient {
           {
             id: "winku-desktop",
             name: pathToFileURL(join(here, "desktop-plugin.mjs")).href,
-            config: { preferences: prefs, workspace, providerId: provider.id },
+            config: {
+              preferences: prefs,
+              workspace,
+              providerId: provider.id,
+              extensions: desktop.extensions ?? [],
+            },
           },
         ],
       },
     );
-    for (const extension of desktop.extensions ?? [])
-      if (
-        extension.type === "mcp" &&
-        (extension.transport !== "stdio" || !readOnly)
-      )
-        patches.push({
-          insert: [
-            {
-              id: "mcp-" + extension.id,
-              name: pathToFileURL(
-                join(
-                  here,
-                  "node_modules/@deepseek-ai/dsh-mcp-client/lib/index.js",
-                ),
-              ).href,
-              config: {
-                transport: extension.transport,
-                serverName: createHash("sha256")
-                  .update(extension.id)
-                  .digest("hex")
-                  .slice(0, 32),
-                ...(extension.transport === "stdio"
-                  ? {
-                      command: extension.command,
-                      args: extension.args,
-                      cwd: workspace,
-                    }
-                  : { url: extension.url }),
-                failOnStartupError: true,
-              },
-            },
-          ],
-        });
     const patch = join(home, "desktop.patch.json");
     writeFileSync(patch, JSON.stringify(patches));
     this.stderr = "";
@@ -198,6 +180,8 @@ export class EngineClient {
           DSH_HOME: join(home, "dsh"),
           DSH_TELEMETRY_DISABLED: "1",
           WINKU_PROVIDER_KEY: key,
+          WINKU_EXTENSION_SAFE: control === "safe" ? "1" : "",
+          WINKU_MCP_SECRETS: JSON.stringify(provider.mcpSecrets ?? {}),
           WINKU_ENGINE_PATCH: patch,
           WINKU_APP_RPC: provider.appRPC ?? "",
           WINKU_APP_TOKEN: provider.appToken ?? "",
@@ -243,6 +227,7 @@ export class EngineClient {
       for (const p of this.pending.values()) p.reject(error);
       this.pending.clear();
     });
+    if (control) return this.call("desktop/ext/list");
     return this.call("initialize", {
       provider: provider.id,
       model: provider.model,

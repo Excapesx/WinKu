@@ -115,6 +115,7 @@ test(
       assert.equal(
         host.state.sessions[0].messages.at(-1).text,
         "answer 1 complete",
+        host.state.sessions[0].messages.at(-1).error || host.engine?.stderr,
       );
       assert.ok(JSON.stringify(calls[0]).includes("source content"));
       // The product persona, teaching contract and read-only tool set reach the real model adapter.

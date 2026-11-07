@@ -232,7 +232,7 @@ This app extends WinKu's established Android learning interface: neutral grey an
 
 Android is the visual authority. `scripts/sync-android-design.mjs` generates Android colors, in-app mark, launcher artwork, icon paths and provider presets. Styles load shared learning CSS, desktop CSS, generated Android roles, then `mobile-parity.css`. The final layer supplies the current font and Android-shaped controls. `MobileUI.tsx` supplies repeated controls and `MobilePages.tsx` settings pages. `SURFACE.md` records the Windows composition; `../../PRODUCT.md` remains product context.
 
-The build remains unfinished. The existing independent finish review has disposition FIX. This refresh reconciles intentional token drift without rerunning the detector or granting release approval. Current code restores the acknowledgement-gated risk dialog, Android switch geometry and expanded mode editor, with final review pending. Extension hierarchy/plugin management, skill imports, MCP authentication, language selection and busy-send queue/steer remain unresolved. Do not describe every subpage as nearly identical to Android.
+This record captures implemented Windows adaptations within the incumbent Android world; the independent scoped verdict has resolved all six listed fixes; this is not exhaustive release approval. Plugins / Skills / MCP management, skill imports, authenticated MCP configuration, the system / Chinese / English UI catalog, durable busy-send queue and SDK steering are implemented. A separate read-only discovered-skill inventory refreshes the actual registry snapshot, shows source/provider/path and incomplete-result hints, and limits custom directories to the isolated workspace `.agents/skills` and `.dsh/skills`. This establishes tested portable management flows, not exhaustive Android parity or nearly identical behavior on every subpage. Upstream Web-only optional bundles are not exposed as working desktop controls.
 
 **Key Characteristics:**
 
@@ -295,9 +295,17 @@ The sidebar contains centered new chat, plain Tools/Automation/Permissions, hist
 
 ### Grouped Settings and Fields
 
-The index retains interactive learning, General, Model service, Abilities, Extensions, Session modes, Usage, Computer permissions and About in Android order. Every page has a back destination. R20 groups use bubble fill, thin perimeter borders and inset internal dividers. Rows pair a label with optional muted detail and a trailing control/chevron. Fields use background fill, thin borders, R10 corners, visible labels and at least 40px height; prompt textareas grow vertically.
+The index retains interactive learning, General, Model service, Abilities, Extensions, Session modes, Usage, Computer permissions and About in Android order. Every page has a back destination. R20 groups use bubble fill, thin perimeter borders and inset internal dividers. Rows pair a label with optional muted detail and a trailing control/chevron. When a row has both navigation and a switch, its label button and switch are siblings; never nest one button inside another. Secondary page actions reuse the shared outlined pill button (`a-outline-button`). Fields use background fill, thin borders, R10 corners, visible labels and at least 40px height; prompt textareas grow vertically.
 
 Provider presets and icons come from generated Android sources. Presets seed setup fields while actual model availability comes from the provider. Current discovery/test/edit/delete and Windows credential storage are implemented adaptations, not evidence of exhaustive provider-flow equivalence.
+
+### Extensions and Language
+
+Extensions retains Plugins / Skills / MCP tabs and nested list, detail, import and marketplace/index routes within the existing grouped settings vocabulary. Native dsh plugin management exposes actionable profile/removable packages, filtering core and upstream Web-only optional bundles. Index controls support refresh, editing the index URL and exact-version installation. Index parsing and installation were verified against a local HTTP index; the curated jsDelivr endpoint was unreachable in this environment, so live external marketplace access is not verified. Network failures use translated, actionable copy.
+
+Skills import from ZIP, URL or GitHub with their assets. MCP editors support headers and environment variables backed by Windows Credential Manager, connection testing, discovered tools and ask controls. Native credential save/reload and an authenticated MCP probe passed against a local server; secrets remain outside plain desktop configuration. These Windows adaptations passed the scoped six-fix review.
+
+General settings exposes System / Chinese / English language choices. The UI catalog resolves system language, updates the document language and translates interface labels and feedback. Keep user content, package names and protocol identifiers intact.
 
 ### Switches and Segmented Controls
 
@@ -305,19 +313,21 @@ The final switch override uses brand track/white thumb when on and disabled-fill
 
 ### Composer
 
-The bordered R28 composer uses the documented inset and no ambient shadow. The draft initially has 68px minimum height before inherited maximum-height scrolling. Toolbar controls include attachment, permission, mode, working brand-emerald polish/undo, model, supported effort, Windows voice entry and send/stop. Attachment is 30px; send is 36px. Chips communicate read-only/ask/full. Model names truncate and essential actions stay visible at the narrow contract. Busy queue/steer remains an unresolved portable Android behavior.
+The bordered R28 composer uses the documented inset and no ambient shadow. The draft initially has 68px minimum height before inherited maximum-height scrolling. Toolbar controls include attachment, permission, mode, working brand-emerald polish/undo, model, supported effort, Windows voice entry and send/stop. Attachment is 30px; send is 36px. Chips communicate read-only/ask/full. Model names truncate and essential actions stay visible at the narrow contract. Busy-send settings choose a durable queue or real SDK steering. The queue appears above the composer in a surface-filled, thin-bordered R16 dock, with a 180px maximum height and internal scrolling; 40px rows truncate message labels beside their actions. Queued messages survive persistence, and steering uses the active SDK session. The selected mode is bound to the session.
 
 ### Dialogs and Mode Editor
 
 Dialogs use R24 tonal panels, dark scrim, internal scrolling, Escape dismissal, focus containment and focus restoration. Current `RiskDialog` starts unchecked and disables confirmation until acknowledgement; it guards confirmation for 300ms after opening. Composer, general access settings and the mode full-access preset share this pattern.
 
-The current mode editor includes name, Android icon choice, prompt, inherited/read-only/ask/full preset, Windows capability groups, engine-tool toggles, skill inclusion, duplication and built-in read-only treatment. Mode settings have real runtime effects in engine/client paths, and a mode cannot raise general permissions. These are current post-review fixes; final review of them remains pending.
+The current mode editor includes name, Android icon choice, prompt, inherited/read-only/ask/full preset, Windows capability groups, engine-tool toggles, skill inclusion, duplication and built-in read-only treatment. Mode settings have real runtime effects in engine/client paths, and a mode cannot raise general permissions. The selected mode is bound to the session. The independent scoped verdict resolved the listed mode, acknowledgement and switch fixes.
 
 ### Learning Cards and Reading Content
 
 Learning bodies directly reuse Android function plots, charts, diagrams, quizzes, formulas, code, tables, HTML, markdown and explanations. Type-specific icons, formula-aware titles, scoped base surfaces and footer follow-ups preserve the shared vocabulary. Artifact state persists. Desktop expansion uses an inset dialog and shared renderer. Code copy/wrap, equation overflow and content colors stay local. Attachment filename chips open optional source readers.
 
-**The Current Evidence Rule.** Document current code and review limits separately; a token refresh does not establish that missing portable Android flows are complete.
+Reported validation for this implementation: 19 serial tests, TypeScript checks, frontend build and debug Rust checks passed. Actual isolated Tauri screenshots are recorded under `.review/completion-*.png`. The independent verdict resolved all six scored fixes; the scope and external-market limits remain.
+
+**The Current Evidence Rule.** Document implemented portable flows and review limits separately; a documentation refresh does not establish exhaustive Android parity or release approval.
 
 ## Do's and Don'ts
 
@@ -337,4 +347,4 @@ Learning bodies directly reuse Android function plots, charts, diagrams, quizzes
 - Don't collapse chrome and learning-content scopes into one action palette.
 - Don't turn this sidebar/composer arrangement into a universal composition rule.
 - Don't populate the reserved Tools entry with invented student features.
-- Don't claim release approval or completed extension/language/busy-send parity from this documentation refresh.
+- Don't claim release approval, exhaustive Android parity or live external marketplace verification from this documentation refresh.

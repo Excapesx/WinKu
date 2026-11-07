@@ -85,6 +85,7 @@ await writeFile(
 );
 console.log("Desktop theme and marks synced from Android.");
 const iconNames = [
+  "queue_outline", "edit_outline", "trash_outline", "paper_plane_outline",
   "panel_left_outline",
   "new_chat_outline",
   "apps_add_outline",

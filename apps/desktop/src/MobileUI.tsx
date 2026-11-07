@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import { createPortal } from "react-dom";
@@ -118,6 +119,26 @@ export function Row({
   children?: React.ReactNode;
 }) {
   const Tag = onClick ? "button" : "div";
+  if (onClick && trailing)
+    return (
+      <div className={"a-row " + (children ? "stacked" : "")}>
+        <div className="a-row-main a-row-split">
+          <button
+            type="button"
+            className="a-row-label-button"
+            onClick={onClick}
+          >
+            {icon && <AIcon name={icon} size={20} />}
+            <span className="a-row-label">
+              <span>{title}</span>
+              {description && <small>{description}</small>}
+            </span>
+          </button>
+          {trailing}
+        </div>
+        {children && <div className="a-row-content">{children}</div>}
+      </div>
+    );
   return (
     <div className={"a-row " + (children ? "stacked" : "")}>
       <Tag
@@ -150,7 +171,11 @@ export function Page({
   return (
     <>
       <header className="a-topbar">
-        <AButton label="返回" icon="chevron_left_outline" onClick={onBack} />
+        <AButton
+          label={t("返回")}
+          icon="chevron_left_outline"
+          onClick={onBack}
+        />
         <h1>{title}</h1>
         <div className="a-topbar-actions">{actions}</div>
       </header>
@@ -232,9 +257,11 @@ export function RiskDialog({
   const [checked, setChecked] = useState(false),
     born = useRef(performance.now());
   return (
-    <Dialog title="开启完全访问？" onClose={onClose}>
+    <Dialog title={t("开启完全访问？")} onClose={onClose}>
       <p>
-        开启后，已启用的工具可以操作电脑、写入文件或执行命令，不再逐次询问。
+        {t(
+          "开启后，已启用的工具可以操作电脑、写入文件或执行命令，不再逐次询问。",
+        )}
       </p>
       <label className="a-risk-check">
         <input
@@ -242,17 +269,17 @@ export function RiskDialog({
           checked={checked}
           onChange={(e) => setChecked(e.target.checked)}
         />
-        我了解风险，并信任当前任务
+        {t("我了解风险，并信任当前任务")}
       </label>
       <div className="a-dialog-actions">
-        <button onClick={onClose}>取消</button>
+        <button onClick={onClose}>{t("取消")}</button>
         <button
           disabled={!checked}
           onClick={() => {
             if (checked && performance.now() - born.current > 300) onConfirm();
           }}
         >
-          确认开启
+          {t("确认开启")}
         </button>
       </div>
     </Dialog>

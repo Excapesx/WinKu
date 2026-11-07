@@ -25,6 +25,7 @@ export type Message = {
   model?: string;
   error?: string;
   interrupted?: boolean;
+  pending?: boolean;
   attachments?: Attachment[];
 };
 export type Session = {
@@ -38,6 +39,8 @@ export type Session = {
   events?: any[];
   messages: Message[];
   artifacts?: Record<string, any>;
+  mode?: {id: string; name: string};
+  queue?: {id: string; text: string; attachments: Attachment[]}[];
 };
 export type Snapshot = {
   providers: Provider[];

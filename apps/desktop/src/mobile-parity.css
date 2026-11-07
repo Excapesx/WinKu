@@ -906,3 +906,12 @@ textarea {
 .a-page-actions > .a-outline-button {
   width: auto;
 }
+.queue-dock {max-height:180px;overflow:auto;margin:0 4px 8px;padding:8px 12px;border:1px solid var(--border);border-radius:16px;background:var(--surface)}
+.queue-heading {display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.queue-item {display:flex;align-items:center;gap:4px;min-height:40px}
+.queue-item>span {flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.a-row-split {padding-top:0;padding-bottom:0}
+.a-row-label-button {display:flex;align-items:center;gap:16px;flex:1;min-width:0;padding:12px 0;background:transparent;text-align:left;color:inherit}
+.a-row-label-button>svg {flex:none;color:var(--muted)}
+.a-checkbox-row {display:flex;align-items:flex-start;gap:10px;margin:12px 0;font-size:13px;line-height:20px}
+.a-checkbox-row input {flex:none;margin-top:3px;accent-color:var(--brand)}

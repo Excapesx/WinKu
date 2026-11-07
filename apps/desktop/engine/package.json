@@ -5,7 +5,9 @@
   "type": "module",
   "dependencies": {
     "@deepseek-ai/dsh": "0.2.1-rc.5",
-    "@snnh/dsh-llm-service-lite": "file:../../android/js/packages/llm-service-lite"
+    "@snnh/dsh-llm-service-lite": "file:../../android/js/packages/llm-service-lite",
+    "fflate": "0.8.2",
+    "pnpm": "11.28.9"
   },
   "overrides": {
     "zod": "4.4.3",

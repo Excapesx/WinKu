@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-07T07:40:10.257Z",
+  "generatedAt": "2026-11-07T13:16:13.7138367Z",
   "title": "Design System: WinKu Windows",
   "extensions": {
     "shadows": [
@@ -195,11 +195,18 @@
       "description": "Current ask state in the composer permission selector.",
       "html": "<button class=\"ds-ask\">询问</button>",
       "css": ".ds-ask{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 7px;border:0;border-radius:8px;background:var(--soft,#e3f3ea);color:var(--primary,#0b6e3b);font:14px/1.6 WinKuSans,\"Microsoft YaHei UI\",sans-serif;cursor:pointer}.ds-ask:hover,.ds-ask:active{filter:brightness(.95)}.ds-ask:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}"
+    },
+    {
+      "name": "Busy-send Queue Dock",
+      "kind": "custom",
+      "description": "Durable queued messages above the composer, with SDK steering through existing controls and session-bound modes. Thin-bordered surface, R16, 180px maximum height and internal scrolling.",
+      "html": "<div class=\"ds-queue\"><div class=\"ds-queue-heading\">Queued messages</div><div class=\"ds-queue-row\"><span>Review this exercise</span><button aria-label=\"Remove queued message\">Remove</button></div></div>",
+      "css": ".ds-queue{max-height:180px;overflow:auto;margin:0 4px 8px;padding:8px 12px;border:1px solid var(--border);border-radius:16px;background:var(--surface);color:var(--fg);font-family:WinKuSans,sans-serif}.ds-queue-heading{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}.ds-queue-row{display:flex;align-items:center;gap:4px;min-height:40px}.ds-queue-row>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.ds-queue-row>button{background:transparent;color:inherit;border:0;border-radius:8px;padding:6px;cursor:pointer}.ds-queue-row>button:hover{background:var(--hover)}.ds-queue-row>button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}"
     }
   ],
   "narrative": {
     "northStar": "WinKu's quiet study workspace",
-    "overview": "This app extends WinKu's established Android learning interface: neutral grey and chalk surfaces, ink text, an emerald W, rounded groups and a conversation-first hierarchy. Locally bundled Noto Sans SC gives Chinese and Latin interface text a consistent sans-serif voice. Shared learning content keeps its separate mathematics, code and content-color conventions. This is an app-scoped implementation record, preserving the Android identity.\n\nAndroid is the visual authority. `scripts/sync-android-design.mjs` generates Android colors, in-app mark, launcher artwork, icon paths and provider presets. Styles load shared learning CSS, desktop CSS, generated Android roles, then `mobile-parity.css`. The final layer supplies the current font and Android-shaped controls. `MobileUI.tsx` supplies repeated controls and `MobilePages.tsx` settings pages. `SURFACE.md` records the Windows composition; `../../PRODUCT.md` remains product context.\n\nThe build remains unfinished. The existing independent finish review has disposition FIX. This refresh reconciles intentional token drift without rerunning the detector or granting release approval. Current code restores the acknowledgement-gated risk dialog, Android switch geometry and expanded mode editor, with final review pending. Extension hierarchy/plugin management, skill imports, MCP authentication, language selection and busy-send queue/steer remain unresolved. Do not describe every subpage as nearly identical to Android.",
+    "overview": "This app extends WinKu's established Android learning interface: neutral grey and chalk surfaces, ink text, an emerald W, rounded groups and a conversation-first hierarchy. Locally bundled Noto Sans SC gives Chinese and Latin interface text a consistent sans-serif voice. Shared learning content keeps its separate mathematics, code and content-color conventions. This is an app-scoped implementation record, preserving the Android identity.\n\nAndroid is the visual authority. `scripts/sync-android-design.mjs` generates Android colors, in-app mark, launcher artwork, icon paths and provider presets. Styles load shared learning CSS, desktop CSS, generated Android roles, then `mobile-parity.css`. The final layer supplies the current font and Android-shaped controls. `MobileUI.tsx` supplies repeated controls and `MobilePages.tsx` settings pages. `SURFACE.md` records the Windows composition; `../../PRODUCT.md` remains product context.\n\nThis record captures implemented Windows adaptations within the incumbent Android world; the independent scoped verdict has resolved all six listed fixes; this is not exhaustive release approval. Plugins / Skills / MCP management, skill imports, authenticated MCP configuration, the system / Chinese / English UI catalog, durable busy-send queue and SDK steering are implemented. A separate read-only discovered-skill inventory refreshes the actual registry snapshot, shows source/provider/path and incomplete-result hints, and limits custom directories to the isolated workspace `.agents/skills` and `.dsh/skills`. This establishes tested portable management flows, not exhaustive Android parity or nearly identical behavior on every subpage. Upstream Web-only optional bundles are not exposed as working desktop controls.",
     "keyCharacteristics": [
       "Quiet neutral surfaces with emerald identity and content accents.",
       "Android-derived colors, marks, icons, grouped settings and composer.",
@@ -219,7 +226,7 @@
       },
       {
         "name": "The Current Evidence Rule",
-        "body": "Document current code and review limits separately; a token refresh does not establish that missing portable Android flows are complete.",
+        "body": "Document implemented portable flows and review limits separately; a documentation refresh does not establish exhaustive Android parity or release approval.",
         "section": "components"
       }
     ],
@@ -237,7 +244,7 @@
       "Don't collapse chrome and learning-content scopes into one action palette.",
       "Don't turn this sidebar/composer arrangement into a universal composition rule.",
       "Don't populate the reserved Tools entry with invented student features.",
-      "Don't claim release approval or completed extension/language/busy-send parity from this documentation refresh."
+      "Don't claim release approval, exhaustive Android parity or live external marketplace verification from this documentation refresh."
     ]
   }
 }

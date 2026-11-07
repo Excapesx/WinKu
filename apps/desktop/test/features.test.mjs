@@ -153,6 +153,10 @@ test("persistent settings, skill lifecycle, modes, provider selection, scheduler
     h.features.tick(task.nextAt + 3);
     assert.equal(events.filter((x) => x.event === "automation.due").length, 1);
     h.busy = false;
+    h.managing = true;
+    h.features.tick(task.nextAt + 4);
+    assert.equal(events.filter((x) => x.event === "automation.due").length, 1);
+    h.managing = false;
     await h.handle("automation.failure", { id: task.id });
     assert.equal(h.state.automations[0].runs.length, 1);
     assert.ok(h.state.automations[0].nextAt > Date.now());

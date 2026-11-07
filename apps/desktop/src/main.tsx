@@ -1,3 +1,4 @@
+import { t, setUILanguage } from "./i18n";
 import React, { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -130,8 +131,18 @@ function App() {
     );
   const pref = snapshot.preferences ?? {},
     mode = snapshot.modes?.find((m) => m.id === pref.modeId);
+  const [systemLanguage, setSystemLanguage] = useState(navigator.language);
+  const language = setUILanguage(pref.language ?? "system", systemLanguage);
+  useEffect(() => {
+    const changed = () => setSystemLanguage(navigator.language);
+    window.addEventListener("languagechange", changed);
+    return () => window.removeEventListener("languagechange", changed);
+  }, []);
+  useEffect(() => {
+    document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
+  }, [language]);
   const permissionLabel = (
-    { "read-only": "只读", ask: "询问", full: "完全访问" } as Record<
+    { "read-only": t("只读"), ask: t("询问"), full: t("完全访问") } as Record<
       string,
       string
     >
@@ -218,7 +229,7 @@ function App() {
   }
   function newTask() {
     newChat();
-    editDraft("帮我创建一个自动化任务：");
+    editDraft(t("帮我创建一个自动化任务："));
   }
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? "dark" : "light";
@@ -346,8 +357,8 @@ function App() {
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
   }, []);
-  async function send(text = draft, regenerate = false) {
-    if (submitting || snapshot.busy) return;
+  async function send(text = draft, regenerate = false, now = false) {
+    if (submitting) return;
     if (!provider) {
       modelSettings();
       return;
@@ -356,7 +367,7 @@ function App() {
     setUndo(null);
     setSubmitting(true);
     follow.current = true;
-    setActivity("正在连接模型…");
+    setActivity(t("正在连接模型…"));
     try {
       const result = await request<{ sessionId: string }>(
         regenerate ? "regenerate" : "send",
@@ -365,6 +376,7 @@ function App() {
           providerId: provider.id,
           text,
           attachments: regenerate ? [] : files,
+          now,
         },
       );
       setSessionId(result.sessionId);
@@ -381,7 +393,7 @@ function App() {
   }
   async function addFiles(list: File[]) {
     if (files.length + list.length > 4) {
-      setNotice("每次最多添加 4 个附件。");
+      setNotice(t("每次最多添加 4 个附件。"));
       return;
     }
     setAttaching(true);
@@ -401,7 +413,7 @@ function App() {
       setCopied(id);
       setTimeout(() => setCopied(""), 1800);
     } catch {
-      setNotice("复制失败，请选中文字手动复制。");
+      setNotice(t("复制失败，请选中文字手动复制。"));
     }
   }
   async function deleteSession(id: string) {
@@ -415,20 +427,20 @@ function App() {
   }
   return (
     <div className={"app " + (collapsed ? "sidebar-collapsed" : "")}>
-      <aside className="sidebar" aria-label="主导航">
+      <aside className="sidebar" aria-label={t("主导航")}>
         <div className="brand">
           <Brand />
           <span>WinKu</span>
           <span className="platform">AGENT</span>
           <AButton
-            label="收起侧栏"
+            label={t("收起侧栏")}
             icon="panel_left_outline"
             onClick={() => setCollapsed(true)}
           />
         </div>
         <button className="new-chat" onClick={newChat}>
           <AIcon name="new_chat_outline" size={20} />
-          新会话
+          {t("新会话")}
         </button>
         <div className="sidebar-links">
           <button
@@ -436,7 +448,7 @@ function App() {
             onClick={() => setPage("tools")}
           >
             <AIcon name="apps_add_outline" size={20} />
-            工具
+            {t("工具")}
           </button>
           <button
             className={"nav-row " + (page === "automation" ? "selected" : "")}
@@ -446,7 +458,7 @@ function App() {
             }}
           >
             <AIcon name="clock_outline" size={20} />
-            自动化任务
+            {t("自动化任务")}
           </button>
           <button
             className={"nav-row " + (page === "permissions" ? "selected" : "")}
@@ -456,52 +468,52 @@ function App() {
             }}
           >
             <AIcon name="shield_outline" size={20} />
-            权限与无障碍
+            {t("权限与无障碍")}
           </button>
         </div>
         <div className="history-label">
-          <span>会话</span>
+          <span>{t("会话")}</span>
           <AButton
-            label="搜索会话"
+            label={t("搜索会话")}
             icon="search_outline"
             onClick={() => setShowSearch(!showSearch)}
           />
           <Menu
-            label="筛选会话"
+            label={t("筛选会话")}
             trigger={<AIcon name="sliders_two_outline" size={18} />}
           >
             <MenuItem
               selected={historyFilter === "active"}
               onClick={() => setHistoryFilter("active")}
             >
-              全部会话
+              {t("全部会话")}
             </MenuItem>
             <MenuItem
               selected={historyFilter === "pinned"}
               onClick={() => setHistoryFilter("pinned")}
             >
-              已置顶
+              {t("已置顶")}
             </MenuItem>
             <MenuItem
               selected={historyFilter === "archived"}
               onClick={() => setHistoryFilter("archived")}
             >
-              已归档
+              {t("已归档")}
             </MenuItem>
           </Menu>
         </div>
         {showSearch && (
           <label className="search-box">
-            <span className="sr-only">搜索会话</span>
+            <span className="sr-only">{t("搜索会话")}</span>
             <input
               autoFocus
-              placeholder="搜索会话"
+              placeholder={t("搜索会话")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </label>
         )}
-        <nav className="history" aria-label="历史会话">
+        <nav className="history" aria-label={t("历史会话")}>
           {snapshot.sessions
             .filter(
               (s) =>
@@ -533,32 +545,34 @@ function App() {
                     <time>{relativeTime(s.updatedAt ?? s.createdAt)}</time>
                   )}
                 </button>
-                <Menu label={"会话菜单：" + s.title} trigger={<MoreIcon />}>
+                <Menu label={t("会话菜单：") + s.title} trigger={<MoreIcon />}>
                   <MenuItem
                     onClick={() => setRename({ id: s.id, title: s.title })}
                   >
-                    重命名
+                    {t("重命名")}
                   </MenuItem>
                   <MenuItem
                     onClick={() =>
                       act("session.update", { id: s.id, pinned: !s.pinned })
                     }
                   >
-                    {s.pinned ? "取消置顶" : "置顶"}
+                    {s.pinned ? t("取消置顶") : t("置顶")}
                   </MenuItem>
                   <MenuItem
                     onClick={() =>
                       act("session.update", { id: s.id, archived: !s.archived })
                     }
                   >
-                    {s.archived ? "取消归档" : "归档"}
+                    {s.archived ? t("取消归档") : t("归档")}
                   </MenuItem>
-                  <MenuItem onClick={() => setDeleting(s.id)}>删除</MenuItem>
+                  <MenuItem onClick={() => setDeleting(s.id)}>
+                    {t("删除")}
+                  </MenuItem>
                 </Menu>
               </div>
             ))}
           {!snapshot.sessions.length && (
-            <p className="history-empty">开始对话后，会保存在这里。</p>
+            <p className="history-empty">{t("开始对话后，会保存在这里。")}</p>
           )}
         </nav>
         <div className="sidebar-bottom">
@@ -571,7 +585,7 @@ function App() {
             }}
           >
             <AIcon name="settings_outline" size={20} />
-            设置
+            {t("设置")}
           </button>
         </div>
       </aside>
@@ -579,21 +593,21 @@ function App() {
         {(page === "chat" || page === "tools") && (
           <header className="topbar">
             <AButton
-              label={collapsed ? "展开侧栏" : "收起侧栏"}
+              label={collapsed ? t("展开侧栏") : t("收起侧栏")}
               icon="panel_left_outline"
               onClick={() => setCollapsed(!collapsed)}
             />
-            <h1>{page === "tools" ? "工具" : (session?.title ?? "")}</h1>
+            <h1>{page === "tools" ? t("工具") : (session?.title ?? "")}</h1>
             <div className="topbar-actions">
               {page === "chat" && session && (
                 <AButton
-                  label="轨迹"
+                  label={t("轨迹")}
                   icon="inspect_outline"
                   onClick={() => setPage("trajectory")}
                 />
               )}
               <AButton
-                label="新会话"
+                label={t("新会话")}
                 icon="new_chat_outline"
                 onClick={newChat}
               />
@@ -602,19 +616,19 @@ function App() {
         )}
         {fatal ? (
           <div className="startup-error">
-            <h2>暂时无法连接桌面引擎</h2>
-            <p>{fatal}</p>
+            <h2>{t("暂时无法连接桌面引擎")}</h2>
+            <p>{t(fatal)}</p>
             <button
               className="primary-button"
               onClick={() => location.reload()}
             >
-              重新连接
+              {t("重新连接")}
             </button>
           </div>
         ) : !ready ? (
           <div className="center-state" role="status">
             <LoaderCircle className="spinner" />
-            正在打开 WinKu…
+            {t("正在打开 WinKu…")}
           </div>
         ) : page === "settings" ? (
           <SettingsHub
@@ -650,11 +664,11 @@ function App() {
         ) : page === "tools" ? (
           <div className="tools-empty">
             <LayoutGrid />
-            <h2>学生工具</h2>
-            <p>工具入口已预留，具体内容待确定。</p>
+            <h2>{t("学生工具")}</h2>
+            <p>{t("工具入口已预留，具体内容待确定。")}</p>
             <button className="text-button" onClick={() => setPage("chat")}>
               <ChevronLeft />
-              返回对话
+              {t("返回对话")}
             </button>
           </div>
         ) : (
@@ -678,7 +692,7 @@ function App() {
                   <div className="welcome">
                     <div className="welcome-heading">
                       <Brand />
-                      <h2>今天想做点什么</h2>
+                      <h2>{t("今天想做点什么")}</h2>
                     </div>
                   </div>
                 ) : (
@@ -687,7 +701,9 @@ function App() {
                     session.events?.length ? (
                       <details className="conversation-work">
                         <summary>
-                          工作详情 · {session.events.length} 条事件
+                          {t("工作详情 ·")}
+                          {session.events.length}
+                          {t("条事件")}
                         </summary>
                         {session.events.slice(-10).map((e, i) => (
                           <div key={i}>
@@ -699,7 +715,7 @@ function App() {
                           className="text-button"
                           onClick={() => setPage("trajectory")}
                         >
-                          查看完整轨迹
+                          {t("查看完整轨迹")}
                         </button>
                       </details>
                     ) : null}
@@ -708,7 +724,9 @@ function App() {
                         key={message.id}
                         className={"message " + message.role}
                         aria-label={
-                          message.role === "user" ? "你的问题" : "WinKu 回答"
+                          message.role === "user"
+                            ? t("你的问题")
+                            : t("WinKu 回答")
                         }
                       >
                         {message.attachments?.length ? (
@@ -726,9 +744,16 @@ function App() {
                           </div>
                         ) : null}
                         {message.role === "user" ? (
-                          <div className="user-text">{message.text}</div>
+                          <div className="user-text">
+                            {message.text}
+                            {message.pending && (
+                              <small className="a-note">
+                                {t("等待助手接收…")}
+                              </small>
+                            )}
+                          </div>
                         ) : (
-                          <Suspense fallback={<p>正在显示回答…</p>}>
+                          <Suspense fallback={<p>{t("正在显示回答…")}</p>}>
                             <Teaching
                               text={message.text}
                               session={session}
@@ -744,12 +769,12 @@ function App() {
                         )}
                         {message.error && (
                           <div className="answer-error" role="alert">
-                            <strong>回答未完成</strong>
+                            <strong>{t("回答未完成")}</strong>
                             <p>{message.error}</p>
                           </div>
                         )}
                         {message.interrupted && (
-                          <p className="muted">已停止生成</p>
+                          <p className="muted">{t("已停止生成")}</p>
                         )}
                         {message.role === "assistant" &&
                           !(
@@ -759,7 +784,7 @@ function App() {
                           ) && (
                             <footer className="answer-actions">
                               <IconButton
-                                label="复制回答"
+                                label={t("复制回答")}
                                 onClick={() => copy(message.id, message.text)}
                               >
                                 {copied === message.id ? <Check /> : <Copy />}
@@ -767,8 +792,8 @@ function App() {
                               <span>{message.model}</span>
                               {i === session.messages.length - 1 && (
                                 <IconButton
-                                  label="重新生成"
-                                  disabled={snapshot.busy || submitting}
+                                  label={t("重新生成")}
+                                  disabled={snapshot.busy || submitting || !!session.queue?.length || !!snapshot.pendingQuestions.length}
                                   onClick={() => send("", true)}
                                 >
                                   <RotateCw />
@@ -784,8 +809,8 @@ function App() {
                             <p className="generating" role="status">
                               <LoaderCircle className="spinner" />
                               {pref.workDetails === "compact"
-                                ? "正在回答…"
-                                : activity || "正在思考…"}
+                                ? t("正在回答…")
+                                : activity || t("正在思考…")}
                             </p>
                           )}
                       </article>
@@ -809,6 +834,62 @@ function App() {
                   addFiles([...e.dataTransfer.files]);
                 }}
               >
+                {!!session?.queue?.length && (
+                  <div className="queue-dock" aria-label={t("排队消息")}>
+                    <div className="queue-heading">
+                      <AIcon name="queue_outline" />
+                      {t("排队消息 ·")}
+                      {session.queue.length}
+                    </div>
+                    {session.queue.map((q) => (
+                      <div className="queue-item" key={q.id}>
+                        <span>
+                          {q.text ||
+                            q.attachments.map((a) => a.name).join("、")}
+                        </span>
+                        <AButton
+                          label={t("编辑排队消息")}
+                          icon="edit_outline"
+                          onClick={async () => {
+                            if (draft.trim() || files.length) {
+                              setNotice(t("请先处理输入框里的草稿。"));
+                              return;
+                            }
+                            try {
+                              await request("queue.remove", {
+                                sessionId,
+                                id: q.id,
+                              });
+                              setDraft(q.text);
+                              setFiles(q.attachments);
+                              textarea.current?.focus();
+                            } catch (e) {
+                              setNotice(String(e));
+                            }
+                          }}
+                        />
+                        <AButton
+                          label={t("删除排队消息")}
+                          icon="trash_outline"
+                          onClick={() =>
+                            act("queue.remove", { sessionId, id: q.id })
+                          }
+                        />
+                        <AButton
+                          label={t("立即引导")}
+                          icon="paper_plane_outline"
+                          onClick={() =>
+                            act("queue.send", {
+                              sessionId,
+                              id: q.id,
+                              providerId: provider?.id,
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <form
                   className="composer"
                   onSubmit={(e) => {
@@ -828,7 +909,7 @@ function App() {
                             <span>{file.name}</span>
                           </button>
                           <IconButton
-                            label={"移除 " + file.name}
+                            label={t("移除 ") + file.name}
                             onClick={() =>
                               setFiles((old) => old.filter((_, n) => n !== i))
                             }
@@ -840,7 +921,7 @@ function App() {
                     </div>
                   )}
                   <label className="sr-only" htmlFor="prompt">
-                    发送消息
+                    {t("发送消息")}
                   </label>
                   <textarea
                     id="prompt"
@@ -849,8 +930,8 @@ function App() {
                     rows={2}
                     placeholder={
                       dragging
-                        ? "松开以添加文件"
-                        : "描述你想让电脑做的事， / 调用指令"
+                        ? t("松开以添加文件")
+                        : t("描述你想让电脑做的事， / 调用指令")
                     }
                     onChange={(e) => editDraft(e.target.value)}
                     onPaste={(e) => {
@@ -870,7 +951,13 @@ function App() {
                         !e.nativeEvent.isComposing
                       ) {
                         e.preventDefault();
-                        if (!snapshot.busy && !attaching) send();
+                        if (!attaching)
+                          send(
+                            draft,
+                            false,
+                            snapshot.busy &&
+                              (e.altKey || pref.busySend === "steer"),
+                          );
                       }
                     }}
                   />
@@ -887,13 +974,13 @@ function App() {
                       }}
                     />
                     <AButton
-                      label="添加图片、PDF 或代码"
+                      label={t("添加图片、PDF 或代码")}
                       icon="plus_outline"
                       disabled={attaching || files.length >= 4}
                       onClick={() => picker.current?.click()}
                     />
                     <Menu
-                      label="权限模式"
+                      label={t("权限模式")}
                       className={
                         "permission-chip " + (pref.access ?? "read-only")
                       }
@@ -917,20 +1004,20 @@ function App() {
                           {
                             (
                               {
-                                "read-only": "只读",
-                                ask: "询问",
-                                full: "完全访问",
+                                "read-only": t("只读"),
+                                ask: t("询问"),
+                                full: t("完全访问"),
                               } as any
                             )[value]
                           }
                         </MenuItem>
                       ))}
                       <MenuItem onClick={() => setPage("permissions")}>
-                        权限与无障碍
+                        {t("权限与无障碍")}
                       </MenuItem>
                     </Menu>
                     <Menu
-                      label="会话模式"
+                      label={t("会话模式")}
                       className="mode-chip"
                       trigger={
                         <>
@@ -942,13 +1029,19 @@ function App() {
                       {(snapshot.modes ?? []).map((m) => (
                         <MenuItem
                           key={m.id}
-                          selected={m.id === pref.modeId}
+                          selected={m.id === (session?.mode?.id ?? pref.modeId)}
                           onClick={() =>
-                            act("preferences.save", { modeId: m.id })
+                            session?.mode
+                              ? setNotice(
+                                  t(
+                                    "会话开始后模式固定；新建会话可选择其他模式。",
+                                  ),
+                                )
+                              : act("preferences.save", { modeId: m.id })
                           }
                           description={m.prompt.slice(0, 70)}
                         >
-                          {m.name}
+                          {m.builtin ? t(m.name) : m.name}
                         </MenuItem>
                       ))}
                       <MenuItem
@@ -957,7 +1050,7 @@ function App() {
                           setPage("settings");
                         }}
                       >
-                        管理模式
+                        {t("管理模式")}
                       </MenuItem>
                     </Menu>
                     <button
@@ -965,8 +1058,8 @@ function App() {
                         "polish-button " + (polishing ? "polishing" : "")
                       }
                       type="button"
-                      aria-label={polishing ? "取消润色" : "润色提示词"}
-                      title={polishing ? "取消润色" : "润色提示词"}
+                      aria-label={polishing ? t("取消润色") : t("润色提示词")}
+                      title={polishing ? t("取消润色") : t("润色提示词")}
                       disabled={!draft.trim() && !polishing}
                       onClick={polishDraft}
                     >
@@ -977,11 +1070,11 @@ function App() {
                       )}
                     </button>
                     <Menu
-                      label="选择模型"
+                      label={t("选择模型")}
                       className="composer-model"
                       trigger={
                         <>
-                          <span>{provider?.model || "选择模型"}</span>
+                          <span>{provider?.model || t("选择模型")}</span>
                           <AIcon name="chevron_down_outline" size={12} />
                         </>
                       }
@@ -1007,12 +1100,12 @@ function App() {
                           )),
                         )}
                       <MenuItem icon="data_outline" onClick={modelSettings}>
-                        管理模型服务
+                        {t("管理模型服务")}
                       </MenuItem>
                     </Menu>
                     {!!provider?.efforts?.length && (
                       <Menu
-                        label="思考强度"
+                        label={t("思考强度")}
                         className="effort-chip"
                         trigger={
                           <>
@@ -1020,7 +1113,7 @@ function App() {
                               {pref.effort && pref.effort !== "auto"
                                 ? pref.effort.charAt(0).toUpperCase() +
                                   pref.effort.slice(1)
-                                : "自动"}
+                                : t("自动")}
                             </span>
                             <AIcon name="chevron_down_outline" size={11} />
                           </>
@@ -1033,7 +1126,7 @@ function App() {
                             onClick={() => act("preferences.save", { effort })}
                           >
                             {effort === "auto"
-                              ? "自动"
+                              ? t("自动")
                               : effort.charAt(0).toUpperCase() +
                                 effort.slice(1)}
                           </MenuItem>
@@ -1042,7 +1135,7 @@ function App() {
                     )}
                     <span className="composer-spacer" />
                     <AButton
-                      label="语音输入"
+                      label={t("语音输入")}
                       icon="microphone_outline"
                       onClick={() => {
                         textarea.current?.focus();
@@ -1051,11 +1144,24 @@ function App() {
                         );
                       }}
                     />
+                    {snapshot.busy && (draft.trim() || files.length > 0) && (
+                      <Menu
+                        label={t("生成中发送")}
+                        trigger={<AIcon name="queue_outline" size={20} />}
+                      >
+                        <MenuItem onClick={() => send()}>
+                          {t("排队发送")}
+                        </MenuItem>
+                        <MenuItem onClick={() => send(draft, false, true)}>
+                          {t("立即引导")}
+                        </MenuItem>
+                      </Menu>
+                    )}
                     {snapshot.busy ? (
                       <button
                         className="send-button stop"
                         type="button"
-                        aria-label="停止生成"
+                        aria-label={t("停止生成")}
                         onClick={() =>
                           request("stop").catch((e) => setNotice(String(e)))
                         }
@@ -1066,7 +1172,7 @@ function App() {
                       <button
                         className="send-button"
                         type="submit"
-                        aria-label="发送消息"
+                        aria-label={t("发送消息")}
                         disabled={
                           submitting ||
                           attaching ||
@@ -1084,29 +1190,29 @@ function App() {
                 </form>
                 {undo && draft === undo.after && (
                   <div className="polish-undo">
-                    已润色
+                    {t("已润色")}
                     <button
                       onClick={() => {
                         editDraft(undo.before);
                         textarea.current?.focus();
                       }}
                     >
-                      撤销
+                      {t("撤销")}
                     </button>
                   </div>
                 )}
                 <div className="composer-note">
-                  回答由所选模型生成，请核对关键知识与计算。
+                  {t("回答由所选模型生成，请核对关键知识与计算。")}
                 </div>
               </div>
             </div>
             {reading && (
-              <aside className="reader" aria-label="附件阅读面板">
+              <aside className="reader" aria-label={t("附件阅读面板")}>
                 <header>
                   <FileText />
                   <h2>{reading.name}</h2>
                   <IconButton
-                    label="关闭阅读面板"
+                    label={t("关闭阅读面板")}
                     onClick={() => setReading(null)}
                   >
                     <X />
@@ -1134,29 +1240,29 @@ function App() {
           />
         )}
         {deleting && (
-          <Dialog title="删除本地会话？" onClose={() => setDeleting(null)}>
-            <p>删除后无法恢复。</p>
+          <Dialog title={t("删除本地会话？")} onClose={() => setDeleting(null)}>
+            <p>{t("删除后无法恢复。")}</p>
             <div className="a-dialog-actions">
-              <button onClick={() => setDeleting(null)}>取消</button>
+              <button onClick={() => setDeleting(null)}>{t("取消")}</button>
               <button
                 className="danger"
                 onClick={() => deleteSession(deleting)}
               >
-                删除
+                {t("删除")}
               </button>
             </div>
           </Dialog>
         )}
         {rename && (
-          <Dialog title="重命名会话" onClose={() => setRename(null)}>
+          <Dialog title={t("重命名会话")} onClose={() => setRename(null)}>
             <input
-              aria-label="会话名称"
+              aria-label={t("会话名称")}
               maxLength={100}
               value={rename.title}
               onChange={(e) => setRename({ ...rename, title: e.target.value })}
             />
             <div className="a-dialog-actions">
-              <button onClick={() => setRename(null)}>取消</button>
+              <button onClick={() => setRename(null)}>{t("取消")}</button>
               <button
                 onClick={() =>
                   request("session.update", rename)
@@ -1164,7 +1270,7 @@ function App() {
                     .catch((e) => setNotice(String(e)))
                 }
               >
-                保存
+                {t("保存")}
               </button>
             </div>
           </Dialog>
@@ -1173,17 +1279,18 @@ function App() {
           <section
             className="request-panel"
             key={q.token}
-            aria-label="引擎请求"
+            aria-label={t("引擎请求")}
           >
             <h2>
               {q.method === "approval/request"
-                ? "工具请求授权"
-                : "WinKu 需要你的回答"}
+                ? t("工具请求授权")
+                : t("WinKu 需要你的回答")}
             </h2>
             {q.method === "approval/request" ? (
               <>
                 <p>
-                  {q.params.toolName}：{q.params.reason || "此操作需要授权。"}
+                  {q.params.toolName}：
+                  {q.params.reason || t("此操作需要授权。")}
                 </p>
                 <button
                   className="primary-button"
@@ -1194,7 +1301,7 @@ function App() {
                     })
                   }
                 >
-                  允许这一次
+                  {t("允许这一次")}
                 </button>
                 <button
                   className="text-button"
@@ -1205,14 +1312,18 @@ function App() {
                     })
                   }
                 >
-                  拒绝
+                  {t("拒绝")}
                 </button>
               </>
             ) : (
               <>
-                <p>模型提出了补充问题。请停止本次生成后，在对话中补充说明。</p>
+                <p>
+                  {t(
+                    "模型提出了补充问题。请停止本次生成后，在对话中补充说明。",
+                  )}
+                </p>
                 <button className="text-button" onClick={() => request("stop")}>
-                  停止并补充
+                  {t("停止并补充")}
                 </button>
               </>
             )}
@@ -1220,8 +1331,8 @@ function App() {
         ))}
         {notice && (
           <div className="toast" role="status">
-            <span>{notice}</span>
-            <IconButton label="关闭提示" onClick={() => setNotice("")}>
+            <span>{t(notice)}</span>
+            <IconButton label={t("关闭提示")} onClick={() => setNotice("")}>
               <X />
             </IconButton>
           </div>
@@ -1264,11 +1375,11 @@ function WandIcon() {
 function relativeTime(value: number) {
   const min = Math.max(0, Math.floor((Date.now() - value) / 60000));
   return min < 1
-    ? "刚刚"
+    ? t("刚刚")
     : min < 60
-      ? min + "分钟"
+      ? min + t("分钟")
       : min < 1440
-        ? Math.floor(min / 60) + "小时"
-        : Math.floor(min / 1440) + "天";
+        ? Math.floor(min / 60) + t("小时")
+        : Math.floor(min / 1440) + t("天");
 }
 createRoot(document.getElementById("root")!).render(<App />);

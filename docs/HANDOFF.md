@@ -174,18 +174,18 @@ iOS 的测试路径（没有 Mac 也能走）：Expo Go 扫码 → PWA → EAS B
 这不是「功能不够」的项目，是「每样都做了一半」的项目。
 接手的第一个月，目标应该是**让它像一件成品**，而不是让它会更多东西。
 
-## 10. Windows 迁移进行中（2026-11-07，未发新版安装包）
+## 10. Windows v1.0 补齐（2026-11-07）
 
 分支 `codex/windows-v1`，当前源码已接入：Android 原矢量图标/色板、内置 Noto Sans SC、设置九入口/子页、真实三协议提示词润色与撤销、会话管理、模式编辑及实际工具限制、技能导入与 MCP、自动化定时/手动执行/运行会话、Windows UI Automation/截图/输入/PowerShell/通知。默认只读，完全访问需勾选确认。只读和询问策略有真实 MCP/dsh 回归验证。
 
-**状态是进行中，不是已完成的“所有子页几乎一致”**。独立审查报告在本机 `apps/desktop/.review/mobile-finish-review.md`（FIX）。主要未完项：
-1. 对照 `feature/extensions/ExtensionsScreen.kt` 移植插件/技能/MCP 分页及完整管理：插件市场/安装/详情/索引，技能 ZIP/URL/GitHub 导入与来源，MCP JSON/加密头/测试/工具状态/授权。当前只有 SKILL.md 导入与无认证 HTTP/本地 stdio MCP，别加假按钮充数。
-2. 语言切换（跟随系统/中文/英文）和生成中的排队/引导；目前只有键盘发送设置，不能当作等价替代。
-3. 模式编辑、RiskDialog、Switch 已按第一轮审查补齐，须用最新截图做审查结论；不得把旧“ship”结论复用到本轮。
-4. 上述完成后再打包、验证 release 携带的运行时并更换 out 安装包，旧包目前保留，避免发布半成品。
+原六项清单已逐项复审通过，本机记录 `apps/desktop/.review/completion-verdict.md` 的 disposition 为 ship。范围仅限这六项修复，不是所有 Android 页面完全等价或任意第三方插件兼容的证明。
+1. 扩展页已有插件/技能/MCP 分页及真实管理：内置 pnpm + dsh PluginManager 支持检查/安装/详情/启停/卸载和坏插件恢复；市场索引与精确版本选择；ZIP/URL/GitHub 技能及资源预览导入；MCP JSON、Windows 凭据保护的请求头/env、连接测试、工具列表与逐次调用询问。技能页区分可编辑的导入技能和内核/插件/工作区自动发现的只读技能，显示真实来源和位置。工作区根仅限应用自己的 `.agents/skills` 和 `.dsh/skills`，不隐式读取用户主目录技能。
+2. 跟随系统/中文/英文界面切换已实现，不改写对话和导入内容。生成中可排队、编辑/删除待发消息、立即引导（SDK steer），持久化队列在失败/停止/重开后保留；有队列或待处理请求时拦截重新生成。首次运行时绑定会话模式，后改默认模式不改变已有会话。
+3. 模式编辑、RiskDialog、Switch 与 DESIGN.md/设计记录已同步，截图检查包含深浅色、中英文、760px 窄窗和实际队列/导入/MCP/技能来源状态。
+4. 第三方插件属于受信任本地代码，工具权限不是插件代码沙箱；仅上游 Web 使用的可选包不作为桌面可用功能展示。默认 jsDelivr 市场本轮网络不可达，只验证了本机索引解析/版本选择和真实本地插件生命周期，不宣称外部市场连通性或所有插件兼容。
 
-验证：`npx tsc --noEmit`、14 项串行测试、前端构建和 Debug Rust 编译通过；实际 Tauri 完成润色/撤销、模型凭据保存测试删除、任务立即执行→会话、重新生成→轨迹；真实 dsh 验证模式限制、技能发现、已授权自动化创建和 stdio MCP。测试只用本机模拟接口，不用用户付费模型。截图 `.review/mobile-*`，全部属于本机 QA 资料，不提交私有数据。
+验证：`npx tsc --noEmit`、19 项串行测试、前端构建和 Rust 编译通过；实际 Tauri 完成润色/撤销、凭据保存/重载/认证 MCP 探测、任务立即执行→会话、重新生成→轨迹和本轮扩展/队列/语言页面。真实 dsh 验证三协议、模式限制、SDK steer、技能发现、已授权自动化、HTTP/stdio MCP、本地插件安装/启停/删除/故障恢复。测试只用本机模拟接口，不用用户付费模型。修复 `llm-service-lite` 对 `usage:null` 的空引用，补丁必须从 `scripts/prepare-engine.mjs` 重现，不手改 node_modules 交付。截图 `.review/mobile-*`、`.review/completion-*` 都是本机 QA 资料，不提交私有数据。
 
 调试原生窗口用 `WINKU_TEST_DATA_DIR` 隔离。最新 Debug 支持 `WINKU_TEST_HIDDEN=1` 隐藏 QA 窗口，避免与用户正在操作的桌面混淆；仅 Debug 生效。用户已安装且正在运行的 `C:\Users\Administrator\Desktop\WinKu\winku.exe` 不能关闭或覆盖。不要自动运行 NSIS 安装到用户现有目录。Cargo workers 保持 2，无需 Android 构建/模拟器。字体许可 `apps/desktop/src/fonts/OFL.txt`，前端许可证中已收录。
 
-本轮审查补充：模式工具控制、带勾选的完全访问确认、Android Switch 三项已由独立复审判定 resolved（只覆盖修复清单，不代表整端通过）。扩展管理、语言及排队/引导仍 unresolved，整体仍 FIX。后续还应以 Android 的每会话模式固定语义核对桌面全局默认偏好，不能只看编辑器控件数量。测试用模拟窗口与服务器已关闭，用户原版进程保留。
+测试默认串行执行，Cargo 保持 2 个 worker。插件管理时到期自动化暂缓，管理完成后继续调度。最新 NSIS 包已通过完整性检查，解出的 7 个宿主/扩展资源与源码 SHA256 一致，内置 pnpm 存在；随包 Node v24.21.0 的真实 dsh 模拟接口收发通过。已替换旧交付包 `apps/desktop/out/WinKu-v1.0-Windows-x64-setup.exe`，校验值见同目录 `SHA256SUMS.txt`。没有执行安装器覆盖用户的已安装实例；QA 专用凭据已删除。后续发布仍需重复运行时和包内资源校验。
