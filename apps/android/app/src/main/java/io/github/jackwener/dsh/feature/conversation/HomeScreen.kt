@@ -43,6 +43,8 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.jackwener.dsh.R
 import io.github.jackwener.dsh.core.data.Settings
+import io.github.jackwener.dsh.core.extensions.SkillInfo
+import io.github.jackwener.dsh.core.extensions.SkillShortcuts
 import io.github.jackwener.dsh.core.designsystem.Dsh
 import io.github.jackwener.dsh.core.designsystem.DshType
 import io.github.jackwener.dsh.core.designsystem.IconBtn
@@ -156,7 +158,7 @@ private fun ConversationPane(vm: HomeViewModel, onMenu: () -> Unit, onSettings: 
     }
 }
 
-/** dsh EmptyHero: centered whale + 探索未至之境 + 预览版 pill, composer below. No suggestion chips. */
+/** Empty conversation and its composer. */
 @Composable
 private fun EmptyHero(vm: HomeViewModel, composer: ComposerState, settings: Settings, live: SessionLive, conv: Conversation, onAutomation: () -> Unit, onSettings: (String?) -> Unit) {
     val c = Dsh.colors
@@ -169,7 +171,7 @@ private fun EmptyHero(vm: HomeViewModel, composer: ComposerState, settings: Sett
                 color = c.labelPrimary, textAlign = TextAlign.Center)
         }
         Spacer(Modifier.height(28.dp))
-        ComposerSlot(vm, composer, settings, live, conv, hero = true, onAutomation = onAutomation, onManageModes = { onSettings("Modes") })
+        HomeComposerSlot(vm, composer, settings, live, conv, hero = true, onAutomation, onSettings)
     }
 }
 
@@ -179,8 +181,31 @@ private fun BottomDock(vm: HomeViewModel, composer: ComposerState, settings: Set
     Column(Modifier.fillMaxWidth().imePadding().navigationBarsPadding().padding(bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         conv.todos?.let { if (live.running) TodoDock(it) }
         QueueDock(live.queue, onEdit = { q -> vm.removeQueued(q.id); composer.text = q.text }, onDelete = { vm.removeQueued(it.id) }, onSendNow = { vm.sendQueuedNow(it.id) })
-        Box(Modifier.padding(horizontal = 8.dp)) { ComposerSlot(vm, composer, settings, live, conv, hero = false, onAutomation = onAutomation, onManageModes = { onSettings("Modes") }) }
+        Box(Modifier.padding(horizontal = 8.dp)) {
+            HomeComposerSlot(vm, composer, settings, live, conv, hero = false, onAutomation, onSettings)
+        }
     }
+}
+
+@Composable
+private fun HomeComposerSlot(vm: HomeViewModel, composer: ComposerState, settings: Settings, live: SessionLive,
+                             conv: Conversation, hero: Boolean, onAutomation: () -> Unit, onSettings: (String?) -> Unit) {
+    val catalog by vm.shortcutSkills.skills.collectAsStateWithLifecycle()
+    val error by vm.shortcutSkills.error.collectAsStateWithLifecycle()
+    val needsCatalog = (settings.skillShortcuts ?: SkillShortcuts.defaults).isNotEmpty() || composer.selectedSkill != null
+    LifecycleResumeEffect(vm, needsCatalog) {
+        if (needsCatalog) vm.shortcutSkills.load()
+        onPauseOrDispose {}
+    }
+    ComposerSlot(vm, composer, settings, live, conv, hero, onAutomation = onAutomation,
+        onManageModes = { onSettings("Modes") }, skillCatalog = catalog, aboveComposer = {
+            if (settings.mode(live.modeId).skills) {
+                SkillShortcutsBar(catalog, error, settings.skillShortcuts, composer.selectedSkill,
+                    onSelect = { name -> composer.selectedSkill = name.takeUnless { it == composer.selectedSkill } },
+                    onLoad = { vm.shortcutSkills.load() }, onSave = vm::saveSkillShortcuts,
+                    onManage = { onSettings("Extensions") })
+            }
+        })
 }
 
 /** First non-null wins: permission card, approval card, question card, composer. */
@@ -189,11 +214,22 @@ fun ComposerSlot(vm: ConversationController, composer: ComposerState, settings: 
                  onAutomation: (() -> Unit)? = null, showChips: Boolean = true, canSendEmpty: Boolean = false,
                  prepare: (String) -> String = { it }, onManageModes: (() -> Unit)? = null,
                  /** Bumped by a voice summon (assistant gesture, ball long-press): start listening. */
-                 listenRequest: Int = 0) {
+                 listenRequest: Int = 0,
+                 skillCatalog: List<SkillInfo>? = null,
+                 aboveComposer: (@Composable () -> Unit)? = null) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val modelChangePending by vm.modelChangePending.collectAsStateWithLifecycle()
-    val send = {
-        val text = prepare(composer.outgoingText(context))
+    val mode = settings.mode(live.modeId)
+    val send: () -> Unit = send@{
+        val skill = composer.selectedSkill
+        if (skill != null && (!mode.skills || SkillShortcuts.available(skillCatalog).none { it.name == skill })) {
+            val message = if (mode.skills) R.string.skill_shortcuts_unavailable_send else R.string.skill_shortcuts_mode_disabled
+            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+            return@send
+        }
+        val draft = composer.outgoingText(context)
+        val prompt = skill?.let { SkillShortcuts.invoke(it, draft) } ?: draft
+        val text = prepare(prompt)
         val images = composer.images.map { it.mime to it.base64 }
         composer.clear()
         vm.send(text, images, now = settings.busySend == io.github.jackwener.dsh.core.data.BusySend.Steer)
@@ -223,31 +259,34 @@ fun ComposerSlot(vm: ConversationController, composer: ComposerState, settings: 
         live.permission != null -> PermissionCard(live.permission) { vm.answerPermission(live.permission.requestKey, it) }
         live.approval != null -> ApprovalCard(live.approval) { vm.approve(live.approval, it) }
         live.question != null -> QuestionCard(live.question, onSubmit = { vm.answer(live.question, it) }, onSkip = { vm.skipQuestion(live.question) })
-        else -> Composer(
-            composer, live.running, live.preset, vm::setPreset, settings.choice, settings.providers, vm::setModel, conv.contextTokens,
-            onSend = { voice.cancel(); send() },
-            onStop = { vm.stop() },
-            reasoning = settings.reasoning, reasoningChoice = settings.reasoningChoice, onReasoning = vm::setReasoning,
-            hero = hero,
-            actions = ComposerActions(
-                onNewSession = if (conv.isEmpty) null else ({ vm.newSession() }),
-                onTrajectory = if (conv.isEmpty) null else ({ vm.view.value = SessionView.Trajectory }),
-                onAutomation = onAutomation,
-                onManageModels = {
-                    context.startActivity(android.content.Intent(context, io.github.jackwener.dsh.MainActivity::class.java)
-                        .putExtra(io.github.jackwener.dsh.MainActivity.EXTRA_SECTION, "Model")
-                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP))
-                },
+        else -> Column(Modifier.fillMaxWidth()) {
+            aboveComposer?.invoke()
+            Composer(
+                composer, live.running, live.preset, vm::setPreset, settings.choice, settings.providers, vm::setModel, conv.contextTokens,
+                onSend = { voice.cancel(); send() },
+                onStop = { vm.stop() },
+                reasoning = settings.reasoning, reasoningChoice = settings.reasoningChoice, onReasoning = vm::setReasoning,
+                hero = hero,
+                actions = ComposerActions(
+                    onNewSession = if (conv.isEmpty) null else ({ vm.newSession() }),
+                    onTrajectory = if (conv.isEmpty) null else ({ vm.view.value = SessionView.Trajectory }),
+                    onAutomation = onAutomation,
+                    onManageModels = {
+                        context.startActivity(android.content.Intent(context, io.github.jackwener.dsh.MainActivity::class.java)
+                            .putExtra(io.github.jackwener.dsh.MainActivity.EXTRA_SECTION, "Model")
+                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP))
+                    },
             ),
             showChips = showChips,
             canSendEmpty = canSendEmpty,
             modelChangePending = modelChangePending,
-            mode = settings.mode(live.modeId),
+            mode = mode,
             modes = settings.allModes,
             modeLocked = !live.modeChangeable,
             onMode = vm::setMode,
             onManageModes = onManageModes,
             voice = voice,
-        )
+            )
+        }
     }
 }

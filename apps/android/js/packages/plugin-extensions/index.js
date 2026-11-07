@@ -761,7 +761,7 @@ export function apply(ctx) {
         const imported = path.startsWith(p.skills + '/')
         let scripts = []
         try { if (imported) scripts = skillScripts(join(p.skills, s.name)) } catch {}
-        return { name: s.name, description: localizedString(s.description), scripts, source: imported ? 'imported' : path.includes('/node_modules/') ? 'plugin' : path.includes('/.agents/skills/') ? 'agents' : s.source ?? s.provider ?? 'builtin', enabled: true, removable: imported, ...path ? { path } : {} }
+        return { name: s.name, description: localizedString(s.description), scripts, source: imported ? 'imported' : path.includes('/node_modules/') ? 'plugin' : path.includes('/.agents/skills/') ? 'agents' : s.source ?? s.provider ?? 'builtin', enabled: true, userInvocable: s.invocation?.userInvocable !== false, removable: imported, ...path ? { path } : {} }
       })
       return { skills: [...items, ...(await skills()).disabled()] }
     },

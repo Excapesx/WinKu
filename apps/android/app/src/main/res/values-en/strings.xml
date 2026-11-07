@@ -873,4 +873,25 @@
     <string name="tools_title">Tools</string>
     <string name="tools_empty_title">No study tools yet</string>
     <string name="tools_empty_body">Your study tools will appear here.</string>
+    <string name="skill_shortcuts_title">Skills</string>
+    <string name="skill_shortcuts_more">More skills</string>
+    <string name="skill_shortcuts_edit">Edit</string>
+    <string name="skill_shortcuts_edit_title">Edit shortcuts</string>
+    <string name="skill_shortcuts_selected">Use for this message · %1$s</string>
+    <string name="skill_shortcuts_clear">Clear selected skill</string>
+    <string name="skill_shortcuts_limit">Pin up to %1$d skills. %2$d selected.</string>
+    <string name="skill_shortcuts_disabled">Disabled</string>
+    <string name="skill_shortcuts_missing">Skill not found</string>
+    <string name="skill_shortcuts_not_invocable">Manual invocation unavailable</string>
+    <string name="skill_shortcuts_move_up">Move %1$s up</string>
+    <string name="skill_shortcuts_move_down">Move %1$s down</string>
+    <string name="skill_shortcuts_restore">Restore defaults</string>
+    <string name="skill_shortcuts_save_failed">Could not save shortcuts. Try again.</string>
+    <string name="skill_shortcuts_loading">Loading skills</string>
+    <string name="skill_shortcuts_load_failed">Could not load skills</string>
+    <string name="skill_shortcuts_empty">No skills available</string>
+    <string name="skill_shortcuts_empty_hint">Import a skill under Extensions → Skills to use it here.</string>
+    <string name="skill_shortcuts_manage">Open extension settings</string>
+    <string name="skill_shortcuts_unavailable_send">The selected skill is unavailable. Select another skill or remove it before sending.</string>
+    <string name="skill_shortcuts_mode_disabled">This mode disables skills. Change mode or remove the selected skill before sending.</string>
 </resources>

@@ -104,6 +104,7 @@ const val MAX_IMAGES = 4
 @Stable
 class ComposerState {
     var polish by mutableStateOf(PolishDraft())
+    var selectedSkill by mutableStateOf<String?>(null)
     private var draftText by mutableStateOf("")
     var text: String
         get() = draftText
@@ -113,7 +114,7 @@ class ComposerState {
     /** Picked attachments still decoding / copying; Send waits for them. */
     var pending by mutableStateOf(0)
     val isEmpty get() = text.isBlank() && images.isEmpty() && files.isEmpty()
-    fun clear() { text = ""; polish = PolishDraft(revision = polish.revision + 1); images.clear(); files.clear() }
+    fun clear() { text = ""; polish = PolishDraft(revision = polish.revision + 1); selectedSkill = null; images.clear(); files.clear() }
 
     /** The text to send: the draft plus a reference line per attached file. */
     fun outgoingText(context: Context): String = buildString {
@@ -293,6 +294,9 @@ fun Composer(
     Column(
         modifier.fillMaxWidth().elevated(Radius.panel, c.borderL2, 8.dp).clip(Radius.panel).background(c.inputMajor).padding(top = 8.dp),
     ) {
+        state.selectedSkill?.let { name ->
+            SelectedSkillChip(name, onRemove = { state.selectedSkill = null })
+        }
         if (state.images.isNotEmpty() || state.files.isNotEmpty() || state.pending > 0) Row(Modifier.padding(horizontal = 10.dp, vertical = 2.dp).horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             val removeLabel = stringResource(R.string.remove_attachment)
