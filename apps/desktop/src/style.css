@@ -1,18 +1,8 @@
 :root {
-  --primary: #0b7a40;
-  --brand: #0e8a4a;
   font-family: "Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif;
-  --sidebar: #eeeef1;
-  --muted: #62626c;
-  --radius: 18px;
-  font-size: 15px;
+  --radius: 20px;
+  font-size: 16px;
   line-height: 1.6;
-}
-:root[data-theme="dark"] {
-  --primary: #4fbf86;
-  --brand: #4fbf86;
-  --sidebar: #141416;
-  --muted: #a3a3ae;
 }
 html,
 body,
@@ -39,7 +29,7 @@ textarea {
   caret-color: var(--primary);
 }
 button:hover:not(:disabled) {
-  background: var(--soft);
+  background: var(--hover);
 }
 a {
   color: var(--primary);
@@ -111,25 +101,28 @@ h3 {
 .brand {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   height: 40px;
-  padding: 0 10px;
+  padding: 0 4px;
   margin-bottom: 14px;
-  font-size: 22px;
-  font-weight: 650;
+  font-size: 18px;
+  font-weight: 600;
   white-space: nowrap;
 }
 .brand > svg,
-.welcome-mark > svg,
-.assistant-label > svg {
+.welcome-heading > svg {
   color: var(--brand);
+}
+.brand > svg {
+  width: 22px;
+  height: 22px;
 }
 .brand .platform {
   font-size: 11px;
   font-weight: 400;
   color: var(--muted);
   align-self: center;
-  margin-left: 3px;
+  letter-spacing: 1px;
 }
 .new-chat {
   display: flex;
@@ -137,16 +130,16 @@ h3 {
   gap: 9px;
   min-height: 44px;
   padding: 10px 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--hover-solid);
+  border: 0;
   border-radius: 12px;
-  text-align: left;
-  margin-bottom: 5px;
+  justify-content: center;
+  font-size: 14px;
+  margin-bottom: 12px;
 }
-.new-chat > span {
-  margin-left: auto;
-  color: var(--muted);
-  font-size: 11px;
+.new-chat > svg {
+  width: 16px;
+  height: 16px;
 }
 .nav-row {
   display: flex;
@@ -158,6 +151,12 @@ h3 {
   border-radius: 10px;
   background: transparent;
   white-space: nowrap;
+  font-size: 14px;
+}
+.nav-row > svg {
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
 }
 .nav-row > span {
   margin-left: auto;
@@ -165,7 +164,10 @@ h3 {
   font-size: 12px;
 }
 .selected {
-  background: var(--border);
+  background: var(--sidebar-active);
+}
+.history-row.selected .history-item {
+  background: transparent;
 }
 .history-label {
   display: flex;
@@ -267,7 +269,6 @@ h3 {
 }
 .sidebar-bottom {
   padding-top: 10px;
-  border-top: 1px solid var(--border);
 }
 .sidebar-bottom .nav-row {
   width: 100%;
@@ -281,7 +282,7 @@ h3 {
 }
 .workspace {
   min-height: 0;
-  overflow: hidden;
+  overflow: clip;
   min-width: 0;
   height: 100%;
   display: flex;
@@ -354,25 +355,38 @@ h3 {
 }
 .welcome {
   max-width: 650px;
-  margin: clamp(40px, 12vh, 140px) auto 40px;
+  margin: 0 auto 28px;
+  text-align: center;
 }
-.welcome-mark {
-  margin-bottom: 18px;
+.welcome-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
-.welcome-mark > svg {
-  width: 45px;
-  height: 45px;
+.welcome-heading > svg {
+  width: 34px;
+  height: 34px;
+  flex: none;
 }
 .welcome h2 {
-  font-size: 32px;
-  letter-spacing: -0.025em;
-  font-weight: 600;
-  margin: 0 0 12px;
-}
-.welcome > p {
-  color: var(--muted);
-  font-size: 15px;
+  font-size: 26px;
+  font-weight: 500;
   margin: 0;
+}
+.conversation.is-empty {
+  justify-content: center;
+  overflow-y: auto;
+}
+.is-empty .messages {
+  flex: none;
+  overflow: visible;
+}
+.is-empty .composer-zone {
+  padding-top: 0;
+}
+.is-empty .composer {
+  width: 100%;
 }
 .setup-note {
   margin-top: 32px;
@@ -384,6 +398,8 @@ h3 {
   margin: 0 0 16px;
 }
 .primary-button {
+  background: var(--action-fill);
+  color: var(--on-action);
   font-size: 14px;
   min-height: 42px;
   padding: 10px 18px;
@@ -394,7 +410,7 @@ h3 {
   gap: 10px;
 }
 .primary-button:hover:not(:disabled) {
-  background: var(--primary);
+  background: var(--action-fill);
   filter: brightness(0.95);
 }
 .primary-button svg {
@@ -407,31 +423,6 @@ h3 {
   color: var(--muted);
   margin-top: 12px;
 }
-.suggestions {
-  display: flex;
-  flex-direction: column;
-  max-width: 340px;
-  gap: 6px;
-  margin-top: 32px;
-}
-.suggestions button {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 5px;
-  border-bottom: 1px solid var(--border);
-  background: transparent;
-  text-align: left;
-  font-size: 14px;
-}
-.suggestions button > svg:last-child {
-  margin-left: auto;
-  color: var(--muted);
-  width: 16px;
-}
-.suggestions button > svg:first-child {
-  color: var(--primary);
-}
 .message-column {
   max-width: 760px;
   margin: 0 auto;
@@ -442,42 +433,52 @@ h3 {
   margin-bottom: 30px;
 }
 .message.user {
-  margin-left: 15%;
-  background: var(--sidebar);
-  padding: 14px 20px;
-  border-radius: 18px 18px 5px 18px;
+  margin-left: auto;
+  background: var(--bubble);
+  padding: 10px 16px;
+  border-radius: 20px;
   width: fit-content;
-  max-width: 85%;
-  justify-self: end;
-  margin-bottom: 32px;
+  max-width: 82%;
+  margin-bottom: 24px;
 }
 .message.user .user-text {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: 15px;
-  line-height: 1.85;
-}
-.assistant-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  font-size: 13px;
-  margin-bottom: 13px;
-}
-.assistant-label > svg {
-  width: 21px;
-  height: 21px;
+  font-size: 14px;
+  line-height: 22px;
 }
 .message.assistant {
   font-size: 15px;
-  line-height: 1.9;
-}
-.message .math-text {
-  font-size: inherit;
+  line-height: 26px;
 }
 .message .component-shell {
-  margin: 22px 0;
+  margin: 16px 0;
+}
+.learning-content {
+  font-size: 16px;
+  line-height: 1.5;
+}
+.learning-content .component-heading h2 {
+  font-size: 17px;
+  line-height: 1.5;
+  letter-spacing: normal;
+}
+.learning-content .icon-button {
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  border-radius: 12px;
+}
+.learning-content .icon-button svg {
+  width: 20px;
+  height: 20px;
+}
+.learning-content .primary-button {
+  min-height: 48px;
+  border-radius: 14px;
+  padding: 12px 22px;
+  background: var(--primary);
+  color: var(--surface);
 }
 .answer-actions {
   display: flex;
@@ -541,10 +542,10 @@ h3 {
   max-width: 800px;
   margin: auto;
   border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: 21px;
-  padding: 14px 14px 8px;
-  box-shadow: 0 3px 14px #00000005;
+  background: var(--composer);
+  border-radius: 28px;
+  padding: 8px 8px 6px;
+  box-shadow: 0 3px 8px #00000008;
 }
 .composer:focus-within {
   border-color: var(--muted);
@@ -559,9 +560,9 @@ h3 {
   background: transparent;
   border: 0;
   color: var(--foreground);
-  font-size: 15px;
-  line-height: 1.7;
-  padding: 2px 4px 8px;
+  font-size: 16px;
+  line-height: 24px;
+  padding: 4px 6px 8px;
 }
 .composer textarea:focus-visible {
   outline: none;
@@ -576,15 +577,37 @@ h3 {
   min-height: 40px;
 }
 .composer-model {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: transparent;
   border-radius: 8px;
   padding: 5px 8px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   max-width: 200px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+.composer-model span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.composer-model svg {
+  flex: none;
+}
+.composer-toolbar > .icon-button {
+  border-radius: 50%;
+  background: var(--selector);
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+}
+.composer-toolbar > .icon-button svg {
+  width: 18px;
+  height: 18px;
 }
 .input-hint {
   margin-left: auto;
@@ -597,13 +620,13 @@ h3 {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--primary);
-  color: var(--surface);
+  background: var(--accent);
+  color: #fff;
   flex: none;
   margin-left: 8px;
 }
 .send-button:hover:not(:disabled) {
-  background: var(--primary);
+  background: var(--accent);
   filter: brightness(0.92);
 }
 .send-button.stop {
@@ -611,9 +634,9 @@ h3 {
   color: var(--surface);
 }
 .send-button:disabled {
-  background: var(--border);
-  color: var(--muted);
-  opacity: 1;
+  background: var(--accent);
+  color: #fff;
+  opacity: 0.4;
 }
 .composer-note {
   font-size: 11px;
@@ -936,9 +959,6 @@ h3 {
   .sidebar-collapsed {
     grid-template-columns: 0 minmax(0, 1fr);
   }
-  .brand .platform {
-    display: none;
-  }
   .messages {
     padding: 12px 22px 0;
   }
@@ -946,7 +966,7 @@ h3 {
     padding: 8px 18px 12px;
   }
   .welcome h2 {
-    font-size: 28px;
+    font-size: 26px;
   }
   .topbar .model-shortcut {
     display: none;
@@ -959,12 +979,6 @@ h3 {
   }
   .settings-heading > .text-button {
     margin: 10px 0 0;
-  }
-  .brand {
-    font-size: 21px;
-  }
-  .new-chat > span {
-    display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {

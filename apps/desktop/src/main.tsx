@@ -5,12 +5,10 @@ import {
   PanelLeft,
   Settings,
   Search,
-  Wrench,
   Sun,
   Moon,
   ArrowUp,
   Square,
-  Paperclip,
   X,
   FileText,
   Image,
@@ -19,10 +17,13 @@ import {
   Check,
   Trash2,
   ChevronLeft,
-  BookOpen,
   ArrowRight,
   LoaderCircle,
+  MessageCirclePlus,
+  LayoutGrid,
+  ChevronDown,
 } from "lucide-react";
+import { androidMark } from "./android-brand";
 import {
   empty,
   request,
@@ -36,6 +37,7 @@ import { readAttachment } from "./attachments";
 import "katex/dist/katex.min.css";
 import "../../android/learning-ui/src/style.css";
 import "./style.css";
+import "./android-design.css";
 const Teaching = lazy(() =>
   import("./Teaching").then((m) => ({ default: m.Teaching })),
 );
@@ -44,14 +46,14 @@ function Brand() {
     <svg
       width="30"
       height="30"
-      viewBox="24 28 60 54"
+      viewBox={androidMark.viewBox}
       fill="none"
       aria-hidden="true"
     >
       <path
-        d="M31 37 42 71 54 49 66 71 77 37"
+        d={androidMark.path}
         stroke="currentColor"
-        strokeWidth="9"
+        strokeWidth={androidMark.strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -294,17 +296,17 @@ function App() {
         <div className="brand">
           <Brand />
           <span>WinKu</span>
-          <span className="platform">Windows</span>
+          <span className="platform">AGENT</span>
         </div>
         <button className="new-chat" onClick={newChat}>
-          <Plus />
-          新会话<span>Ctrl N</span>
+          <MessageCirclePlus />
+          新会话
         </button>
         <button
           className={"nav-row " + (page === "tools" ? "selected" : "")}
           onClick={() => setPage("tools")}
         >
-          <Wrench />
+          <LayoutGrid />
           工具
         </button>
         <div className="history-label">
@@ -408,7 +410,7 @@ function App() {
               {dark ? <Sun /> : <Moon />}
             </IconButton>
             <IconButton label="新会话" onClick={newChat}>
-              <Plus />
+              <MessageCirclePlus />
             </IconButton>
           </div>
         </header>
@@ -437,7 +439,7 @@ function App() {
           />
         ) : page === "tools" ? (
           <div className="tools-empty">
-            <Wrench />
+            <LayoutGrid />
             <h2>学生工具</h2>
             <p>工具入口已预留，具体内容待确定。</p>
             <button className="text-button" onClick={() => setPage("chat")}>
@@ -447,7 +449,11 @@ function App() {
           </div>
         ) : (
           <div className="chat-layout">
-            <div className="conversation">
+            <div
+              className={
+                "conversation " + (!session?.messages.length ? "is-empty" : "")
+              }
+            >
               <div
                 className="messages"
                 ref={scroll}
@@ -460,11 +466,10 @@ function App() {
               >
                 {!session?.messages.length ? (
                   <div className="welcome">
-                    <div className="welcome-mark">
+                    <div className="welcome-heading">
                       <Brand />
+                      <h2>今天想做点什么</h2>
                     </div>
-                    <h2>把问题想明白。</h2>
-                    <p>一起拆解难题、读懂课件，或把代码讲清楚。</p>
                     {!provider ? (
                       <div className="setup-note">
                         <p>先连接你自己的模型，就可以开始学习。</p>
@@ -479,27 +484,7 @@ function App() {
                           支持 OpenAI 兼容、Responses 和 Anthropic 协议
                         </small>
                       </div>
-                    ) : (
-                      <div className="suggestions">
-                        <button
-                          onClick={() => {
-                            setDraft(
-                              "请用直观的例子讲解函数极限，并给我一道小测验。",
-                            );
-                            textarea.current?.focus();
-                          }}
-                        >
-                          <BookOpen />
-                          讲懂一个概念
-                          <ArrowRight />
-                        </button>
-                        <button onClick={() => picker.current?.click()}>
-                          <FileText />
-                          带着课件提问
-                          <ArrowRight />
-                        </button>
-                      </div>
-                    )}
+                    ) : null}
                   </div>
                 ) : (
                   <div className="message-column">
@@ -511,12 +496,6 @@ function App() {
                           message.role === "user" ? "你的问题" : "WinKu 回答"
                         }
                       >
-                        {message.role === "assistant" && (
-                          <div className="assistant-label">
-                            <Brand />
-                            <span>WinKu</span>
-                          </div>
-                        )}
                         {message.attachments?.length ? (
                           <div className="attachment-list">
                             {message.attachments.map((a, n) => (
@@ -652,7 +631,7 @@ function App() {
                     value={draft}
                     rows={2}
                     placeholder={
-                      dragging ? "松开以添加文件" : "发消息，或把课件拖到这里"
+                      dragging ? "松开以添加文件" : "发消息或创建任务"
                     }
                     onChange={(e) => setDraft(e.target.value)}
                     onPaste={(e) => {
@@ -695,7 +674,7 @@ function App() {
                       {attaching ? (
                         <LoaderCircle className="spinner" />
                       ) : (
-                        <Paperclip />
+                        <Plus />
                       )}
                     </IconButton>
                     <button
@@ -703,7 +682,8 @@ function App() {
                       type="button"
                       onClick={() => setPage("settings")}
                     >
-                      {provider?.model || "选择模型"}
+                      <span>{provider?.model || "选择模型"}</span>
+                      <ChevronDown size={14} />
                     </button>
                     <span className="input-hint">
                       Enter 发送 / Shift Enter 换行

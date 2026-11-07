@@ -9,6 +9,7 @@ import {
 } from "node:fs/promises";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import "./sync-android-design.mjs";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), ".."),
   out = join(root, "dist"),
   nm = join(root, "node_modules");

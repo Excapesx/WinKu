@@ -1,5 +1,17 @@
-import React, { useState, useMemo } from "react";
-import { Expand, Minimize, BookOpen, MessageCircle } from "lucide-react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import {
+  Activity,
+  ChartNoAxesCombined,
+  Code2,
+  Expand,
+  GitBranch,
+  HelpCircle,
+  Minimize,
+  BookOpen,
+  MessageCircle,
+  Table2,
+  Variable,
+} from "lucide-react";
 import { MathText } from "../../android/learning-ui/src/MathText";
 import { FunctionPlot } from "../../android/learning-ui/src/FunctionPlot";
 import {
@@ -17,6 +29,32 @@ import { normalizeSpec } from "../../android/learning-ui/src/schema.mjs";
 import type { Spec } from "../../android/learning-ui/src/types";
 import type { Session } from "./api";
 import { request } from "./api";
+import { parseRichContent } from "./rich-content.mjs";
+// Match the Android LearningView vocabulary, including formula-aware card titles.
+const titles = {
+  function: "函数画板",
+  diagram: "流程图",
+  chart: "交互图表",
+  quiz: "小测验",
+  math: "数学公式",
+  table: "数据表格",
+  code: "代码",
+  html: "交互内容",
+  explanation: "学习讲解",
+  markdown: "学习讲解",
+};
+const icons = {
+  function: Activity,
+  diagram: GitBranch,
+  chart: ChartNoAxesCombined,
+  quiz: HelpCircle,
+  math: Variable,
+  table: Table2,
+  code: Code2,
+  html: BookOpen,
+  explanation: BookOpen,
+  markdown: BookOpen,
+};
 // A regenerated card with different questions must not inherit old quiz answers.
 function specKey(spec: Spec) {
   let hash = 2166136261;
@@ -60,6 +98,40 @@ function Artifact({
   const [state, setState] = useState(session.artifacts?.[id] ?? {}),
     [expanded, setExpanded] = useState(false),
     [error, setError] = useState("");
+  const shell = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!expanded) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const controls = () => [
+      ...(shell.current?.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), a[href], input, select, textarea, [tabindex="0"]',
+      ) ?? []),
+    ];
+    controls()[0]?.focus();
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setExpanded(false);
+      }
+      if (event.key === "Tab") {
+        const items = controls(),
+          first = items[0],
+          last = items.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    window.addEventListener("keydown", key);
+    return () => {
+      window.removeEventListener("keydown", key);
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
+    };
+  }, [expanded]);
   const store = useMemo(
     () => ({
       state,
@@ -90,6 +162,7 @@ function Artifact({
     dark,
     reducedMotion: matchMedia("(prefers-reduced-motion:reduce)").matches,
   };
+  const Icon = icons[spec.type];
   let content;
   switch (spec.type) {
     case "function":
@@ -125,6 +198,10 @@ function Artifact({
   return (
     <Store.Provider value={store}>
       <section
+        ref={shell}
+        role={expanded ? "dialog" : undefined}
+        aria-modal={expanded || undefined}
+        aria-label={expanded ? spec.title || titles[spec.type] : undefined}
         className={"component-shell " + (expanded ? "desktop-expanded" : "")}
         onKeyDown={(e) => {
           if (e.key === "Escape") setExpanded(false);
@@ -132,8 +209,10 @@ function Artifact({
       >
         <header className="component-header">
           <div className="component-heading">
-            <BookOpen />
-            <h2>{spec.title || "学习讲解"}</h2>
+            <Icon />
+            <h2>
+              <MathText text={spec.title || titles[spec.type]} inline />
+            </h2>
           </div>
           <button
             className="icon-button"
@@ -154,7 +233,9 @@ function Artifact({
             className="text-button"
             disabled={!canAsk}
             onClick={() =>
-              store.ask("请结合我在这个组件中的操作，继续解释这个概念。")
+              store.ask(
+                "请结合我在这个交互组件中的当前操作和结果，继续解释这个概念。",
+              )
             }
           >
             <MessageCircle />
@@ -185,34 +266,23 @@ export function Teaching({
   ask: (text: string) => void;
   canAsk: boolean;
 }) {
-  const parts = useMemo(() => {
-    const result: { text?: string; spec?: Spec; error?: string }[] = [];
-    const pattern =
-      /^(`{3,}|~{3,})(dsh-visual|mermaid|math|latex)[^\S\n]*\n([\s\S]*?)^\1[^\S\n]*$/gm;
-    let start = 0,
-      m;
-    while ((m = pattern.exec(text))) {
-      if (m.index > start) result.push({ text: text.slice(start, m.index) });
+  const parts = useMemo<
+    { text?: string; spec?: Spec; error?: string }[]
+  >(() => {
+    return parseRichContent(text).map((part) => {
+      if (!part.spec) return part as { text: string };
       try {
-        result.push({
-          spec: normalizeSpec(
-            m[2] === "dsh-visual"
-              ? JSON.parse(m[3])
-              : m[2] === "mermaid"
-                ? { type: "diagram", source: m[3] }
-                : { type: "math", latex: m[3] },
-          ) as Spec,
-        });
+        return { spec: normalizeSpec(part.spec) as Spec };
       } catch {
-        result.push({ text: m[0], error: "组件格式有误，已显示原文。" });
+        return {
+          text: JSON.stringify(part.spec),
+          error: "组件格式有误，已显示原文。",
+        };
       }
-      start = pattern.lastIndex;
-    }
-    if (start < text.length) result.push({ text: text.slice(start) });
-    return result;
+    });
   }, [text]);
   return (
-    <>
+    <div className="learning-content">
       {parts.map((p, i) =>
         p.spec ? (
           <Boundary key={messageId + ":" + i + ":" + specKey(p.spec)}>
@@ -228,10 +298,12 @@ export function Teaching({
         ) : (
           <React.Fragment key={i}>
             {p.error && <p className="muted">{p.error}</p>}
-            <MathText text={p.text ?? ""} />
+            <article className="text-document">
+              <MathText text={p.text ?? ""} />
+            </article>
           </React.Fragment>
         ),
       )}
-    </>
+    </div>
   );
 }

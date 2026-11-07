@@ -1,107 +1,162 @@
 ---
 name: WinKu Windows
-description: Windows extension of the WinKu Android learning interface
+description: Windows extension unified with the WinKu Android interface
 colors:
-  primary: "#0b7a40"
-  brand: "#0e8a4a"
   background: "#f7f7f9"
-  surface: "#fff"
+  surface: "#ffffff"
   foreground: "#17171a"
-  sidebar: "#eeeef1"
-  muted: "#62626c"
-  border: "#e4e4ea"
+  muted: "#55555e"
+  sidebar: "#f2f2f5"
+  sidebar-active: "#e8e8ee"
+  bubble: "#eeeef2"
+  composer: "#ffffff"
+  selector: "#eeeef2"
+  border: "#17171a1a"
+  hover: "#17171a14"
+  hover-solid: "#f0f0f4"
+  primary: "#0b6e3b"
+  brand: "#0e8a4a"
+  accent: "#0e8a4a"
+  action-fill: "#17171a"
+  on-action: "#ffffff"
+  disabled-fill: "#dedee4"
   soft: "#e3f3ea"
-  plot: "#fbfbfd"
-  grid: "#ececf1"
-  success: "#1e7d46"
   error: "#c0392b"
-  code: "#f4f4f7"
-  dark-primary: "#4fbf86"
+  success: "#1e7d46"
+  code: "#f1f1f5"
+  learning-surface: "#f7f7f9"
+  learning-foreground: "#17171a"
+  learning-muted: "#55555e"
+  learning-primary: "#0e8a4a"
+  learning-border: "#17171a1a"
+  learning-soft: "#e3f3ea"
+  learning-code: "#f4f4f7"
   dark-background: "#0e0e10"
   dark-surface: "#17171a"
   dark-foreground: "#f5f5f7"
-  dark-sidebar: "#141416"
-  dark-muted: "#a3a3ae"
-  dark-border: "#2e2e34"
-  dark-soft: "#143024"
-  dark-plot: "#131316"
-  dark-grid: "#24242a"
-  dark-success: "#5fc79b"
+  dark-muted: "#b4b4be"
+  dark-sidebar: "#121214"
+  dark-sidebar-active: "#242429"
+  dark-bubble: "#1c1c20"
+  dark-composer: "#17171a"
+  dark-selector: "#242429"
+  dark-border: "#ffffff1a"
+  dark-hover: "#ffffff14"
+  dark-hover-solid: "#242429"
+  dark-primary: "#4fbf86"
+  dark-brand: "#0e8a4a"
+  dark-accent: "#0e8a4a"
+  dark-action-fill: "#f5f5f7"
+  dark-on-action: "#0e0e10"
+  dark-disabled-fill: "#2e2e34"
+  dark-soft: "#10301f"
   dark-error: "#e8797f"
+  dark-success: "#5fc79b"
   dark-code: "#141417"
+  dark-learning-surface: "#0e0e10"
+  dark-learning-foreground: "#f5f5f7"
+  dark-learning-muted: "#b4b4be"
+  dark-learning-primary: "#0e8a4a"
+  dark-learning-border: "#ffffff1a"
+  dark-learning-soft: "#143024"
+  dark-learning-code: "#141417"
 typography:
   welcome:
     fontFamily: '"Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif'
-    fontSize: "32px"
-    fontWeight: 600
+    fontSize: 26px
+    fontWeight: 500
     lineHeight: 1.4
-    letterSpacing: "-0.025em"
+    letterSpacing: -0.02em
   title:
     fontFamily: '"Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif'
-    fontSize: "25px"
+    fontSize: 25px
     fontWeight: 600
     lineHeight: 1.4
-    letterSpacing: "-0.02em"
+    letterSpacing: -0.02em
   body:
     fontFamily: '"Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif'
-    fontSize: "15px"
+    fontSize: 16px
     lineHeight: 1.6
   answer:
     fontFamily: '"Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif'
-    fontSize: "15px"
-    lineHeight: 1.9
+    fontSize: 15px
+    lineHeight: 26px
+  user:
+    fontFamily: '"Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif'
+    fontSize: 14px
+    lineHeight: 22px
+  composer:
+    fontFamily: '"Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif'
+    fontSize: 16px
+    lineHeight: 24px
+  brand:
+    fontFamily: '"Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif'
+    fontSize: 18px
+    fontWeight: 600
   label:
     fontFamily: '"Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif'
-    fontSize: "13px"
+    fontSize: 13px
+  learning-title:
+    fontFamily: '"Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif'
+    fontSize: 17px
+    fontWeight: 600
+    lineHeight: 1.5
+    letterSpacing: normal
   code:
-    fontFamily: 'ui-monospace, "Cascadia Code", Consolas, "Roboto Mono", monospace'
-    fontSize: ".8125rem"
+    fontFamily: ui-monospace, "Cascadia Code", Consolas, "Roboto Mono", monospace
+    fontSize: .8125rem
     fontWeight: 400
     lineHeight: 1.8
 rounded:
-  field: "10px"
-  primary-button: "11px"
-  secondary-button: "12px"
-  code-block: "16px"
-  learning-card: "18px"
-  composer: "21px"
+  field: 10px
+  primary-button: 11px
+  secondary-button: 12px
+  code-block: 16px
+  learning-card: 20px
+  user-bubble: 20px
+  composer: 28px
 spacing:
-  compact: "4px"
-  related: "8px"
-  control: "12px"
-  content: "18px"
-  section: "24px"
-  conversation: "30px"
+  compact: 4px
+  related: 8px
+  control: 12px
+  content: 18px
+  section: 24px
+  conversation: 30px
 components:
   button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.surface}"
+    backgroundColor: "{colors.action-fill}"
+    textColor: "{colors.on-action}"
     rounded: "{rounded.primary-button}"
-    padding: "10px 18px"
+    padding: 10px 18px
   button-text:
     textColor: "{colors.primary}"
     rounded: "{rounded.field}"
-    padding: "10px 8px"
+    padding: 10px 8px
   input-provider:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.foreground}"
     rounded: "{rounded.field}"
-    padding: "9px 12px"
+    padding: 9px 12px
   navigation-row:
     textColor: "{colors.foreground}"
     rounded: "{rounded.field}"
-    padding: "11px 12px"
+    padding: 11px 12px
   attachment:
     backgroundColor: "{colors.surface}"
     rounded: "{rounded.field}"
-    padding: "10px 12px"
+    padding: 10px 12px
   learning-card:
-    backgroundColor: "{colors.surface}"
+    backgroundColor: "{colors.learning-surface}"
     rounded: "{rounded.learning-card}"
   composer:
-    backgroundColor: "{colors.surface}"
+    backgroundColor: "{colors.composer}"
     rounded: "{rounded.composer}"
-    padding: "14px 14px 8px"
+    padding: 8px 8px 6px
+  user-bubble:
+    backgroundColor: "{colors.bubble}"
+    textColor: "{colors.foreground}"
+    rounded: "{rounded.user-bubble}"
+    padding: 10px 16px
 ---
 
 # Design System: WinKu Windows
@@ -112,93 +167,93 @@ components:
 
 This app extends the existing Android learning interface. Neutral grey and chalk surfaces, ink text, the emerald W, and restrained rounded controls remain the visual identity. Windows system typography serves Chinese and English study material, while bundled textbook mathematics and highlighted code retain their own reading conventions. This is an app-scoped record of the implemented Windows extension, not a replacement identity for Android.
 
-The source of truth is `src/style.css`, applied after `../android/learning-ui/src/style.css` by `src/main.tsx`. Shared learning renderers and their mathematics, code and explanation styles are imported through `src/Teaching.tsx`. Product intent is recorded in `../../PRODUCT.md`; this surface's composition is recorded in `SURFACE.md`. The `.review` captures show implemented structure, but captures made before the final action-color adjustment do not supersede current source tokens.
+Android is the visual authority for this unified surface. `scripts/sync-android-design.mjs` generates `src/android-design.css` from Android `Color.kt`, `src/android-brand.ts` from `brand_mark.xml`, and `app-icon.svg` from the launcher vector and launcher background. `src/main.tsx` loads shared learning styles, desktop layout styles, then the generated Android roles. The frontmatter mirrors these scoped runtime values; update the Android source and generator when changing shared roles rather than treating a documentation snapshot as an independent theme. `SURFACE.md` records the Windows composition; `../../PRODUCT.md` remains the product context.
 
 **Key Characteristics:**
 
-- Quiet neutral surfaces with emerald marks and actions.
+- Quiet neutral surfaces with emerald identity and content accents.
+- Android-derived colors, marks, bubbles and composer with Windows study typography.
 - Readable Chinese and English text, textbook mathematics, and code.
-- Rounded controls and thin separators with restrained functional depth.
 - Shared learning components retain their Android visual vocabulary.
 
 ## Colors
 
 ### Primary
 
-The primary action color is a deeper emerald than the graphic W in light mode. `primary` drives buttons, links, focus indicators, selected learning controls and caret color; `brand` colors the W. Dark mode uses `dark-primary` for both roles. These are the desktop accessibility overrides; shared Android tokens remain unchanged.
+The W and business accent retain Android emerald in both themes. Chrome links and focus use the readable link role: light `primary` and `dark-primary`. Settings/setup primary buttons use the neutral `action-fill` with `on-action`; the circular send control uses `accent` and a white arrow. These are different roles. The previous desktop-only emerald action override is superseded by the generated Android mapping.
 
-**The Action and Mark Rule.** Keep the accessible action emerald separate from the graphic W emerald in light mode; do not substitute the logo color into normal-size action text or filled action controls.
+**The Android Role Rule.** Preserve the distinct Android roles for neutral primary buttons, readable links, business accents and the W mark. Learning content has its own scoped role overrides; do not flatten those scopes into one global primary color.
 
 ### Neutral
 
-Chalk `background` surrounds white `surface` panels. Ink `foreground` carries reading text, `muted` carries supporting information, `sidebar` separates history, and `border` supplies thin structural dividers. Dark mode swaps the corresponding roles through `data-theme="dark"`; it does not invert images or code mechanically.
+Chalk `background` surrounds layered `surface` content. `foreground` and `muted` come from Android label roles. Sidebar, selected history, user bubbles, composer, selectors, hover and borders each have their own Android role rather than reusing one panel gray. Corresponding dark roles switch through `data-theme="dark"`. The frontmatter records alpha borders and hover values as used, without converting them to opaque approximations.
 
-`soft` is the pale emerald interaction surface. `plot` and `grid` define graph paper; `code` supports inline code. Success and error colors communicate learning feedback and failures. Shared chart, diagram, explanation and syntax palettes remain scoped to content; they are not additional chrome accents. Their full values stay in the shared renderer styles and components rather than becoming a new desktop palette.
+Inside `.learning-content`, surface becomes Android base background, muted becomes label-secondary, primary becomes business emerald, and the border uses Android border-L2. Shared renderer soft and code defaults are restored within that scope. Consequently, a learning action or card is not a settings button or a raised chrome panel. Success and error retain their feedback roles; chart, diagram, explanation and syntax palettes remain scoped to content in the shared renderer.
 
 ## Typography
 
-Use the Windows system stack in the frontmatter throughout app chrome and prose. It is a deliberate study-reading choice, with Microsoft YaHei UI for Chinese; there is no external display font or marketing type treatment.
+Use the Windows system stack in the frontmatter throughout app chrome and prose, with Microsoft YaHei UI for Chinese. The chrome root is 16px. The sidebar wordmark uses 18px semibold, its W is 22px, and its AGENT label is 11px with quiet tracking. The centered empty-chat greeting is 26px medium with a 34px W. General page headings use the title role; settings uses 26px and the empty Tools heading 23px. Topbar titles remain 15px medium. Supporting labels range from 11px to 14px.
 
-The welcome heading uses the `welcome` role, reducing to 28px below the narrow breakpoint. General page headings use `title`; settings uses a 26px variant, and the empty Tools heading uses 23px. Topbar titles stay at body size and medium weight. Supporting labels range from 11px to 14px; they do not compete with explanations.
-
-Assistant messages use the `answer` role, with rendered `.math-text` paragraphs at line-height 1.75. User text uses 15px at line-height 1.85. Markdown heading sizes remain relative to the text through the shared renderer; do not force every generated heading to the page-title size. Equations use bundled KaTeX textbook fonts and preserve complete expressions with horizontal scrolling where necessary. Code uses the mono role, syntax highlighting, and optional wrapping. The shared `.8125rem` code size resolves against the desktop 15px root.
+User messages use 14px/22px. Assistant messages omit the former repeated WinKu brand row and read at 15px/26px. The shared text-document and math renderer preserve Android's own prose rhythm, relative markdown headings, textbook KaTeX fonts, and scrolling for complete expressions. Composer text uses 16px/24px. Learning content establishes a 16px root; card titles use 17px/25.5px with normal tracking and may contain rendered formulas. Shared code remains .8125rem (13px with the current root), its mono stack, syntax highlighting and optional wrapping.
 
 **The Study Reading Rule.** Preserve the separate typography of prose, equations and code instead of flattening all three into app labels.
 
 ## Layout
 
-This surface uses a history sidebar (240px) beside a flexible workspace. The topbar is 64px high. The message region scrolls independently; the composer remains at the bottom. The reading column is capped at 760px, the composer at 800px, and the welcome content at 650px. Settings uses a centered reading area around 720px and a form capped at 600px. Common spacing steps are recorded in the frontmatter; conversational messages have more breathing room than utility rows.
+The Windows surface retains a history sidebar (240px) beside a flexible workspace, a 64px topbar, a reading column capped at 760px, and a composer capped at 800px. During a conversation, messages scroll independently while the composer remains below them. The workspace uses overflow clipping so content focus or scrolling cannot move the header or composer outside the window. An empty conversation instead centers the W, “今天想做点什么” and composer together. The missing-provider setup action remains available; there is no recommended-question list.
 
-At 1050px and below, the sidebar becomes 210px and the optional reader overlays the right side below the topbar. At 800px and below, the sidebar becomes 190px, model shortcuts and keyboard hints simplify, gutters tighten, and the reader becomes `calc(100% - 50px)` of the workspace. The sidebar can collapse to zero width at every size. Long titles truncate; learning content and mathematical blocks handle their own overflow.
+At 1050px and below, the sidebar becomes 210px and the optional reader overlays the right side below the topbar. At 800px and below, the sidebar becomes 190px, model shortcuts and keyboard hints simplify, gutters tighten, and the reader becomes `calc(100% - 50px)` of the workspace. The sidebar can collapse to zero width at every size. Long titles truncate; learning content and mathematical blocks handle their own overflow. Settings keeps its centered area around 720px and form capped at 600px.
 
-This is the current chat surface composition, not a universal layout requirement for every future WinKu surface. The reader only appears after a document is opened. Tools intentionally displays an empty state while its student content is reserved for the user.
+These are the current chat surface's Windows adaptations, alongside file drag-and-drop, keyboard controls and inset large-screen expansion. They are not universal composition requirements for every future WinKu surface. The reader appears only after a document is opened. Tools intentionally displays an empty state while its student content is reserved for the user.
 
 ## Elevation & Depth
 
-The interface relies mainly on neutral surface changes and thin borders. The composer has only a faint ambient shadow. Shadows establish actual overlays: reader, deletion confirmation, engine requests, expanded learning cards, and status messages. There are no decorative floating card stacks.
-
-The exact shadow values, overlay positions and transitions are recorded in `.impeccable/design.json`. Buttons change background and color over 160ms; sidebar collapse uses a 200ms ease-out curve. Reduced-motion preferences disable transitions and animations. Motion communicates state rather than providing a decorative background.
+Neutral surface changes and thin borders carry most depth. The composer has a faint ambient shadow. Shadows establish actual overlays: reader, deletion confirmation, engine requests, expanded learning cards and status messages. Exact values, transition timing and breakpoints are in `.impeccable/design.json`. Buttons change background and color over 160ms; sidebar collapse uses a 200ms ease-out curve. Reduced-motion preferences disable transitions and animations.
 
 ## Shapes
 
-Controls have restrained rounded corners. Small utility buttons use 9px corners; fields and attachment chips use the `field` radius; primary actions use `primary-button`. Learning shells use `learning-card`, shared code blocks use `code-block`, and the composer uses the larger `composer` curve. User messages have a smaller lower-right corner (5px) within their 18px outline. The circular send control is a functional exception.
+Controls retain restrained rounded corners. Utility buttons use 9px corners; fields and attachment chips use the field radius; settings primary actions use the primary-button radius. User bubbles are uniformly rounded at 20px, without a pointed corner, and align right with an 82% maximum width. Learning shells are 20px; code blocks retain their shared 16px corners. The composer is 28px, with circular attachment and send controls.
 
-The editable identity source is `app-icon.svg`: a rounded chalk square carrying the same rounded-stroke W path used by `Brand` in `src/main.tsx`, inherited from the Android launcher. It is source vector artwork, not an AI-generated image. `src-tauri/icons/icon.ico` and `src-tauri/icons/icon.png` are generated derivatives. The ICO is the bundled Windows icon; the PNG comes from the generated 128×128 export. `src-tauri/icons/README.md` records the Tauri icon generation command and copy destinations. Preserve this provenance when regenerating or shipping those rasters.
+Launcher and in-app marks have separate Android sources and purposes. `app-icon.svg` is generated from `res/drawable/ic_launcher_fg.xml` and the dark launcher background in `res/values/colors.xml`; Windows wraps the Android launcher geometry in a rounded square. The in-app W comes from `res/drawable/brand_mark.xml`, exported to `src/android-brand.ts`, rather than cropping the launcher artwork. Both retain the Android emerald. These are source vector assets, not AI-generated illustrations.
+
+`src-tauri/icons/icon.ico` and `src-tauri/icons/icon.png` are generated derivatives of `app-icon.svg`; the PNG is the 128×128 export. `src-tauri/icons/README.md` records the Tauri generation command and copy destinations. Packaging synchronizes the Android design and regenerates icons. Preserve this lineage when shipping rasters.
 
 ## Components
 
 ### Buttons
 
-Primary actions are compact filled emerald controls with surface-colored labels, medium weight, 42px minimum height, and the frontmatter padding. Hover darkens by a brightness filter; active uses the inherited foreground fill. Secondary and text actions are transparent, with emerald or muted text according to role. Icon buttons are 36px squares with actual inline SVG icons and accessible names; specialized learning and code controls retain their documented local dimensions. Disabled controls visibly reduce emphasis; disabled send uses explicit neutral colors.
+Settings/setup primary actions are neutral filled controls with on-action labels, medium weight and a 42px minimum height. Text actions use the readable chrome link role. New chat uses a neutral hover-solid fill and a 16px message-plus icon. Chrome utility buttons are 36px squares with inline SVG icons and accessible names. Hover uses the Android hover overlay; selected navigation uses sidebar-active rather than emerald. Disabled controls visibly reduce emphasis.
 
-Keyboard focus uses a 2px primary outline with 3px offset on buttons, inputs and selects. The composer groups focus at the container border instead of outlining its textarea separately.
+Learning buttons retain the shared 48px minimum size, 14px primary-action corners and business emerald. Their icon controls are 48px with 20px icons. Keyboard focus uses a 2px primary outline with 3px offset; the composer groups focus at its container border.
 
 ### Inputs / Fields
 
-Provider inputs and selects are surface-colored, thin-bordered controls with 42px minimum height and visible labels above them. Search is intentionally denser. Placeholder and helper text use the muted role. Long values remain within the available width. Checkboxes use the primary accent. Do not use placeholder text as the sole field label.
+Provider inputs and selects use surface fill, thin borders, visible labels, 42px minimum height and the field radius. Search remains denser. Placeholder and helper text use the muted role. Long values stay within available width. Checkboxes use the chrome link accent. Do not use placeholders as the sole field label.
 
 ### Navigation
 
-New chat is a bordered surface button. Sidebar navigation is a quiet row with a 44px minimum height. History rows truncate titles and reveal deletion controls on hover or keyboard focus. Current page selection uses the neutral border surface; history selection also receives the inherited soft interaction surface. Hover and pressed controls use the soft fill. Settings stays at the foot of the sidebar.
+Sidebar navigation has a 44px minimum height and 14px labels. New chat is centered in a neutral rounded button. History rows truncate titles, reveal deletion on hover or keyboard focus, and use the dedicated selected-history background. Settings remains at the foot of the sidebar. The WinKu AGENT heading inherits the Android in-app mark and wordmark proportions.
 
 ### Attachments
 
-Attachment chips combine a small document or image icon with a truncated filename, thin border, surface fill and compact text. Draft attachments add a separate remove action. Opening a chip reveals the reader and a labeled close control; image and extracted text viewing remain in that optional panel.
+Compact chips combine a document/image icon, truncated filename, thin border and surface fill. Draft attachments add a remove action. The composer exposes attachment through a small 28px circular plus control with an 18px icon. Opening a source reveals the optional reader and its labeled close action; image and extracted-text viewing stay in that panel.
 
 ### Composer
 
-The composer is a large rounded bordered field with a multiline textarea, attachment and model controls, keyboard hint, and circular send or stop action. Its textarea grows from 56px to 180px, then scrolls. Dragging an attachment adds a dashed primary outline and soft background. The note beneath it stays quiet and centered.
+The Android-shaped composer uses its dedicated input-major fill, thin border, 28px radius and compact padding. Its multiline textarea grows from 56px to 180px, then scrolls. A small plus button, model selector and circular emerald send action form the lower toolbar, with a Windows keyboard hint where space allows. Stop uses the foreground role. Disabled send retains emerald at reduced opacity. Dragging adds a dashed link-color outline and soft background. The note beneath remains quiet and centered.
 
 ### Learning Cards and Reading Content
 
-Learning cards are shared Android shells with thin borders, a title and book icon, content, an expand action, and a footer action to continue the explanation in chat. They persist interaction state per artifact. Desktop expansion uses an inset overlay, closed with the expand control or Escape. Equations, plots, diagrams, tables, quizzes and explanations retain the established shared renderer. Code blocks use their own light and dark syntax palettes, visible copy/wrap controls, and scrollable long lines; these content colors do not redefine navigation.
+Learning bodies directly reuse Android's function plot, chart, diagram, quiz, formula, code, table, HTML, markdown and explanation components. A type-specific icon and formula-aware title replace the former generic book heading. The shell uses the Android base surface and role overrides, 20px radius and shared footer follow-up action. Interaction state persists per artifact.
+
+Desktop expansion uses an inset dialog with 48px controls, Escape dismissal, a keyboard focus loop and focus restoration. Equations, highlighted code, tables and interactions retain the shared Android rendering rather than desktop-specific visual replacements. Code blocks keep their own syntax palettes and copy/wrap controls. Shared content colors do not redefine navigation.
 
 ## Do's and Don'ts
 
 ### Do:
 
 - Do preserve the Android neutral/chalk world and emerald W when extending Windows.
-- Do use the desktop action token for interactive text, focus and filled actions.
+- Do synchronize shared colors and marks from their Android sources.
 - Do preserve separate reading treatments for prose, mathematics and code.
 - Do make keyboard focus and icon-button names visible or accessible as implemented.
 - Do keep overlay depth functional and honor reduced-motion preferences.
@@ -208,7 +263,7 @@ Learning cards are shared Android shells with thin borders, a title and book ico
 
 - Don't replace the incumbent identity with a new desktop brand or display-font theme.
 - Don't promote chart, explanation or syntax colors into general app chrome.
+- Don't collapse chrome and learning-content color scopes into a single action palette.
 - Don't turn this surface's sidebar/composer composition into a rule for unrelated future screens.
 - Don't populate the intentionally empty Tools entry with invented student features.
-- Don't use pre-adjustment screenshots as authority for action-color tokens.
-
+- Don't use earlier pre-unification screenshots as authority for current tokens.

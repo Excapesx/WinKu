@@ -4,6 +4,12 @@ $env:PATH="$env:USERPROFILE\.cargo\bin;$env:PATH"
 $env:CARGO_BUILD_JOBS='2'
 node scripts/prepare-engine.mjs
 if ($LASTEXITCODE -ne 0) { throw 'Engine preparation failed' }
+node scripts/sync-android-design.mjs
+if ($LASTEXITCODE -ne 0) { throw 'Android design sync failed' }
+npx tauri icon app-icon.svg --output .tools/generated-icons
+if ($LASTEXITCODE -ne 0) { throw 'Icon generation failed' }
+Copy-Item -LiteralPath .tools/generated-icons/icon.ico -Destination src-tauri/icons/icon.ico -Force
+Copy-Item -LiteralPath .tools/generated-icons/128x128.png -Destination src-tauri/icons/icon.png -Force
 npx tauri build --bundles nsis
 if ($LASTEXITCODE -ne 0) { throw 'Desktop packaging failed' }
 New-Item -ItemType Directory -Force out | Out-Null

@@ -35,6 +35,8 @@ npm run package
 
 打包脚本限制 Cargo 为 2 个 worker。不要同时启动 Android 构建/模拟器。`engine/node_modules`、`runtime`、Rust target 和 `.review` 都是本地生成目录；不要把 QA 数据打入安装包。`.cargo/config.toml` 是本机可选网络配置，不提交到仓库。
 
+桌面主题、应用内 W 和图标以 Android 为基准：构建会从手机端色板与矢量资源同步，打包会重新生成 Windows 图标。用户气泡、输入框、空会话和学习卡片保持同一视觉语言；桌面保留侧栏、拖入文件、键盘操作和按需阅读面板。字体采用各自系统字体，窗口与启动图标外形遵循各平台约定。
+
 ## 代码地图
 
 | 路径 | 职责 |
@@ -45,6 +47,8 @@ npm run package
 | `engine/desktop-plugin.mjs` | 流式事件与共享学习组件生成指引 |
 | `src/main.tsx` | 会话、模型设置、附件入口与阅读面板 |
 | `src/Teaching.tsx` | 共享学习组件封装与交互状态 |
+| `src/rich-content.mjs` | 与 Android 对齐的教学围栏解析，保护代码示例与未完成数据 |
+| `scripts/sync-android-design.mjs` | 从 Android 色板和品牌资源生成桌面主题与图标源 |
 | `scripts/prepare-engine.mjs` | Windows 可移植补丁、共享模块及 Node 运行时准备 |
 | `scripts/package.ps1` | NSIS 安装包 |
 
@@ -52,4 +56,4 @@ npm run package
 
 ## 验证范围
 
-5 个集成测试使用本机 HTTP 模拟服务，覆盖真实 dsh 的三种协议、图片输入、流式、失败、停止、重生成与重启续聊；没有调用用户的付费服务。已在真实 Tauri WebView2 中检查聊天、PDF 阅读、代码操作、学习组件、深浅主题和窄桌面布局。具体服务商的模型权限、额度和兼容性仍由其实际接口决定。
+8 个测试包含 5 个实际 dsh 集成测试与 3 个教学围栏回归，使用本机 HTTP 模拟服务覆盖三种协议、图片输入、流式、失败、停止、重生成与重启续聊；没有调用用户的付费服务。已在真实 Tauri WebView2 中检查聊天、PDF 阅读、代码操作、学习组件、深浅主题和窄桌面布局，并对照 Android 现有前端资产验证同一教学卡片的主题与尺寸。具体服务商的模型权限、额度和兼容性仍由其实际接口决定。

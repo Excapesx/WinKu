@@ -1,13 +1,13 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-07T06:05:15.8830803Z",
+  "generatedAt": "2026-11-07T06:39:49.133Z",
   "title": "Design System: WinKu Windows",
   "extensions": {
     "shadows": [
       {
         "name": "composer",
-        "value": "0 3px 14px #00000005",
-        "purpose": "Faint separation of the fixed composer from the reading area."
+        "value": "0 3px 8px #00000008",
+        "purpose": "Faint separation of the Android-shaped desktop composer from the reading area."
       },
       {
         "name": "confirmation",
@@ -70,15 +70,15 @@
     "typographyMeta": {
       "welcome": {
         "displayName": "Welcome heading",
-        "purpose": "First-launch and new-chat greeting, reduced to 28px at the narrow breakpoint."
+        "purpose": "Centered empty-conversation heading, 26px medium beside the Android in-app W."
       },
       "body": {
         "displayName": "Windows study text",
-        "purpose": "Segoe UI with Microsoft YaHei UI Chinese fallback; an explicit surface requirement."
+        "purpose": "16px Windows chrome root with Segoe UI and Microsoft YaHei UI; learning content also establishes a 16px root."
       },
       "answer": {
         "displayName": "Assistant explanation",
-        "purpose": "Long study responses; nested shared math-text uses its own 1.75 line height."
+        "purpose": "Unbranded assistant prose at 15px/26px with the shared Android text-document and mathematics treatments."
       },
       "code": {
         "displayName": "Shared highlighted code",
@@ -91,9 +91,9 @@
       "name": "Primary action",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Connect or save a model using the accessible desktop action emerald.",
+      "description": "Connect or save a model using the Android neutral primary-button role.",
       "html": "<button class=\"ds-primary\">保存并使用</button>",
-      "css": ".ds-primary{font:500 14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;background:var(--primary,#0b7a40);color:var(--surface,#fff);border:0;border-radius:11px;min-height:42px;padding:10px 18px;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-primary:hover:not(:disabled){filter:brightness(.95)}.ds-primary:active:not(:disabled){background:var(--foreground,#17171a)}.ds-primary:focus-visible{outline:2px solid var(--primary,#0b7a40);outline-offset:3px}.ds-primary:disabled{opacity:.5;cursor:default}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}"
+      "css": ".ds-primary{font:500 14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;background:var(--action-fill,#17171a);color:var(--on-action,#fff);border:0;border-radius:11px;min-height:42px;padding:10px 18px;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-primary:hover:not(:disabled){filter:brightness(.95)}.ds-primary:active:not(:disabled){background:var(--foreground,#17171a)}.ds-primary:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}.ds-primary:disabled{opacity:.5;cursor:default}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}"
     },
     {
       "name": "Text action",
@@ -101,7 +101,7 @@
       "refersTo": "button-text",
       "description": "Quiet secondary action used in settings and shared learning footers.",
       "html": "<button class=\"ds-text\">返回对话 <svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M5 12h14m-6-6 6 6-6 6\"/></svg></button>",
-      "css": ".ds-text{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:48px;padding:10px 8px;border:0;border-radius:10px;background:transparent;font:14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;color:var(--primary,#0b7a40);cursor:pointer;transition:background .16s ease,color .16s ease}.ds-text:hover:not(:disabled),.ds-text:active:not(:disabled){background:var(--soft,#e3f3ea)}.ds-text:focus-visible{outline:2px solid var(--primary,#0b7a40);outline-offset:3px}.ds-text:disabled{opacity:.5;cursor:default}@media(prefers-reduced-motion:reduce){.ds-text{transition:none}}"
+      "css": ".ds-text{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:48px;padding:10px 8px;border:0;border-radius:10px;background:transparent;font:14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;color:var(--primary,#0b6e3b);cursor:pointer;transition:background .16s ease,color .16s ease}.ds-text:hover:not(:disabled),.ds-text:active:not(:disabled){background:var(--hover,#17171a14)}.ds-text:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}.ds-text:disabled{opacity:.5;cursor:default}@media(prefers-reduced-motion:reduce){.ds-text{transition:none}}"
     },
     {
       "name": "Provider field",
@@ -109,15 +109,15 @@
       "refersTo": "input-provider",
       "description": "Labeled settings field with a clear keyboard focus outline.",
       "html": "<label class=\"ds-field\">服务商名称<input placeholder=\"例如：我的模型服务\" /></label>",
-      "css": ".ds-field{display:flex;flex-direction:column;gap:7px;color:var(--foreground,#17171a);font:13px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;max-width:600px}.ds-field input{font:14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;min-height:42px;padding:9px 12px;border:1px solid var(--border,#e4e4ea);border-radius:10px;background:var(--surface,#fff);color:var(--foreground,#17171a);caret-color:var(--primary,#0b7a40)}.ds-field input:focus-visible{outline:2px solid var(--primary,#0b7a40);outline-offset:3px}"
+      "css": ".ds-field{display:flex;flex-direction:column;gap:7px;color:var(--foreground,#17171a);font:13px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;max-width:600px}.ds-field input{font:14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;min-height:42px;padding:9px 12px;border:1px solid var(--border,#17171a1a);border-radius:10px;background:var(--surface,#fff);color:var(--foreground,#17171a);caret-color:var(--primary,#0b6e3b)}.ds-field input:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}"
     },
     {
       "name": "Sidebar navigation",
       "kind": "nav",
       "refersTo": "navigation-row",
-      "description": "Quiet navigation row with a neutral selected surface and soft hover.",
-      "html": "<nav class=\"ds-nav\" aria-label=\"应用导航\"><button class=\"ds-nav-row ds-nav-selected\" aria-current=\"page\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M12 8a4 4 0 1 0 4 4\"/><path d=\"m16 3 5 5-7 7-5-5 7-7ZM9 15l-6 6\"/></svg>工具</button></nav>",
-      "css": ".ds-nav{width:212px;padding:7px;background:var(--sidebar,#eeeef1)}.ds-nav-row{display:flex;align-items:center;gap:11px;text-align:left;padding:11px 12px;min-height:44px;width:100%;border:0;border-radius:10px;background:transparent;white-space:nowrap;color:var(--foreground,#17171a);font:15px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-nav-selected{background:var(--border,#e4e4ea)}.ds-nav-row:hover,.ds-nav-row:active{background:var(--soft,#e3f3ea)}.ds-nav-row:focus-visible{outline:2px solid var(--primary,#0b7a40);outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-nav-row{transition:none}}"
+      "description": "Android sidebar roles with a neutral selected-history surface and muted 16px tool icon.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"应用导航\"><button class=\"ds-nav-row ds-nav-selected\" aria-current=\"page\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><rect width=\"7\" height=\"7\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"14\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"3\" y=\"14\" rx=\"1\"/></svg>工具</button></nav>",
+      "css": ".ds-nav{width:212px;padding:7px;background:var(--sidebar,#f2f2f5)}.ds-nav-row{display:flex;align-items:center;gap:11px;text-align:left;padding:11px 12px;min-height:44px;width:100%;border:0;border-radius:10px;background:transparent;white-space:nowrap;color:var(--foreground,#17171a);font:14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-nav-selected{background:var(--sidebar-active,#e8e8ee)}.ds-nav-row:hover,.ds-nav-row:active{background:var(--hover,#17171a14)}.ds-nav-row:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-nav-row{transition:none}}.ds-nav-row svg{color:var(--muted,#55555e)}"
     },
     {
       "name": "Attachment chip",
@@ -125,38 +125,46 @@
       "refersTo": "attachment",
       "description": "An attached source with a filename; opens the optional reader.",
       "html": "<button class=\"ds-attachment\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z\"/><path d=\"M14 2v6h6M8 13h8M8 17h6\"/></svg><span>课堂笔记.md</span></button>",
-      "css": ".ds-attachment{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border,#e4e4ea);border-radius:10px;background:var(--surface,#fff);color:var(--foreground,#17171a);font:12px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;max-width:260px;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-attachment svg{flex:none;color:var(--muted,#62626c)}.ds-attachment span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.ds-attachment:hover,.ds-attachment:active{background:var(--soft,#e3f3ea)}.ds-attachment:focus-visible{outline:2px solid var(--primary,#0b7a40);outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-attachment{transition:none}}"
+      "css": ".ds-attachment{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border,#17171a1a);border-radius:10px;background:var(--surface,#fff);color:var(--foreground,#17171a);font:12px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;max-width:260px;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-attachment svg{flex:none;color:var(--muted,#55555e)}.ds-attachment span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.ds-attachment:hover,.ds-attachment:active{background:var(--hover,#17171a14)}.ds-attachment:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-attachment{transition:none}}"
     },
     {
       "name": "Learning card",
       "kind": "card",
       "refersTo": "learning-card",
-      "description": "The shared Android learning shell, with desktop sizing and follow-up action.",
+      "description": "Shared Android learning shell with base-background surface, business accent and formula-aware type heading.",
       "html": "<section class=\"ds-card\"><header class=\"ds-card-head\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M12 7v14M3 3c4-1 6 1 9 3 3-2 5-4 9-3v16c-4-1-6 0-9 2-3-2-5-3-9-2V3Z\"/></svg><h2>学习讲解</h2></header><p class=\"ds-card-description\">结合图像、公式与操作理解概念。</p><footer class=\"ds-card-footer\"><button>结合我的操作讲解</button></footer></section>",
-      "css": ".ds-card{min-width:0;overflow:hidden;background:var(--surface,#fff);color:var(--foreground,#17171a);border:1px solid var(--border,#e4e4ea);border-radius:18px;font:15px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif}.ds-card-head{display:flex;align-items:center;gap:10px;padding:12px 12px 4px 18px}.ds-card-head>svg{color:var(--primary,#0b7a40)}.ds-card-head h2{margin:0;font-size:25px;line-height:1.4;font-weight:600;letter-spacing:-.02em}.ds-card-description{font-size:.875rem;line-height:1.6;color:var(--muted,#62626c);margin:0;padding:0 18px 12px}.ds-card-footer{border-top:1px solid var(--border,#e4e4ea);padding:4px 12px}.ds-card-footer button{font:14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;color:var(--muted,#62626c);min-height:48px;padding:10px 8px;border:0;border-radius:10px;background:transparent;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-card-footer button:hover,.ds-card-footer button:active{background:var(--soft,#e3f3ea)}.ds-card-footer button:focus-visible{outline:2px solid var(--primary,#0b7a40);outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-card-footer button{transition:none}}"
+      "css": ".ds-card{--surface:var(--background,#f7f7f9);--primary:var(--accent,#0e8a4a);min-width:0;overflow:hidden;background:var(--surface,#fff);color:var(--foreground,#17171a);border:1px solid var(--border,#17171a1a);border-radius:20px;font:16px/1.5 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif}.ds-card-head{display:flex;align-items:center;gap:10px;padding:12px 12px 4px 18px}.ds-card-head>svg{color:var(--primary,#0b6e3b)}.ds-card-head h2{margin:0;font-size:17px;line-height:1.5;font-weight:600;letter-spacing:normal}.ds-card-description{font-size:.875rem;line-height:1.6;color:var(--muted,#55555e);margin:0;padding:0 18px 12px}.ds-card-footer{border-top:1px solid var(--border,#17171a1a);padding:4px 12px}.ds-card-footer button{font:14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;color:var(--muted,#55555e);min-height:48px;padding:10px 8px;border:0;border-radius:10px;background:transparent;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-card-footer button:hover,.ds-card-footer button:active{background:var(--hover,#17171a14)}.ds-card-footer button:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-card-footer button{transition:none}}"
     },
     {
       "name": "Bottom composer",
       "kind": "custom",
       "refersTo": "composer",
-      "description": "Multiline message field with container focus and a circular send control.",
-      "html": "<div class=\"ds-composer\"><textarea aria-label=\"消息\" placeholder=\"发消息，或把课件拖到这里\"></textarea><div class=\"ds-composer-toolbar\"><span>选择模型</span><button aria-label=\"发送消息\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M12 19V5m-7 7 7-7 7 7\"/></svg></button></div></div>",
-      "css": ".ds-composer{max-width:800px;border:1px solid var(--border,#e4e4ea);background:var(--surface,#fff);border-radius:21px;padding:14px 14px 8px;box-shadow:0 3px 14px #00000005;font:15px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif}.ds-composer:focus-within{border-color:var(--muted,#62626c)}.ds-composer textarea{display:block;width:100%;min-height:56px;max-height:180px;resize:none;outline:none;background:transparent;border:0;color:var(--foreground,#17171a);font:15px/1.7 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;padding:2px 4px 8px;caret-color:var(--primary,#0b7a40)}.ds-composer textarea::placeholder{color:var(--muted,#62626c)}.ds-composer-toolbar{display:flex;align-items:center;justify-content:space-between;min-height:40px;gap:8px;color:var(--muted,#62626c);font-size:12px}.ds-composer-toolbar button{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;background:var(--primary,#0b7a40);color:var(--surface,#fff);cursor:pointer}.ds-composer-toolbar button:hover{filter:brightness(.92)}.ds-composer-toolbar button:focus-visible{outline:2px solid var(--primary,#0b7a40);outline-offset:3px}"
+      "description": "Android-shaped 28px composer with a small plus control, model selector and circular business-accent send action.",
+      "html": "<div class=\"ds-composer\"><textarea aria-label=\"消息\" placeholder=\"发消息或创建任务\"></textarea><div class=\"ds-composer-toolbar\"><button class=\"ds-add\" aria-label=\"添加附件\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button><span>选择模型</span><button class=\"ds-send\" aria-label=\"发送消息\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M12 19V5m-7 7 7-7 7 7\"/></svg></button></div></div>",
+      "css": ".ds-composer{max-width:800px;border:1px solid var(--border,#17171a1a);background:var(--composer,#fff);border-radius:28px;padding:8px 8px 6px;box-shadow:0 3px 8px #00000008;font:16px/1.6 \"Segoe UI\", \"Microsoft YaHei UI\", system-ui, sans-serif}.ds-composer:focus-within{border-color:var(--muted,#55555e)}.ds-composer textarea{display:block;width:100%;min-height:56px;max-height:180px;resize:none;outline:none;background:transparent;border:0;color:var(--foreground,#17171a);font:16px/24px \"Segoe UI\", \"Microsoft YaHei UI\", system-ui, sans-serif;padding:4px 6px 8px;caret-color:var(--primary,#0b6e3b)}.ds-composer textarea::placeholder{color:var(--muted,#55555e)}.ds-composer-toolbar{display:flex;align-items:center;min-height:40px;gap:8px;color:var(--muted,#55555e);font-size:13px}.ds-composer-toolbar button{display:grid;place-items:center;border:0;border-radius:50%;cursor:pointer}.ds-composer-toolbar .ds-add{width:28px;height:28px;background:var(--selector,#eeeef2);color:var(--foreground,#17171a)}.ds-composer-toolbar .ds-send{width:36px;height:36px;margin-left:auto;background:var(--accent,#0e8a4a);color:#fff}.ds-send:hover{filter:brightness(.92)}.ds-composer-toolbar button:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}"
+    },
+    {
+      "name": "User bubble",
+      "kind": "custom",
+      "refersTo": "user-bubble",
+      "description": "Android-style right-aligned user message with uniform rounded corners.",
+      "html": "<div class=\"ds-user\">请分步讲解这个问题。</div>",
+      "css": ".ds-user{margin-left:auto;width:fit-content;max-width:82%;padding:10px 16px;border-radius:20px;background:var(--bubble,#eeeef2);color:var(--foreground,#17171a);font:14px/22px \"Segoe UI\", \"Microsoft YaHei UI\", system-ui, sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}"
     }
   ],
   "narrative": {
     "northStar": "WinKu's quiet study workspace",
-    "overview": "This app extends the existing Android learning interface. Neutral grey and chalk surfaces, ink text, the emerald W, and restrained rounded controls remain the visual identity. Windows system typography serves Chinese and English study material, while bundled textbook mathematics and highlighted code retain their own reading conventions. This is an app-scoped record of the implemented Windows extension, not a replacement identity for Android.\n\nThe source of truth is `src/style.css`, applied after `../android/learning-ui/src/style.css` by `src/main.tsx`. Shared learning renderers and their mathematics, code and explanation styles are imported through `src/Teaching.tsx`. Product intent is recorded in `../../PRODUCT.md`; this surface's composition is recorded in `SURFACE.md`. The `.review` captures show implemented structure, but captures made before the final action-color adjustment do not supersede current source tokens.",
+    "overview": "This app extends the existing Android learning interface. Neutral grey and chalk surfaces, ink text, the emerald W, and restrained rounded controls remain the visual identity. Windows system typography serves Chinese and English study material, while bundled textbook mathematics and highlighted code retain their own reading conventions. This is an app-scoped record of the implemented Windows extension, not a replacement identity for Android.\n\nAndroid is the visual authority for this unified surface. `scripts/sync-android-design.mjs` generates `src/android-design.css` from Android `Color.kt`, `src/android-brand.ts` from `brand_mark.xml`, and `app-icon.svg` from the launcher vector and launcher background. `src/main.tsx` loads shared learning styles, desktop layout styles, then the generated Android roles. The frontmatter mirrors these scoped runtime values; update the Android source and generator when changing shared roles rather than treating a documentation snapshot as an independent theme. `SURFACE.md` records the Windows composition; `../../PRODUCT.md` remains the product context.",
     "keyCharacteristics": [
-      "Quiet neutral surfaces with emerald marks and actions.",
+      "Quiet neutral surfaces with emerald identity and content accents.",
+      "Android-derived colors, marks, bubbles and composer with Windows study typography.",
       "Readable Chinese and English text, textbook mathematics, and code.",
-      "Rounded controls and thin separators with restrained functional depth.",
       "Shared learning components retain their Android visual vocabulary."
     ],
     "rules": [
       {
-        "name": "The Action and Mark Rule",
-        "body": "Keep the accessible action emerald separate from the graphic W emerald in light mode; do not substitute the logo color into normal-size action text or filled action controls.",
+        "name": "The Android Role Rule",
+        "body": "Preserve the distinct Android roles for neutral primary buttons, readable links, business accents and the W mark. Learning content has its own scoped role overrides; do not flatten those scopes into one global primary color.",
         "section": "colors"
       },
       {
@@ -167,7 +175,7 @@
     ],
     "dos": [
       "Do preserve the Android neutral/chalk world and emerald W when extending Windows.",
-      "Do use the desktop action token for interactive text, focus and filled actions.",
+      "Do synchronize shared colors and marks from their Android sources.",
       "Do preserve separate reading treatments for prose, mathematics and code.",
       "Do make keyboard focus and icon-button names visible or accessible as implemented.",
       "Do keep overlay depth functional and honor reduced-motion preferences.",
@@ -176,9 +184,10 @@
     "donts": [
       "Don't replace the incumbent identity with a new desktop brand or display-font theme.",
       "Don't promote chart, explanation or syntax colors into general app chrome.",
+      "Don't collapse chrome and learning-content color scopes into a single action palette.",
       "Don't turn this surface's sidebar/composer composition into a rule for unrelated future screens.",
       "Don't populate the intentionally empty Tools entry with invented student features.",
-      "Don't use pre-adjustment screenshots as authority for action-color tokens."
+      "Don't use earlier pre-unification screenshots as authority for current tokens."
     ]
   }
 }
