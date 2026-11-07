@@ -239,6 +239,9 @@
     <string name="act_join">%1$s并%2$s</string>
     <string name="act_etc">%1$s等</string>
     <string name="tool_read">读取</string>
+    <string name="tool_ppt_export">导出 PPT</string>
+    <string name="ppt_open">打开 PPT</string>
+    <string name="ppt_open_failed">无法打开此文件。可以通过分享将它发给支持 PPTX 的应用。</string>
     <string name="tool_file_stat">文件信息</string>
     <string name="tool_file_list">列出文件</string>
     <string name="tool_grep">搜索文件内容</string>

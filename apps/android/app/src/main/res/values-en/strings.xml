@@ -239,6 +239,9 @@
     <string name="act_join">%1$s and %2$s</string>
     <string name="act_etc">%1$s, etc.</string>
     <string name="tool_read">Read</string>
+    <string name="tool_ppt_export">Export PowerPoint</string>
+    <string name="ppt_open">Open PowerPoint</string>
+    <string name="ppt_open_failed">Could not open the file. Try sharing it to an app that supports PPTX.</string>
     <string name="tool_file_stat">File info</string>
     <string name="tool_file_list">List files</string>
     <string name="tool_grep">Grep</string>

@@ -2,7 +2,7 @@ name: Android checks
 
 on:
   push:
-    branches: [main, 'codex/prompt-polish']
+    branches: [main, 'codex/prompt-polish', 'codex/android-ppt-master']
     paths: ['apps/android/**', '.github/workflows/android-check.yml']
   pull_request:
     paths: ['apps/android/**', '.github/workflows/android-check.yml']
@@ -25,6 +25,9 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - uses: android-actions/setup-android@v3
         with:
           packages: platform-tools
@@ -32,6 +35,11 @@ jobs:
       - name: Test and compile Android UI
         working-directory: apps/android
         run: bash gradlew :app:testDebugUnitTest :app:assembleDebug -Pdsh.fetchShizuku=false --console=plain
+      - name: Verify PPT Master export
+        working-directory: apps/android
+        run: |
+          python -m pip install python-pptx==1.0.2
+          PYTHONPATH=app/src/main/python python tools/test-ppt-master.py app/build/generated/ppt-master-assets/ppt-master-renderer.zip
       - name: Retain test reports
         if: always()
         uses: actions/upload-artifact@v4
