@@ -26,7 +26,7 @@ WinKu 希望围绕大学生的课程学习、学科竞赛和个人成长，将 A
 
 ## Skills 集成清单
 
-Skills 按能力系统分类，后续在各系统下补充具体技能与接入状态。Android 内置提示词润色规则；Humanizer 仍处于文档登记阶段。
+Skills 按能力系统分类，后续在各系统下补充具体技能与接入状态。Android 内置提示词润色规则和 PPT Master，Humanizer 已登记，待接入调用。
 
 ### 写作与表达系统
 
@@ -43,7 +43,11 @@ Skills 按能力系统分类，后续在各系统下补充具体技能与接入�
 
 ### 学习系统
 
-规划覆盖课程学习、笔记整理与复习备考，具体 Skills 待补充。
+| Skill | 作用 | 使用场景 | 接入状态 |
+|---|---|---|---|
+| **PPT Master（汇报 PPT）** | 根据提示词和上传材料制作可编辑的 `.pptx`，支持讲稿备注和插图 | 课程小组汇报、实验报告、答辩和竞赛演示 | Android 内置，可在 Skill 列表选用 |
+
+在默认会话中选择 `ppt-master`，添加 PDF（有文本层）、DOCX、XLSX、PPTX 或纯文本资料，说明页数、时长和重点。JPEG、PNG 可通过文件附件加入。生成后可在聊天里打开或分享 PPTX。扫描版 PDF 需提供可读取的文字。
 
 ### 竞赛系统
 
@@ -87,7 +91,7 @@ docs/               架构、引擎契约、交接说明
 
 ## 快速开始（Android）
 
-前置：JDK 21、Android SDK（compileSdk 37.2）、Node（只在重打引擎包时需要）。
+前置依赖包括 JDK 21、Android SDK（compileSdk 37.2）、Python 3.12 和 Node（重打引擎包时使用）。Gradle 构建时会验证并打包 [PPT Master v6.8.0](https://github.com/hugohe3/ppt-master/releases/tag/v6.8.0) 的导出器。
 
 ```bash
 cd apps/android
@@ -98,6 +102,7 @@ Windows 上注意两点：
 
 1. `-P` 参数**必须加引号**，否则 PowerShell 会把它拆开。
 2. 必须带 `-Pdsh.fetchShizuku=false`，否则会去跑 `tools/fetch-shizuku.sh`（需要 bash）。
+3. 若 `python3.12` 不在 PATH，用 `"-Pdsh.pptMasterPython=C:/path/to/python.exe"` 指定 Python 3.12。
 
 产物在 `apps/android/app/build/outputs/apk/debug/app-debug.apk`，arm64-v8a，Android 10+。
 

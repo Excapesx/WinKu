@@ -433,6 +433,20 @@ class EngineManager @Inject constructor(
         startedLocale = Locale.getDefault().toLanguageTag()
         val files = context.filesDir
         putString("DSH_HOME", File(files, "dsh-home").path)
+        val bundledSkills = File(files, "bundled-skills")
+        runCatching {
+            val pptSkill = File(bundledSkills, "ppt-master/SKILL.md")
+            context.assets.open("skills/ppt-master/SKILL.md").use { asset ->
+                val content = asset.readBytes()
+                if (!pptSkill.isFile || !pptSkill.readBytes().contentEquals(content)) {
+                    pptSkill.parentFile?.mkdirs()
+                    val staged = File(pptSkill.parentFile, "SKILL.md.tmp")
+                    staged.writeBytes(content)
+                    check(staged.renameTo(pptSkill)) { "Could not update the bundled PPT Master skill" }
+                }
+            }
+            putString("DSH_BUNDLED_SKILL_DIR", bundledSkills.path)
+        }.onFailure { Log.w(TAG, "Could not load bundled PPT Master skill", it) }
         putString("HOME", File(files, "home").path)
         putString("TMPDIR", File(context.cacheDir, "tmp").path)
         putString("SHELL", "/system/bin/sh")

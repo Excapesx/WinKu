@@ -116,6 +116,7 @@ fun ToolRow(t: Block.Tool, sessionId: String, onInspect: (String) -> Unit) {
         }
         // Screenshots are the point of capture tools: keep them visible without expanding.
         if (!open && shots.isNotEmpty() && info.body == BodyKind.Screen) Box(Modifier.padding(start = 22.dp, top = 4.dp, bottom = 4.dp)) { Screenshot(shots.first(), maxHeight = 200.dp) }
+        PptResultCard(t, sessionId)
     }
 }
 
@@ -219,6 +220,7 @@ fun StepGroup(key: String, blocks: List<Block>, live: Boolean, sessionId: String
                 blocks.forEach { StepBlock(it, live, sessionId, onInspect) }
             }
         }
+        if (!expanded) tools.forEach { PptResultCard(it, sessionId) }
     }
 }
 
