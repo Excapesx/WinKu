@@ -96,7 +96,9 @@ async fn desktop_request(
     tauri::async_runtime::spawn_blocking(move || {
         match method.as_str() {
             "state" | "provider.select" | "session.delete" | "artifact.save" | "stop"
-            | "question.answer" => {}
+            | "question.answer" | "prompt.polish.cancel" | "preferences.save" | "session.update"
+            | "mode.save" | "mode.delete" | "extension.save" | "extension.toggle" | "extension.delete"
+            | "automation.save" | "automation.toggle" | "automation.delete" | "automation.failure" => {}
             "provider.save" => {
                 let key = params
                     .get("apiKey")
@@ -116,12 +118,13 @@ async fn desktop_request(
                         .map_err(|e| format!("API Key 保存失败：{e}"))?;
                 }
             }
-            "send" | "regenerate" => {
+            "send" | "regenerate" | "prompt.polish" | "provider.test" | "provider.models" | "automation.run" => {
                 let snapshot = backend.call("state", json!({}))?;
-                let id = params
+                let task_provider = if method=="automation.run" { snapshot.get("automations").and_then(Value::as_array).and_then(|items| items.iter().find(|task|task.get("id")==params.get("id"))).and_then(|task|task.get("providerId")).and_then(Value::as_str) } else { None };
+                let id = task_provider.or_else(||params
                     .get("providerId")
                     .and_then(Value::as_str)
-                    .filter(|x| !x.is_empty())
+                    .filter(|x| !x.is_empty()))
                     .or_else(|| snapshot.get("selectedProvider").and_then(Value::as_str))
                     .ok_or("请先配置模型")?;
                 let key = credential(id)?
@@ -131,6 +134,23 @@ async fn desktop_request(
                     .as_object_mut()
                     .ok_or("参数错误")?
                     .insert("_key".into(), json!(key));
+            }
+            "provider.delete" => {
+                let id=params.get("id").and_then(Value::as_str).ok_or("缺少服务商 ID")?;
+                let result=backend.call("provider.delete",params.clone())?;
+                let _=credential(id)?.delete_credential();
+                return Ok(result);
+            }
+            "windows.voice" => {
+                let script="Start-Sleep -Milliseconds 250; Add-Type -TypeDefinition 'using System;using System.Runtime.InteropServices;public class WinKuVoice{[DllImport(\"user32.dll\")]public static extern void keybd_event(byte v,byte s,uint f,UIntPtr e);}'; [WinKuVoice]::keybd_event(0x5B,0,0,[UIntPtr]::Zero);[WinKuVoice]::keybd_event(0x48,0,0,[UIntPtr]::Zero);[WinKuVoice]::keybd_event(0x48,0,2,[UIntPtr]::Zero);[WinKuVoice]::keybd_event(0x5B,0,2,[UIntPtr]::Zero)";
+                let status=Command::new("powershell.exe").args(["-NoProfile","-NonInteractive","-Command",script]).creation_flags(0x08000000).status().map_err(|e|e.to_string())?;
+                if !status.success(){return Err("无法打开 Windows 语音输入，请在输入框按 Win + H。".into());}
+                return Ok(json!({"ok":true}));
+            }
+            "windows.settings" => {
+                let page=match params.get("page").and_then(Value::as_str){Some("accessibility")=>"ms-settings:easeofaccess",Some("notifications")=>"ms-settings:notifications",Some("microphone")=>"ms-settings:privacy-microphone",_=>return Err("不支持的系统设置页面".into())};
+                open::that_detached(page).map_err(|e|e.to_string())?;
+                return Ok(json!({"ok":true}));
             }
             _ => return Err("不支持的命令".into()),
         }
@@ -196,6 +216,7 @@ fn main() {
                 window=window.additional_browser_args(&format!("--remote-debugging-port={port} --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection"));
             }
             window=window.data_directory(data.join("webview"));
+            if std::env::var_os("WINKU_TEST_HIDDEN").is_some(){window=window.visible(false);}
         }
         window.build()?;
         Ok(())

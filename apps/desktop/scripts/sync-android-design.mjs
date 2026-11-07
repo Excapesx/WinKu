@@ -84,3 +84,81 @@ await writeFile(
   `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 108 108"><rect width="108" height="108" rx="24" fill="#${background.toLowerCase()}"/><path d="${path}" fill="none" stroke="#${accent.toLowerCase()}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/></svg>\n`,
 );
 console.log("Desktop theme and marks synced from Android.");
+const iconNames = [
+  "panel_left_outline",
+  "new_chat_outline",
+  "apps_add_outline",
+  "clock_outline",
+  "shield_outline",
+  "search_outline",
+  "sliders_two_outline",
+  "settings_outline",
+  "plus_outline",
+  "chevron_down_outline",
+  "chevron_left_outline",
+  "chevron_right_outline",
+  "microphone_outline",
+  "send_outline",
+  "sparkle",
+  "data_outline",
+  "cordis_plugin_outline",
+  "agent_preset_outline",
+  "gauge_outline",
+  "info_outline",
+  "copy_outline",
+  "inspect_outline",
+  "paperclip_outline",
+  "fullscreen_outline",
+  "alarm_clock_outline",
+  "close_outline",
+];
+const icons = {};
+for (const name of iconNames) {
+  const source = await read(`res/drawable/dsw_${name}.xml`);
+  const attr = (text, key) =>
+    text.match(new RegExp(`android:${key}="([^"]+)"`))?.[1];
+  icons[name] = {
+    viewBox: `0 0 ${attr(source, "viewportWidth")} ${attr(source, "viewportHeight")}`,
+    paths: [...source.matchAll(/<path\s([\s\S]*?)\/>/g)].map(([, text]) => ({
+      d: attr(text, "pathData"),
+      fill: attr(text, "fillColor") ? "currentColor" : "none",
+      ...(attr(text, "strokeColor")
+        ? {
+            stroke: "currentColor",
+            strokeWidth: Number(attr(text, "strokeWidth") ?? 1),
+          }
+        : {}),
+      ...(attr(text, "strokeLineCap")
+        ? { strokeLinecap: attr(text, "strokeLineCap") }
+        : {}),
+      ...(attr(text, "strokeLineJoin")
+        ? { strokeLinejoin: attr(text, "strokeLineJoin") }
+        : {}),
+    })),
+  };
+}
+await writeFile(
+  new URL("src/android-icons.ts", root),
+  `// Generated from Android drawable vectors.\nexport const androidIcons = ${JSON.stringify(icons)} as const;\n`,
+);
+const providerSource = await read(
+  "java/io/github/jackwener/dsh/core/provider/Providers.kt",
+);
+const presets = [
+  ...providerSource.matchAll(
+    /ProviderPreset\("([^"]+)", "([^"]+)", "([^"]+)"([^\n]*)/g,
+  ),
+].map(([, id, name, baseURL, tail]) => ({
+  id,
+  name,
+  baseURL,
+  model: tail.match(/listOf\("([^"]+)"/)?.[1] ?? "",
+  protocol: tail.includes("ProviderProtocol.Messages")
+    ? "anthropic-messages"
+    : "openai-chat-completions",
+  keysURL: tail.match(/keysUrl = "([^"]+)"/)?.[1] ?? "",
+}));
+await writeFile(
+  new URL("src/android-presets.ts", root),
+  `// Android ProviderPresets, for matching setup flows; availability comes from each provider.\nexport const androidPresets = ${JSON.stringify(presets)} as const;\n`,
+);

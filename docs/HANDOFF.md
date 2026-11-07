@@ -173,3 +173,19 @@ iOS 的测试路径（没有 Mac 也能走）：Expo Go 扫码 → PWA → EAS B
 
 这不是「功能不够」的项目，是「每样都做了一半」的项目。
 接手的第一个月，目标应该是**让它像一件成品**，而不是让它会更多东西。
+
+## 10. Windows 迁移进行中（2026-11-07，未发新版安装包）
+
+分支 `codex/windows-v1`，当前源码已接入：Android 原矢量图标/色板、内置 Noto Sans SC、设置九入口/子页、真实三协议提示词润色与撤销、会话管理、模式编辑及实际工具限制、技能导入与 MCP、自动化定时/手动执行/运行会话、Windows UI Automation/截图/输入/PowerShell/通知。默认只读，完全访问需勾选确认。只读和询问策略有真实 MCP/dsh 回归验证。
+
+**状态是进行中，不是已完成的“所有子页几乎一致”**。独立审查报告在本机 `apps/desktop/.review/mobile-finish-review.md`（FIX）。主要未完项：
+1. 对照 `feature/extensions/ExtensionsScreen.kt` 移植插件/技能/MCP 分页及完整管理：插件市场/安装/详情/索引，技能 ZIP/URL/GitHub 导入与来源，MCP JSON/加密头/测试/工具状态/授权。当前只有 SKILL.md 导入与无认证 HTTP/本地 stdio MCP，别加假按钮充数。
+2. 语言切换（跟随系统/中文/英文）和生成中的排队/引导；目前只有键盘发送设置，不能当作等价替代。
+3. 模式编辑、RiskDialog、Switch 已按第一轮审查补齐，须用最新截图做审查结论；不得把旧“ship”结论复用到本轮。
+4. 上述完成后再打包、验证 release 携带的运行时并更换 out 安装包，旧包目前保留，避免发布半成品。
+
+验证：`npx tsc --noEmit`、14 项串行测试、前端构建和 Debug Rust 编译通过；实际 Tauri 完成润色/撤销、模型凭据保存测试删除、任务立即执行→会话、重新生成→轨迹；真实 dsh 验证模式限制、技能发现、已授权自动化创建和 stdio MCP。测试只用本机模拟接口，不用用户付费模型。截图 `.review/mobile-*`，全部属于本机 QA 资料，不提交私有数据。
+
+调试原生窗口用 `WINKU_TEST_DATA_DIR` 隔离。最新 Debug 支持 `WINKU_TEST_HIDDEN=1` 隐藏 QA 窗口，避免与用户正在操作的桌面混淆；仅 Debug 生效。用户已安装且正在运行的 `C:\Users\Administrator\Desktop\WinKu\winku.exe` 不能关闭或覆盖。不要自动运行 NSIS 安装到用户现有目录。Cargo workers 保持 2，无需 Android 构建/模拟器。字体许可 `apps/desktop/src/fonts/OFL.txt`，前端许可证中已收录。
+
+本轮审查补充：模式工具控制、带勾选的完全访问确认、Android Switch 三项已由独立复审判定 resolved（只覆盖修复清单，不代表整端通过）。扩展管理、语言及排队/引导仍 unresolved，整体仍 FIX。后续还应以 Android 的每会话模式固定语义核对桌面全局默认偏好，不能只看编辑器控件数量。测试用模拟窗口与服务器已关闭，用户原版进程保留。

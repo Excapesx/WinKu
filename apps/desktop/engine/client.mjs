@@ -3,6 +3,7 @@ import { createInterface } from "node:readline";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { mkdirSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 const here = dirname(fileURLToPath(import.meta.url));
 export class EngineClient {
   constructor(notify, request = () => ({ outcome: "rejected" })) {
@@ -13,6 +14,14 @@ export class EngineClient {
     this.opened = new Set();
   }
   async start(provider, key, home) {
+    const desktop = provider.desktop ?? {},
+      prefs = desktop.preferences ?? {
+        access: "read-only",
+        tools: { files: true, web: true },
+      },
+      tools = prefs.tools ?? {};
+    const readOnly = prefs.access === "read-only",
+      writable = !readOnly && tools.files;
     this.home = home;
     mkdirSync(home, { recursive: true });
     const workspace = join(home, "workspace");
@@ -42,9 +51,13 @@ export class EngineClient {
       "command-goal",
       "tmux-context",
       "tool-bash",
-      "tool-pwsh",
       "tool-jobs",
     ];
+    if (readOnly || !tools.shell) disabled.push("tool-pwsh");
+    if (desktop.mode?.skills === false)
+      disabled.push("tool-skill", "skill-filesystem");
+    if (prefs.engineTools?.subagent === false)
+      disabled.push("tool-subagent", "tool-subagent-control");
     const patches = disabled.map((id) => ({ id, disabled: true }));
     patches.push(
       {
@@ -52,22 +65,49 @@ export class EngineClient {
         config: {
           includeHarnessIdentity: false,
           personaPrefix:
-            "You are WinKu, a personal learning assistant for university students on Windows. Help with studying, research, competitions, writing and code. Your product identity is WinKu, independent of your model ({{model}}). If asked about the engine, explain accurately that WinKu uses open-source dsh. Reply in the user's language. Tools in this first desktop release are read-only; never claim to have modified files or operated the screen.",
+            "You are WinKu, a personal learning assistant for university students on Windows. Your product identity is WinKu, independent of your model ({{model}}). If asked about the engine, explain accurately that WinKu uses open-source dsh. Reply in the user's language. Only claim actions supported by available tools and their returned results. " +
+            (readOnly
+              ? "Current permissions are read-only. "
+              : "Respect the user-selected permission policy. ") +
+            (desktop.mode?.prompt ?? ""),
         },
       },
       {
         id: "tool-web",
-        config: { search: false, fetch: true, searchTimeoutMs: 60000 },
+        config: { search: false, fetch: !!tools.web, searchTimeoutMs: 60000 },
       },
       {
         id: "tool-fs",
-        config: { read: true, readImage: true, write: false, edit: false },
+        config: {
+          read: !!tools.files && prefs.engineTools?.files_read !== false,
+          readImage: !!(tools.files || tools.screen)&&prefs.engineTools?.files_read!==false,
+          write: !!writable && prefs.engineTools?.files_write !== false,
+          edit: !!writable && prefs.engineTools?.files_write !== false,
+        },
       },
       {
         id: "sandbox-policy",
-        config: { mode: "read-only", workspaceRoot: workspace },
+        config: {
+          mode: readOnly
+            ? "read-only"
+            : prefs.access === "full"
+              ? "full-access"
+              : "workspace-write",
+          workspaceRoot: workspace,
+        },
       },
-      { id: "approval", config: { policy: "ask" } },
+      {
+        id: "approval",
+        config: { policy: prefs.access === "full" ? "never" : "ask" },
+      },
+      {
+        id: "skill-filesystem",
+        config: {
+          includeDefaultRoots: false,
+          customSkillDirs: desktop.skillsDir ? [desktop.skillsDir] : [],
+          watch: false,
+        },
+      },
       {
         id: "agent-default-model",
         config: { provider: provider.id, model: provider.model },
@@ -106,10 +146,44 @@ export class EngineClient {
           {
             id: "winku-desktop",
             name: pathToFileURL(join(here, "desktop-plugin.mjs")).href,
+            config: { preferences: prefs, workspace, providerId: provider.id },
           },
         ],
       },
     );
+    for (const extension of desktop.extensions ?? [])
+      if (
+        extension.type === "mcp" &&
+        (extension.transport !== "stdio" || !readOnly)
+      )
+        patches.push({
+          insert: [
+            {
+              id: "mcp-" + extension.id,
+              name: pathToFileURL(
+                join(
+                  here,
+                  "node_modules/@deepseek-ai/dsh-mcp-client/lib/index.js",
+                ),
+              ).href,
+              config: {
+                transport: extension.transport,
+                serverName: createHash("sha256")
+                  .update(extension.id)
+                  .digest("hex")
+                  .slice(0, 32),
+                ...(extension.transport === "stdio"
+                  ? {
+                      command: extension.command,
+                      args: extension.args,
+                      cwd: workspace,
+                    }
+                  : { url: extension.url }),
+                failOnStartupError: true,
+              },
+            },
+          ],
+        });
     const patch = join(home, "desktop.patch.json");
     writeFileSync(patch, JSON.stringify(patches));
     this.stderr = "";
@@ -125,6 +199,8 @@ export class EngineClient {
           DSH_TELEMETRY_DISABLED: "1",
           WINKU_PROVIDER_KEY: key,
           WINKU_ENGINE_PATCH: patch,
+          WINKU_APP_RPC: provider.appRPC ?? "",
+          WINKU_APP_TOKEN: provider.appToken ?? "",
         },
         stdio: ["pipe", "pipe", "pipe"],
       },
@@ -170,6 +246,9 @@ export class EngineClient {
     return this.call("initialize", {
       provider: provider.id,
       model: provider.model,
+      ...(prefs.effort && prefs.effort !== "auto"
+        ? { reasoningEffort: prefs.effort }
+        : {}),
       cwd: workspace,
       approvalRequests: true,
       capabilities: { userQuestions: true },

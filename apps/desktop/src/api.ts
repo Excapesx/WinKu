@@ -7,6 +7,9 @@ export type Provider = {
   baseURL: string;
   protocol: string;
   vision?: boolean;
+  models?: string[];
+  enabled?: boolean;
+  efforts?: string[];
 };
 export type Attachment = {
   name: string;
@@ -28,6 +31,11 @@ export type Session = {
   id: string;
   title: string;
   createdAt: number;
+  updatedAt?: number;
+  pinned?: boolean;
+  archived?: boolean;
+  muted?: boolean;
+  events?: any[];
   messages: Message[];
   artifacts?: Record<string, any>;
 };
@@ -38,6 +46,11 @@ export type Snapshot = {
   busy: boolean;
   activeSession: string | null;
   pendingQuestions: any[];
+  preferences?: any;
+  modes?: any[];
+  extensions?: any[];
+  automations?: any[];
+  usage?: Record<string, { input: number; output: number; cached: number }>;
 };
 export const empty: Snapshot = {
   providers: [],

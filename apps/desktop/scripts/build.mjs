@@ -54,7 +54,7 @@ await copyFile(
 );
 // Ship attribution with the assets, including notices retained by the bundler.
 const pkg = JSON.parse(await readFile(join(root, "package.json"), "utf8")),
-  licenses = [];
+  licenses = ['Noto Sans SC (Google Fonts / Adobe), SIL Open Font License 1.1\n'+await readFile(join(root,'src/fonts/OFL.txt'),'utf8')];
 for (const name of Object.keys(pkg.dependencies)) {
   const dir = join(nm, name),
     meta = JSON.parse(await readFile(join(dir, "package.json"), "utf8"));

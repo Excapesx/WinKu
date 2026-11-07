@@ -1,19 +1,9 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-07T06:39:49.133Z",
+  "generatedAt": "2026-11-07T07:40:10.257Z",
   "title": "Design System: WinKu Windows",
   "extensions": {
     "shadows": [
-      {
-        "name": "composer",
-        "value": "0 3px 8px #00000008",
-        "purpose": "Faint separation of the Android-shaped desktop composer from the reading area."
-      },
-      {
-        "name": "confirmation",
-        "value": "0 8px 24px #0002",
-        "purpose": "History deletion confirmation."
-      },
       {
         "name": "reader-overlay",
         "value": "-8px 0 30px #0001",
@@ -33,6 +23,16 @@
         "name": "toast",
         "value": "0 5px 24px #0003",
         "purpose": "Status message above the workspace."
+      },
+      {
+        "name": "menu",
+        "value": "0 8px 28px #0003",
+        "purpose": "Android-style popover menu."
+      },
+      {
+        "name": "dialog",
+        "value": "0 14px 48px #0004",
+        "purpose": "Confirmation above dark scrim."
       }
     ],
     "motion": [
@@ -55,16 +55,29 @@
         "name": "reduced-motion",
         "value": "@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }",
         "purpose": "Honor the system motion preference."
+      },
+      {
+        "name": "switch-thumb",
+        "value": "transform .16s ease-out",
+        "purpose": "Android 16px on-state thumb translation."
       }
     ],
     "breakpoints": [
       {
-        "name": "reader-overlay",
+        "name": "reader-overlay-inherited",
         "value": "1050px"
       },
       {
-        "name": "narrow-workspace",
+        "name": "sidebar-medium",
+        "value": "1000px"
+      },
+      {
+        "name": "reader-narrow-inherited",
         "value": "800px"
+      },
+      {
+        "name": "sidebar-narrow",
+        "value": "760px"
       }
     ],
     "typographyMeta": {
@@ -73,8 +86,8 @@
         "purpose": "Centered empty-conversation heading, 26px medium beside the Android in-app W."
       },
       "body": {
-        "displayName": "Windows study text",
-        "purpose": "16px Windows chrome root with Segoe UI and Microsoft YaHei UI; learning content also establishes a 16px root."
+        "displayName": "Bundled Chinese and Latin sans",
+        "purpose": "WinKuSans aliases unchanged Noto Sans SC; local 16px root and accompanying OFL license."
       },
       "answer": {
         "displayName": "Assistant explanation",
@@ -83,6 +96,22 @@
       "code": {
         "displayName": "Shared highlighted code",
         "purpose": "Preserve shared Android code typography, syntax colors and wrap behavior."
+      }
+    },
+    "colorMeta": {
+      "brand": {
+        "role": "primary",
+        "displayName": "Android business emerald",
+        "tonalRamp": [
+          "oklch(15% .13 155)",
+          "oklch(26% .13 155)",
+          "oklch(38% .13 155)",
+          "oklch(49% .13 155)",
+          "oklch(61% .13 155)",
+          "oklch(72% .13 155)",
+          "oklch(84% .13 155)",
+          "oklch(95% .13 155)"
+        ]
       }
     }
   },
@@ -93,7 +122,7 @@
       "refersTo": "button-primary",
       "description": "Connect or save a model using the Android neutral primary-button role.",
       "html": "<button class=\"ds-primary\">保存并使用</button>",
-      "css": ".ds-primary{font:500 14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;background:var(--action-fill,#17171a);color:var(--on-action,#fff);border:0;border-radius:11px;min-height:42px;padding:10px 18px;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-primary:hover:not(:disabled){filter:brightness(.95)}.ds-primary:active:not(:disabled){background:var(--foreground,#17171a)}.ds-primary:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}.ds-primary:disabled{opacity:.5;cursor:default}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}"
+      "css": ".ds-primary{font:500 14px/1.6 WinKuSans,'Microsoft YaHei UI','Microsoft YaHei','Segoe UI',sans-serif;background:var(--action-fill,#17171a);color:var(--on-action,#fff);border:0;border-radius:11px;min-height:42px;padding:10px 18px;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-primary:hover:not(:disabled){filter:brightness(.95)}.ds-primary:active:not(:disabled){background:var(--foreground,#17171a)}.ds-primary:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}.ds-primary:disabled{opacity:.5;cursor:default}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}"
     },
     {
       "name": "Text action",
@@ -101,7 +130,7 @@
       "refersTo": "button-text",
       "description": "Quiet secondary action used in settings and shared learning footers.",
       "html": "<button class=\"ds-text\">返回对话 <svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M5 12h14m-6-6 6 6-6 6\"/></svg></button>",
-      "css": ".ds-text{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:48px;padding:10px 8px;border:0;border-radius:10px;background:transparent;font:14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;color:var(--primary,#0b6e3b);cursor:pointer;transition:background .16s ease,color .16s ease}.ds-text:hover:not(:disabled),.ds-text:active:not(:disabled){background:var(--hover,#17171a14)}.ds-text:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}.ds-text:disabled{opacity:.5;cursor:default}@media(prefers-reduced-motion:reduce){.ds-text{transition:none}}"
+      "css": ".ds-text{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:48px;padding:10px 8px;border:0;border-radius:10px;background:transparent;font:14px/1.6 WinKuSans,'Microsoft YaHei UI','Microsoft YaHei','Segoe UI',sans-serif;color:var(--primary,#0b6e3b);cursor:pointer;transition:background .16s ease,color .16s ease}.ds-text:hover:not(:disabled),.ds-text:active:not(:disabled){background:var(--hover,#17171a14)}.ds-text:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}.ds-text:disabled{opacity:.5;cursor:default}@media(prefers-reduced-motion:reduce){.ds-text{transition:none}}"
     },
     {
       "name": "Provider field",
@@ -109,23 +138,15 @@
       "refersTo": "input-provider",
       "description": "Labeled settings field with a clear keyboard focus outline.",
       "html": "<label class=\"ds-field\">服务商名称<input placeholder=\"例如：我的模型服务\" /></label>",
-      "css": ".ds-field{display:flex;flex-direction:column;gap:7px;color:var(--foreground,#17171a);font:13px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;max-width:600px}.ds-field input{font:14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;min-height:42px;padding:9px 12px;border:1px solid var(--border,#17171a1a);border-radius:10px;background:var(--surface,#fff);color:var(--foreground,#17171a);caret-color:var(--primary,#0b6e3b)}.ds-field input:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}"
+      "css": ".ds-field{display:flex;flex-direction:column;gap:7px;color:var(--foreground,#17171a);font:13px/1.6 WinKuSans,'Microsoft YaHei UI','Microsoft YaHei','Segoe UI',sans-serif;max-width:600px}.ds-field input{font:14px/1.6 WinKuSans,'Microsoft YaHei UI','Microsoft YaHei','Segoe UI',sans-serif;min-height:40px;padding:9px 12px;border:1px solid var(--border,#17171a1a);border-radius:10px;background:var(--background,#f7f7f9);color:var(--foreground,#17171a);caret-color:var(--primary,#0b6e3b)}.ds-field input:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}"
     },
     {
       "name": "Sidebar navigation",
       "kind": "nav",
       "refersTo": "navigation-row",
       "description": "Android sidebar roles with a neutral selected-history surface and muted 16px tool icon.",
-      "html": "<nav class=\"ds-nav\" aria-label=\"应用导航\"><button class=\"ds-nav-row ds-nav-selected\" aria-current=\"page\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><rect width=\"7\" height=\"7\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"14\" y=\"14\" rx=\"1\"/><rect width=\"7\" height=\"7\" x=\"3\" y=\"14\" rx=\"1\"/></svg>工具</button></nav>",
-      "css": ".ds-nav{width:212px;padding:7px;background:var(--sidebar,#f2f2f5)}.ds-nav-row{display:flex;align-items:center;gap:11px;text-align:left;padding:11px 12px;min-height:44px;width:100%;border:0;border-radius:10px;background:transparent;white-space:nowrap;color:var(--foreground,#17171a);font:14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-nav-selected{background:var(--sidebar-active,#e8e8ee)}.ds-nav-row:hover,.ds-nav-row:active{background:var(--hover,#17171a14)}.ds-nav-row:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-nav-row{transition:none}}.ds-nav-row svg{color:var(--muted,#55555e)}"
-    },
-    {
-      "name": "Attachment chip",
-      "kind": "chip",
-      "refersTo": "attachment",
-      "description": "An attached source with a filename; opens the optional reader.",
-      "html": "<button class=\"ds-attachment\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z\"/><path d=\"M14 2v6h6M8 13h8M8 17h6\"/></svg><span>课堂笔记.md</span></button>",
-      "css": ".ds-attachment{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border,#17171a1a);border-radius:10px;background:var(--surface,#fff);color:var(--foreground,#17171a);font:12px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;max-width:260px;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-attachment svg{flex:none;color:var(--muted,#55555e)}.ds-attachment span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.ds-attachment:hover,.ds-attachment:active{background:var(--hover,#17171a14)}.ds-attachment:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-attachment{transition:none}}"
+      "html": "<nav class=\"ds-nav\" aria-label=\"应用导航\"><button class=\"ds-nav-row ds-nav-selected\" aria-current=\"page\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"M3.25,2.25h2a1,1 0 0 1 1,1v2a1,1 0 0 1 -1,1h-2a1,1 0 0 1 -1,-1v-2a1,1 0 0 1 1,-1Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"/><path d=\"M3.25,9.75h2a1,1 0 0 1 1,1v2a1,1 0 0 1 -1,1h-2a1,1 0 0 1 -1,-1v-2a1,1 0 0 1 1,-1Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"/><path d=\"M10.75,9.75h2a1,1 0 0 1 1,1v2a1,1 0 0 1 -1,1h-2a1,1 0 0 1 -1,-1v-2a1,1 0 0 1 1,-1Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"/><path d=\"M11.75 1.75v5M9.25 4.25h5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"/></svg>工具</button></nav>",
+      "css": ".ds-nav{width:272px;padding:7px;background:var(--sidebar,#f2f2f5)}.ds-nav-row{display:flex;align-items:center;gap:16px;text-align:left;padding:0 10px;min-height:44px;width:100%;border:0;border-radius:10px;background:transparent;white-space:nowrap;color:var(--foreground,#17171a);font:15px/1.6 WinKuSans,'Microsoft YaHei UI','Microsoft YaHei','Segoe UI',sans-serif;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-nav-selected{background:var(--sidebar-active,#e8e8ee)}.ds-nav-row:hover,.ds-nav-row:active{background:var(--hover,#17171a14)}.ds-nav-row:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-nav-row{transition:none}}.ds-nav-row svg{color:var(--muted,#55555e)}"
     },
     {
       "name": "Learning card",
@@ -133,61 +154,90 @@
       "refersTo": "learning-card",
       "description": "Shared Android learning shell with base-background surface, business accent and formula-aware type heading.",
       "html": "<section class=\"ds-card\"><header class=\"ds-card-head\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M12 7v14M3 3c4-1 6 1 9 3 3-2 5-4 9-3v16c-4-1-6 0-9 2-3-2-5-3-9-2V3Z\"/></svg><h2>学习讲解</h2></header><p class=\"ds-card-description\">结合图像、公式与操作理解概念。</p><footer class=\"ds-card-footer\"><button>结合我的操作讲解</button></footer></section>",
-      "css": ".ds-card{--surface:var(--background,#f7f7f9);--primary:var(--accent,#0e8a4a);min-width:0;overflow:hidden;background:var(--surface,#fff);color:var(--foreground,#17171a);border:1px solid var(--border,#17171a1a);border-radius:20px;font:16px/1.5 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif}.ds-card-head{display:flex;align-items:center;gap:10px;padding:12px 12px 4px 18px}.ds-card-head>svg{color:var(--primary,#0b6e3b)}.ds-card-head h2{margin:0;font-size:17px;line-height:1.5;font-weight:600;letter-spacing:normal}.ds-card-description{font-size:.875rem;line-height:1.6;color:var(--muted,#55555e);margin:0;padding:0 18px 12px}.ds-card-footer{border-top:1px solid var(--border,#17171a1a);padding:4px 12px}.ds-card-footer button{font:14px/1.6 'Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;color:var(--muted,#55555e);min-height:48px;padding:10px 8px;border:0;border-radius:10px;background:transparent;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-card-footer button:hover,.ds-card-footer button:active{background:var(--hover,#17171a14)}.ds-card-footer button:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-card-footer button{transition:none}}"
+      "css": ".ds-card{--surface:var(--background,#f7f7f9);--primary:var(--accent,#0e8a4a);min-width:0;overflow:hidden;background:var(--surface,#fff);color:var(--foreground,#17171a);border:1px solid var(--border,#17171a1a);border-radius:20px;font:16px/1.5 WinKuSans,'Microsoft YaHei UI','Microsoft YaHei','Segoe UI',sans-serif}.ds-card-head{display:flex;align-items:center;gap:10px;padding:12px 12px 4px 18px}.ds-card-head>svg{color:var(--primary,#0b6e3b)}.ds-card-head h2{margin:0;font-size:17px;line-height:1.5;font-weight:600;letter-spacing:normal}.ds-card-description{font-size:.875rem;line-height:1.6;color:var(--muted,#55555e);margin:0;padding:0 18px 12px}.ds-card-footer{border-top:1px solid var(--border,#17171a1a);padding:4px 12px}.ds-card-footer button{font:14px/1.6 WinKuSans,'Microsoft YaHei UI','Microsoft YaHei','Segoe UI',sans-serif;color:var(--muted,#55555e);min-height:48px;padding:10px 8px;border:0;border-radius:10px;background:transparent;cursor:pointer;transition:background .16s ease,color .16s ease}.ds-card-footer button:hover,.ds-card-footer button:active{background:var(--hover,#17171a14)}.ds-card-footer button:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-card-footer button{transition:none}}"
     },
     {
       "name": "Bottom composer",
       "kind": "custom",
       "refersTo": "composer",
-      "description": "Android-shaped 28px composer with a small plus control, model selector and circular business-accent send action.",
-      "html": "<div class=\"ds-composer\"><textarea aria-label=\"消息\" placeholder=\"发消息或创建任务\"></textarea><div class=\"ds-composer-toolbar\"><button class=\"ds-add\" aria-label=\"添加附件\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button><span>选择模型</span><button class=\"ds-send\" aria-label=\"发送消息\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M12 19V5m-7 7 7-7 7 7\"/></svg></button></div></div>",
-      "css": ".ds-composer{max-width:800px;border:1px solid var(--border,#17171a1a);background:var(--composer,#fff);border-radius:28px;padding:8px 8px 6px;box-shadow:0 3px 8px #00000008;font:16px/1.6 \"Segoe UI\", \"Microsoft YaHei UI\", system-ui, sans-serif}.ds-composer:focus-within{border-color:var(--muted,#55555e)}.ds-composer textarea{display:block;width:100%;min-height:56px;max-height:180px;resize:none;outline:none;background:transparent;border:0;color:var(--foreground,#17171a);font:16px/24px \"Segoe UI\", \"Microsoft YaHei UI\", system-ui, sans-serif;padding:4px 6px 8px;caret-color:var(--primary,#0b6e3b)}.ds-composer textarea::placeholder{color:var(--muted,#55555e)}.ds-composer-toolbar{display:flex;align-items:center;min-height:40px;gap:8px;color:var(--muted,#55555e);font-size:13px}.ds-composer-toolbar button{display:grid;place-items:center;border:0;border-radius:50%;cursor:pointer}.ds-composer-toolbar .ds-add{width:28px;height:28px;background:var(--selector,#eeeef2);color:var(--foreground,#17171a)}.ds-composer-toolbar .ds-send{width:36px;height:36px;margin-left:auto;background:var(--accent,#0e8a4a);color:#fff}.ds-send:hover{filter:brightness(.92)}.ds-composer-toolbar button:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}"
+      "description": "Current flat R28 composer with permission, mode and polish toolbar; runtime menus and voice entry are implemented separately.",
+      "html": "<div class=\"ds-composer\"><textarea aria-label=\"消息\" placeholder=\"发消息或创建任务\"></textarea><div class=\"ds-composer-toolbar\"><button class=\"ds-add\" aria-label=\"添加附件\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button><button class=\"ds-permission\">询问</button><button class=\"ds-mode\">默认</button><button class=\"ds-polish\" aria-label=\"润色提示词\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"M5.875 3C5.875 6.33333 7.54167 8 10.875 8C7.54167 8 5.875 9.66667 5.875 13C5.875 9.66667 4.20833 8 0.875 8C4.20833 8 5.875 6.33333 5.875 3Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"/><path d=\"M12.375 1.55823C12.375 3.39156 13.2917 4.30823 15.125 4.30823C13.2917 4.30823 12.375 5.22489 12.375 7.05823C12.375 5.22489 11.4583 4.30823 9.625 4.30823C11.4583 4.30823 12.375 3.39156 12.375 1.55823Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"/><path d=\"M12.375 10.4418C12.375 11.7751 13.0417 12.4418 14.375 12.4418C13.0417 12.4418 12.375 13.1084 12.375 14.4418C12.375 13.1084 11.7083 12.4418 10.375 12.4418C11.7083 12.4418 12.375 11.7751 12.375 10.4418Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"/></svg></button><span>选择模型</span><button class=\"ds-send\" aria-label=\"发送消息\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M12 19V5m-7 7 7-7 7 7\"/></svg></button></div></div>",
+      "css": ".ds-composer{max-width:800px;border:1px solid var(--border,#17171a1a);background:var(--composer,#fff);border-radius:28px;padding:14px 14px 10px;box-shadow:none;font:16px/1.6 WinKuSans, \"Microsoft YaHei UI\", \"Microsoft YaHei\", \"Segoe UI\", sans-serif}.ds-composer:focus-within{border-color:var(--muted,#55555e)}.ds-composer textarea{display:block;width:100%;min-height:68px;max-height:180px;resize:none;outline:none;background:transparent;border:0;color:var(--foreground,#17171a);font:16px/24px WinKuSans, \"Microsoft YaHei UI\", \"Microsoft YaHei\", \"Segoe UI\", sans-serif;padding:0 0 12px;caret-color:var(--primary,#0b6e3b)}.ds-composer textarea::placeholder{color:var(--muted,#55555e)}.ds-composer-toolbar{display:flex;align-items:center;min-height:40px;gap:10px;color:var(--muted,#55555e);font-size:13px}.ds-composer-toolbar button{display:grid;place-items:center;border:0;border-radius:50%;cursor:pointer}.ds-composer-toolbar .ds-add{width:30px;height:30px;background:var(--selector,#eeeef2);color:var(--foreground,#17171a)}.ds-composer-toolbar .ds-send{width:36px;height:36px;margin-left:auto;background:var(--accent,#0e8a4a);color:#fff}.ds-send:hover{filter:brightness(.92)}.ds-composer-toolbar button:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}.ds-composer-toolbar .ds-permission{height:30px;padding:0 7px;border-radius:8px;background:var(--soft,#e3f3ea);color:var(--primary,#0b6e3b)}.ds-composer-toolbar .ds-mode{background:transparent;color:var(--muted,#55555e)}.ds-composer-toolbar .ds-polish{width:34px;height:34px;border-radius:50%;padding:5px;background:var(--brand,#0e8a4a);color:#fff}.ds-composer-toolbar button:hover{filter:brightness(.95)}.ds-composer-toolbar button:active{filter:brightness(.9)}"
     },
     {
-      "name": "User bubble",
+      "name": "Android settings group",
+      "kind": "card",
+      "refersTo": "settings-card",
+      "description": "Flat R20 group with inset dividers.",
+      "html": "<section class=\"ds-settings\"><button><svg width=\"20\" height=\"20\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"M8 9.75012C8.9665 9.75012 9.75 8.96662 9.75 8.00012C9.75 7.03362 8.9665 6.25012 8 6.25012C7.0335 6.25012 6.25 7.03362 6.25 8.00012C6.25 8.96662 7.0335 9.75012 8 9.75012Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"/><path d=\"M13.0107 7.79377C12.9505 7.89401 12.9205 7.94413 12.9205 7.99951C12.9205 8.0549 12.9505 8.10502 13.0106 8.20528L13.9849 9.83006C14.045 9.93029 14.0751 9.9804 14.0751 10.0358C14.0751 10.0911 14.045 10.1413 13.9849 10.2415L13.0037 11.8777C12.9468 11.9726 12.9184 12.0201 12.8725 12.0461C12.8267 12.072 12.7713 12.072 12.6607 12.072H10.6704C10.5598 12.072 10.5045 12.072 10.4586 12.098C10.4128 12.1239 10.3843 12.1714 10.3274 12.2662L9.33825 13.9142C9.28133 14.009 9.25287 14.0564 9.20703 14.0823C9.16118 14.1083 9.10588 14.1083 8.99529 14.1083H7.00486C6.89426 14.1083 6.83896 14.1083 6.79312 14.0823C6.74727 14.0564 6.71881 14.009 6.6619 13.9142L5.67273 12.2662C5.61581 12.1714 5.58735 12.1239 5.54151 12.098C5.49566 12.072 5.44036 12.072 5.32977 12.072H3.33945C3.2288 12.072 3.17347 12.072 3.12761 12.0461C3.08176 12.0201 3.0533 11.9726 2.9964 11.8777L2.0152 10.2415C1.9551 10.1413 1.92505 10.0911 1.92505 10.0358C1.92505 9.9804 1.9551 9.93029 2.0152 9.83006L2.98951 8.20528C3.04963 8.10502 3.07969 8.0549 3.07969 7.99951C3.07968 7.94413 3.04961 7.89401 2.98946 7.79377L2.01529 6.17011C1.95514 6.06987 1.92507 6.01975 1.92507 5.96437C1.92506 5.90899 1.95512 5.85886 2.01524 5.7586L2.9964 4.1224C3.0533 4.0275 3.08176 3.98005 3.12761 3.95408C3.17347 3.92811 3.2288 3.92811 3.33945 3.92811H5.32977C5.44036 3.92811 5.49566 3.92811 5.54151 3.90216C5.58735 3.87621 5.61581 3.82879 5.67273 3.73397L6.6619 2.08599C6.71881 1.99116 6.74727 1.94375 6.79312 1.9178C6.83896 1.89185 6.89426 1.89185 7.00486 1.89185H8.99529C9.10588 1.89185 9.16118 1.89185 9.20703 1.9178C9.25287 1.94375 9.28133 1.99116 9.33825 2.08599L10.3274 3.73397C10.3843 3.82879 10.4128 3.87621 10.4586 3.90216C10.5045 3.92811 10.5598 3.92811 10.6704 3.92811H12.6607C12.7713 3.92811 12.8267 3.92811 12.8725 3.95408C12.9184 3.98005 12.9468 4.0275 13.0037 4.1224L13.9849 5.7586C14.045 5.85886 14.0751 5.90899 14.0751 5.96437C14.0751 6.01975 14.045 6.06987 13.9849 6.17011L13.0107 7.79377Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"/></svg>通用<span><svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"M6 12L9.29289 8.70711C9.68342 8.31658 9.68342 7.68342 9.29289 7.29289L6 4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"/></svg></span></button><button><svg width=\"20\" height=\"20\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"M7.8667 0.349609C8.96906 0.349634 10.0601 0.481272 11.0317 0.735352C11.9973 0.987845 12.8453 1.362 13.4644 1.84766C14.0744 2.32629 14.507 2.95539 14.5161 3.69336H14.5171V8.53516C14.0843 8.32076 13.6108 8.17679 13.1108 8.11816C13.1831 7.96848 13.2162 7.82856 13.2163 7.70312V5.76758C12.6269 6.16618 11.8739 6.47995 11.0317 6.7002C10.0602 6.95423 8.96896 7.08494 7.8667 7.08496C6.76461 7.08493 5.67411 6.95415 4.70264 6.7002C3.85994 6.48006 3.10694 6.1662 2.51709 5.76758V7.70312L2.521 7.78418C2.56374 8.19554 2.93361 8.74414 3.91357 9.23145C4.9281 9.73585 6.35004 10.0371 7.8667 10.0371C8.26373 10.0371 8.6543 10.0141 9.03271 9.97461C8.75596 10.3799 8.54664 10.8349 8.42041 11.3232C8.23666 11.3313 8.0518 11.3369 7.8667 11.3369C6.20108 11.3369 4.57025 11.01 3.33447 10.3955C3.04163 10.2499 2.76658 10.0836 2.51709 9.90039V11.6738C2.51728 12.1379 2.88589 12.7556 3.92236 13.292C4.93457 13.8157 6.35342 14.1289 7.8667 14.1289C8.12318 14.1289 8.37694 14.1161 8.62646 14.0986C8.82021 14.5535 9.08999 14.9682 9.41943 15.3271C8.91285 15.3934 8.39149 15.4287 7.8667 15.4287C6.19761 15.4287 4.56379 15.0869 3.32568 14.4463C2.11244 13.8185 1.21649 12.8562 1.21631 11.6738V3.76367C1.21595 3.74853 1.21438 3.733 1.21436 3.71777C1.21436 2.96917 1.65103 2.33053 2.26807 1.84668C2.88747 1.36112 3.73675 0.987685 4.70264 0.735352C5.67413 0.481376 6.76457 0.349636 7.8667 0.349609ZM7.8667 1.65039C6.86269 1.65042 5.88326 1.77028 5.03076 1.99316C4.17183 2.2176 3.50421 2.52956 3.06982 2.87012C2.65043 3.19909 2.52622 3.48898 2.51709 3.69336V3.74414C2.52719 3.94845 2.65185 4.23772 3.06982 4.56543C3.50425 4.90601 4.17172 5.21795 5.03076 5.44238C5.88326 5.66527 6.8627 5.78513 7.8667 5.78516C8.8707 5.78513 9.85015 5.66525 10.7026 5.44238C11.5611 5.21787 12.2286 4.9049 12.6626 4.56445C13.0982 4.22252 13.2163 3.9231 13.2163 3.71777L13.2104 3.63574C13.1818 3.43623 13.044 3.16941 12.6626 2.87012C12.2286 2.52957 11.5614 2.21773 10.7026 1.99316C9.85009 1.77025 8.8708 1.65041 7.8667 1.65039Z\" fill=\"currentColor\"/><path d=\"M12.8936 10.0361L13.2061 10.5566C13.2296 10.5959 13.2651 10.6562 13.3027 10.707C13.3469 10.7666 13.4148 10.8431 13.5195 10.9023C13.6244 10.9617 13.725 10.9801 13.7988 10.9873C13.8619 10.9934 13.9318 10.9932 13.9775 10.9932H14.6162L14.8896 11.4502L14.5947 11.9443C14.5698 11.9859 14.5312 12.0483 14.5029 12.1084C14.4781 12.1611 14.4514 12.2312 14.4395 12.3164L14.4326 12.4072L14.4395 12.4971C14.4514 12.5825 14.4781 12.6532 14.5029 12.7061C14.5312 12.7661 14.5689 12.8287 14.5938 12.8701L14.8896 13.3633L14.6162 13.8213H13.9775C13.9318 13.8213 13.8619 13.821 13.7988 13.8271C13.7433 13.8326 13.6728 13.8442 13.5967 13.875L13.5195 13.9121C13.4148 13.9714 13.3469 14.0478 13.3027 14.1074C13.265 14.1583 13.2296 14.2186 13.2061 14.2578L12.8936 14.7783H12.3115L11.999 14.2578C11.9755 14.2186 11.9401 14.1583 11.9023 14.1074C11.8693 14.0628 11.823 14.0083 11.7578 13.959L11.6855 13.9121L11.6074 13.875C11.5316 13.8445 11.4615 13.8325 11.4062 13.8271C11.3432 13.821 11.2733 13.8213 11.2275 13.8213H10.5889L10.3135 13.3633L10.6104 12.8701C10.6352 12.8287 10.6739 12.7661 10.7021 12.7061C10.7352 12.6357 10.7724 12.534 10.7725 12.4072C10.7724 12.2804 10.7352 12.1788 10.7021 12.1084C10.6739 12.0483 10.6353 11.9859 10.6104 11.9443L10.3135 11.4502L10.5889 10.9932H11.2275C11.2733 10.9932 11.3432 10.9934 11.4062 10.9873C11.4801 10.9801 11.5808 10.9616 11.6855 10.9023C11.7903 10.843 11.8582 10.7666 11.9023 10.707C11.94 10.6562 11.9755 10.5959 11.999 10.5566L12.3115 10.0361H12.8936Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"/></svg>模型服务<span><svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"M6 12L9.29289 8.70711C9.68342 8.31658 9.68342 7.68342 9.29289 7.29289L6 4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"/></svg></span></button></section>",
+      "css": ".ds-settings{padding:0 16px;border:1px solid var(--border,#17171a1a);border-radius:20px;background:var(--bubble,#eeeef2);overflow:hidden}.ds-settings button{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:12px 0;border:0;background:transparent;color:var(--foreground,#17171a);font:14px/1.6 WinKuSans,'Microsoft YaHei UI','Microsoft YaHei','Segoe UI',sans-serif;text-align:left;cursor:pointer}.ds-settings span{margin-left:auto;color:var(--muted,#55555e)}.ds-settings button+button{border-top:1px solid var(--border,#17171a1a)}.ds-settings button:hover,.ds-settings button:active{background:var(--hover,#17171a14)}.ds-settings button:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px;}"
+    },
+    {
+      "name": "Android switch",
       "kind": "custom",
-      "refersTo": "user-bubble",
-      "description": "Android-style right-aligned user message with uniform rounded corners.",
-      "html": "<div class=\"ds-user\">请分步讲解这个问题。</div>",
-      "css": ".ds-user{margin-left:auto;width:fit-content;max-width:82%;padding:10px 16px;border-radius:20px;background:var(--bubble,#eeeef2);color:var(--foreground,#17171a);font:14px/22px \"Segoe UI\", \"Microsoft YaHei UI\", system-ui, sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}"
+      "refersTo": "switch-on",
+      "description": "Current 36×20 brand/disabled filled tracks with 16px white thumbs.",
+      "html": "<div class=\"ds-switches\"><button class=\"ds-switch ds-on\" role=\"switch\" aria-label=\"已开启\" aria-checked=\"true\"><span></span></button><button class=\"ds-switch\" role=\"switch\" aria-label=\"已关闭\" aria-checked=\"false\"><span></span></button></div>",
+      "css": ".ds-switches{display:flex;gap:24px;padding:8px}.ds-switch{position:relative;display:flex;align-items:center;width:36px;min-width:36px;height:20px;padding:2px;border:0;border-radius:10px;background:var(--disabled-fill,#dedee4);cursor:pointer}.ds-switch::after{content:\"\";position:absolute;inset:-6px}.ds-switch span{width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .16s ease-out}.ds-switch.ds-on{background:var(--brand,#0e8a4a)}.ds-switch.ds-on span{transform:translateX(16px)}.ds-switch:hover,.ds-switch:active{filter:brightness(.97)}.ds-switch:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px;}@media(prefers-reduced-motion:reduce){.ds-switch span{transition:none}}"
+    },
+    {
+      "name": "Acknowledgement dialog",
+      "kind": "custom",
+      "refersTo": "risk-dialog",
+      "description": "Initial unchecked state; runtime enforces acknowledgement, focus behavior and a 300ms opening guard.",
+      "html": "<section class=\"ds-risk\" role=\"dialog\" aria-label=\"开启完全访问？\"><h2>开启完全访问？</h2><p>开启后，已启用的工具可以操作电脑、写入文件或执行命令，不再逐次询问。</p><label><input type=\"checkbox\"/>我了解风险，并信任当前任务</label><footer><button>取消</button><button disabled>确认开启</button></footer></section>",
+      "css": ".ds-risk{max-width:500px;padding:24px;border:1px solid var(--border,#17171a1a);border-radius:24px;background:var(--bubble,#eeeef2);color:var(--foreground,#17171a);box-shadow:0 14px 48px #0004;font:14px/1.6 WinKuSans,'Microsoft YaHei UI','Microsoft YaHei','Segoe UI',sans-serif;}.ds-risk h2{font-size:20px;margin:0 0 16px}.ds-risk p{color:var(--muted,#55555e);line-height:24px}.ds-risk label{display:flex;align-items:center;gap:10px;line-height:23px}.ds-risk input{width:18px;height:18px;accent-color:var(--brand,#0e8a4a)}.ds-risk footer{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}.ds-risk button{border:0;border-radius:18px;padding:9px 18px;background:transparent;color:var(--primary,#0b6e3b);font:14px/1.6 WinKuSans,'Microsoft YaHei UI','Microsoft YaHei','Segoe UI',sans-serif;cursor:pointer}.ds-risk button:hover:not(:disabled),.ds-risk button:active:not(:disabled){background:var(--hover,#17171a14)}.ds-risk button:focus-visible,.ds-risk input:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px;}.ds-risk button:disabled{opacity:.4;cursor:default}"
+    },
+    {
+      "name": "Ask permission chip",
+      "kind": "chip",
+      "refersTo": "permission-chip",
+      "description": "Current ask state in the composer permission selector.",
+      "html": "<button class=\"ds-ask\">询问</button>",
+      "css": ".ds-ask{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 7px;border:0;border-radius:8px;background:var(--soft,#e3f3ea);color:var(--primary,#0b6e3b);font:14px/1.6 WinKuSans,\"Microsoft YaHei UI\",sans-serif;cursor:pointer}.ds-ask:hover,.ds-ask:active{filter:brightness(.95)}.ds-ask:focus-visible{outline:2px solid var(--primary,#0b6e3b);outline-offset:3px}"
     }
   ],
   "narrative": {
     "northStar": "WinKu's quiet study workspace",
-    "overview": "This app extends the existing Android learning interface. Neutral grey and chalk surfaces, ink text, the emerald W, and restrained rounded controls remain the visual identity. Windows system typography serves Chinese and English study material, while bundled textbook mathematics and highlighted code retain their own reading conventions. This is an app-scoped record of the implemented Windows extension, not a replacement identity for Android.\n\nAndroid is the visual authority for this unified surface. `scripts/sync-android-design.mjs` generates `src/android-design.css` from Android `Color.kt`, `src/android-brand.ts` from `brand_mark.xml`, and `app-icon.svg` from the launcher vector and launcher background. `src/main.tsx` loads shared learning styles, desktop layout styles, then the generated Android roles. The frontmatter mirrors these scoped runtime values; update the Android source and generator when changing shared roles rather than treating a documentation snapshot as an independent theme. `SURFACE.md` records the Windows composition; `../../PRODUCT.md` remains the product context.",
+    "overview": "This app extends WinKu's established Android learning interface: neutral grey and chalk surfaces, ink text, an emerald W, rounded groups and a conversation-first hierarchy. Locally bundled Noto Sans SC gives Chinese and Latin interface text a consistent sans-serif voice. Shared learning content keeps its separate mathematics, code and content-color conventions. This is an app-scoped implementation record, preserving the Android identity.\n\nAndroid is the visual authority. `scripts/sync-android-design.mjs` generates Android colors, in-app mark, launcher artwork, icon paths and provider presets. Styles load shared learning CSS, desktop CSS, generated Android roles, then `mobile-parity.css`. The final layer supplies the current font and Android-shaped controls. `MobileUI.tsx` supplies repeated controls and `MobilePages.tsx` settings pages. `SURFACE.md` records the Windows composition; `../../PRODUCT.md` remains product context.\n\nThe build remains unfinished. The existing independent finish review has disposition FIX. This refresh reconciles intentional token drift without rerunning the detector or granting release approval. Current code restores the acknowledgement-gated risk dialog, Android switch geometry and expanded mode editor, with final review pending. Extension hierarchy/plugin management, skill imports, MCP authentication, language selection and busy-send queue/steer remain unresolved. Do not describe every subpage as nearly identical to Android.",
     "keyCharacteristics": [
       "Quiet neutral surfaces with emerald identity and content accents.",
-      "Android-derived colors, marks, bubbles and composer with Windows study typography.",
-      "Readable Chinese and English text, textbook mathematics, and code.",
+      "Android-derived colors, marks, icons, grouped settings and composer.",
+      "Bundled Chinese and Latin sans text, textbook mathematics and code.",
       "Shared learning components retain their Android visual vocabulary."
     ],
     "rules": [
       {
         "name": "The Android Role Rule",
-        "body": "Preserve the distinct Android roles for neutral primary buttons, readable links, business accents and the W mark. Learning content has its own scoped role overrides; do not flatten those scopes into one global primary color.",
+        "body": "Preserve separate roles for neutral primary actions, readable chrome links, business accents and the W mark. Learning content keeps its scoped role overrides; do not flatten every scope into one primary color.",
         "section": "colors"
       },
       {
         "name": "The Study Reading Rule",
-        "body": "Preserve the separate typography of prose, equations and code instead of flattening all three into app labels.",
+        "body": "Preserve the separate typography of prose, equations and code instead of flattening study material into interface labels.",
         "section": "typography"
+      },
+      {
+        "name": "The Current Evidence Rule",
+        "body": "Document current code and review limits separately; a token refresh does not establish that missing portable Android flows are complete.",
+        "section": "components"
       }
     ],
     "dos": [
       "Do preserve the Android neutral/chalk world and emerald W when extending Windows.",
-      "Do synchronize shared colors and marks from their Android sources.",
-      "Do preserve separate reading treatments for prose, mathematics and code.",
-      "Do make keyboard focus and icon-button names visible or accessible as implemented.",
-      "Do keep overlay depth functional and honor reduced-motion preferences.",
-      "Do retain the editable SVG and raster provenance when shipping icons."
+      "Do synchronize shared colors, marks, icons and provider presets from Android sources.",
+      "Do use bundled WinKuSans for interface text and preserve separate prose, mathematics and code treatments.",
+      "Do retain R20 groups, the R28 composer and the compact Android switch geometry.",
+      "Do preserve keyboard focus, accessible names, acknowledgement gates and reduced-motion behavior.",
+      "Do retain vector, raster and bundled-font provenance when shipping."
     ],
     "donts": [
       "Don't replace the incumbent identity with a new desktop brand or display-font theme.",
       "Don't promote chart, explanation or syntax colors into general app chrome.",
-      "Don't collapse chrome and learning-content color scopes into a single action palette.",
-      "Don't turn this surface's sidebar/composer composition into a rule for unrelated future screens.",
-      "Don't populate the intentionally empty Tools entry with invented student features.",
-      "Don't use earlier pre-unification screenshots as authority for current tokens."
+      "Don't collapse chrome and learning-content scopes into one action palette.",
+      "Don't turn this sidebar/composer arrangement into a universal composition rule.",
+      "Don't populate the reserved Tools entry with invented student features.",
+      "Don't claim release approval or completed extension/language/busy-send parity from this documentation refresh."
     ]
   }
 }

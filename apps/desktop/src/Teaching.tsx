@@ -148,7 +148,7 @@ function Artifact({
       update: (key: string, value: any) =>
         setState((old: any) => {
           const next = { ...old, [key]: value };
-          request("artifact.save", {
+          if(session.id!=='learning-preview')request("artifact.save", {
             sessionId: session.id,
             id,
             value: next,

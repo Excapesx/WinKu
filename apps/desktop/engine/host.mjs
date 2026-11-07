@@ -11,6 +11,10 @@ import { join } from "node:path";
 import { randomUUID, createHash } from "node:crypto";
 import { createInterface } from "node:readline";
 import { EngineClient } from "./client.mjs";
+import { polish } from "./polish.mjs";
+import { Features } from "./features.mjs";
+import { createServer } from "node:http";
+import { modelOf } from "@snnh/dsh-llm-service-lite";
 
 export class DesktopHost {
   constructor(home, notify = () => {}) {
@@ -22,6 +26,7 @@ export class DesktopHost {
     this.idle = null;
     this.active = null;
     this.questions = new Map();
+    this.polishing = new Map();
     mkdirSync(home, { recursive: true });
     this.file = join(home, "desktop.json");
     this.state = existsSync(this.file)
@@ -39,10 +44,15 @@ export class DesktopHost {
           m.running = false;
           m.interrupted = true;
         }
+    this.features = new Features(this);
   }
   snapshot() {
     return {
       ...this.state,
+      providers: this.state.providers.map((p) => ({
+        ...p,
+        efforts: modelOf({ models: [] }, p.model).effort,
+      })),
       busy: this.busy,
       activeSession: this.active?.session.id ?? null,
       pendingQuestions: [...this.questions.values()].map((x) => x.public),
@@ -58,6 +68,55 @@ export class DesktopHost {
     this.notify("state", this.snapshot());
   }
   async engineFor(provider, key) {
+    provider = { ...provider, desktop: this.features.route() };
+    if (!this.appRPC) {
+      this.appToken = randomUUID();
+      this.appServer = createServer((req, res) => {
+        if (
+          req.headers.authorization !== "Bearer " + this.appToken ||
+          req.method !== "POST"
+        ) {
+          res.writeHead(403);
+          res.end();
+          return;
+        }
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk;
+          if (body.length > 150000) req.destroy();
+        });
+        req.on("end", async () => {
+          try {
+            const { method, params } = JSON.parse(body);
+            if (
+              ![
+                "automation.save",
+                "automation.toggle",
+                "automation.delete",
+                "automation.list",
+              ].includes(method)
+            )
+              throw Error("不支持的命令");
+            const result =
+              method === "automation.list"
+                ? this.state.automations
+                : await this.features.handle(method, params);
+            res.writeHead(200, { "content-type": "application/json" });
+            res.end(JSON.stringify(result));
+          } catch (error) {
+            res.writeHead(400, { "content-type": "application/json" });
+            res.end(JSON.stringify({ error: error.message }));
+          }
+        });
+      });
+      await new Promise((resolve) =>
+        this.appServer.listen(0, "127.0.0.1", resolve),
+      );
+      this.appServer.unref();
+      this.appRPC = "http://127.0.0.1:" + this.appServer.address().port;
+    }
+    provider.appRPC = this.appRPC;
+    provider.appToken = this.appToken;
     clearTimeout(this.idle);
     await this.closing;
     const route =
@@ -112,6 +171,16 @@ export class DesktopHost {
     }
     if (method === "session.event") {
       const e = params.event;
+      this.features.usage(e);
+      active.session.events ??= [];
+      active.session.events.push({
+        time: Date.now(),
+        type: e.type,
+        data: JSON.stringify(e.data ?? null)
+          .replaceAll(active.secret, "[已隐藏]")
+          .slice(0, 16000),
+      });
+      active.session.events = active.session.events.slice(-500);
       if (e.type === "assistant/message") {
         const m = e.data.message ?? e.data;
         const text = (m.content ?? [])
@@ -143,6 +212,13 @@ export class DesktopHost {
     );
     if (!provider) throw Error("请先在模型设置中添加服务商。");
     if (!params._key) throw Error("请先为这个服务商填写 API Key。");
+    const today = this.state.usage[new Date().toLocaleDateString("sv-SE")];
+    if (
+      this.state.preferences.dailyLimit > 0 &&
+      (today?.input ?? 0) + (today?.output ?? 0) >=
+        this.state.preferences.dailyLimit
+    )
+      throw Error("已达到每日用量上限，请在能力设置中调整。");
     let session = this.state.sessions.find((s) => s.id === params.sessionId);
     if (!session) {
       session = {
@@ -153,6 +229,13 @@ export class DesktopHost {
       };
       this.state.sessions.unshift(session);
     }
+    if (provider.enabled === false) throw Error("当前模型服务已停用。");
+    if (
+      this.state.preferences.sessionLimit > 0 &&
+      (session.tokens ?? 0) >= this.state.preferences.sessionLimit
+    )
+      throw Error("已达到会话用量上限，请在能力设置中调整。");
+    session.updatedAt = Date.now();
     const text = String(params.text ?? "").trim();
     if (!regenerate && !text && !params.attachments?.length)
       throw Error("请输入问题或添加附件。");
@@ -213,7 +296,13 @@ export class DesktopHost {
     answer.interrupted = false;
     answer.running = true;
     this.busy = true;
-    this.active = { session, answer, committed: "", backup };
+    this.active = {
+      session,
+      answer,
+      committed: "",
+      backup,
+      secret: params._key,
+    };
     this.publish(true);
     // Respond immediately so UI stays interactive; completion is delivered as state events.
     this.finishTurn(
@@ -292,6 +381,7 @@ export class DesktopHost {
         item.resolve({ outcome: "cancelled" });
       this.questions.clear();
       active.answer.running = false;
+      this.features.completed(session, active.answer);
       this.busy = false;
       this.active = null;
       this.publish(true);
@@ -304,7 +394,79 @@ export class DesktopHost {
     }
   }
   async handle(method, p = {}) {
+    const extra = await this.features.handle(method, p);
+    if (extra !== undefined) return extra;
     switch (method) {
+      case "provider.delete":
+        if (this.busy) throw Error("请等待当前回答完成。");
+        this.state.providers = this.state.providers.filter(
+          (x) => x.id !== p.id,
+        );
+        if (this.state.selectedProvider === p.id)
+          this.state.selectedProvider = this.state.providers[0]?.id ?? "";
+        this.publish(true);
+        return {};
+      case "provider.models": {
+        const provider = this.state.providers.find(
+          (x) => x.id === (p.providerId || this.state.selectedProvider),
+        );
+        if (!provider || !p._key) throw Error("请先保存模型配置。");
+        const response = await fetch(provider.baseURL + "/models", {
+          headers:
+            provider.protocol === "anthropic-messages"
+              ? { "x-api-key": p._key, "anthropic-version": "2023-06-01" }
+              : { Authorization: "Bearer " + p._key },
+          signal: AbortSignal.timeout(15000),
+          redirect: "error",
+        });
+        if (!response.ok)
+          throw Error(
+            "获取模型失败（HTTP " + response.status + "），可手动填写模型 ID。",
+          );
+        const value = await response.json();
+        return {
+          models: (value.data ?? value.models ?? [])
+            .map((x) => x.id ?? x.name)
+            .filter((x) => typeof x === "string")
+            .slice(0, 500),
+        };
+      }
+      case "provider.test": {
+        const provider = this.state.providers.find(
+          (x) => x.id === (p.providerId || this.state.selectedProvider),
+        );
+        if (!provider || !p._key) throw Error("请先保存模型配置。");
+        await polish(
+          provider,
+          p._key,
+          "请只回复 OK。",
+          AbortSignal.timeout(20000),
+        );
+        return { ok: true };
+      }
+      case "prompt.polish": {
+        const provider = this.state.providers.find(
+          (x) => x.id === (p.providerId || this.state.selectedProvider),
+        );
+        if (!provider || !p._key) throw Error("请先配置模型与 API Key。");
+        if (this.polishing.size) throw Error("正在润色，请稍候。");
+        const controller = new AbortController();
+        this.polishing.set(p.id, controller);
+        const timer = setTimeout(() => controller.abort(), 20000);
+        try {
+          return await polish(provider, p._key, p.text, controller.signal);
+        } catch (error) {
+          if (controller.signal.aborted)
+            throw Error("润色已取消或超时，原草稿已保留。");
+          throw Error(String(error.message).replaceAll(p._key, "[已隐藏]"));
+        } finally {
+          clearTimeout(timer);
+          this.polishing.delete(p.id);
+        }
+      }
+      case "prompt.polish.cancel":
+        this.polishing.get(p.id)?.abort();
+        return {};
       case "state":
         return this.snapshot();
       case "provider.validate":
@@ -339,6 +501,17 @@ export class DesktopHost {
           baseURL: url.href.replace(/\/$/, ""),
           protocol: p.protocol,
           vision: p.vision === true,
+          models: [
+            ...new Set([
+              String(p.model).trim(),
+              ...(Array.isArray(p.models)
+                ? p.models
+                    .filter((x) => typeof x === "string" && x.trim())
+                    .map((x) => x.trim())
+                : []),
+            ]),
+          ].slice(0, 200),
+          enabled: p.enabled !== false,
         };
         if (method === "provider.validate") return value;
         const i = this.state.providers.findIndex((x) => x.id === p.id);
@@ -351,7 +524,14 @@ export class DesktopHost {
       case "provider.select":
         if (!this.state.providers.some((x) => x.id === p.id))
           throw Error("服务商不存在。");
+        if (p.model) {
+          const provider = this.state.providers.find((x) => x.id === p.id);
+          if (!(provider.models ?? [provider.model]).includes(p.model))
+            throw Error("模型不存在。");
+          provider.model = p.model;
+        }
         this.state.selectedProvider = p.id;
+        this.state.preferences.effort = "auto";
         this.publish(true);
         return {};
       case "session.delete":
@@ -416,6 +596,10 @@ export class DesktopHost {
         return {};
       }
       case "shutdown":
+        this.features.stop();
+        this.appServer?.closeAllConnections();
+        this.appServer?.close();
+        for (const item of this.polishing.values()) item.abort();
         clearTimeout(this.idle);
         if (this.active) this.active.cancelled = true;
         for (const item of this.questions.values())

@@ -95,6 +95,7 @@ for (const name of [
 ])
   cpSync(join(shared, name), join(root, "engine", name));
 const runtime = join(root, "runtime");
+cpSync(join(root,"../android/app/src/main/assets/skills/prompt-polish/SKILL.md"),join(root,"engine/prompt-polish.md"));
 mkdirSync(runtime, { recursive: true });
 cpSync(process.execPath, join(runtime, "node.exe"));
 if (!existsSync(join(runtime, "NODE-LICENSE"))) {

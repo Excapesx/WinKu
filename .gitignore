@@ -28,6 +28,7 @@ dist/
 /apps/desktop/engine/learning.js
 /apps/desktop/engine/learning-templates.js
 /apps/desktop/engine/assistant-stream.js
+/apps/desktop/engine/prompt-polish.md
 /out/
 /apps/android/out/
 *.keystore
