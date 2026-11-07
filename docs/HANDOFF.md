@@ -41,7 +41,7 @@ docs/           架构、引擎契约、交接
 **没做完的**：
 - 顶部栏、输入框的布局还是老结构（控件太多）
 - 学生组件（拍照解题、课表、DDL、复习卡）一个都没有
-- iOS / Web / 桌面只有 README，没有代码
+- iOS / Web 只有 README；Windows 首版已实现，构建与验证见 `apps/desktop/README.md`，不需要启动 Android 构建或模拟器
 
 ## 3. 构建与验证
 

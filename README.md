@@ -67,7 +67,8 @@ Android 已有可运行的客户端（聊天、多服务商模型接入、学习
 | **Android** | 🟡 能跑，未打磨 | Kotlin + Compose，内置 dsh 引擎（Node），带设备能力 |
 | iOS | ⬜ 只有计划 | 纯客户端，不跑引擎；能力集是 Android 的子集 |
 | Web | ⬜ 只有计划 | 移动优先的网页版，兼作 iOS 的 PWA 形态 |
-| Windows / macOS | ⬜ 只有计划 | 桌面壳，引擎直接用宿主机的 Node |
+| Windows x64 | 🟡 v1.0 测试版 | Tauri + React，自带 Node/dsh，多模型聊天与学习组件 |
+| macOS | ⬜ 只有计划 | 尚未移植 |
 | 共享包 | ⬜ 待抽取 | artifact 渲染器、设计 token、协议类型 |
 
 ## 仓库结构
@@ -76,7 +77,7 @@ Android 已有可运行的客户端（聊天、多服务商模型接入、学习
 apps/
   android/          Kotlin + Compose 客户端（含 dsh 引擎、设备能力、学习组件）
   web/              （计划）网页版
-  desktop/          （计划）Windows / macOS 桌面端
+  desktop/          Windows 桌面端（macOS 尚在计划中）
   ios/              （计划）iOS 客户端
 packages/           （计划）跨端共享：artifact 渲染、设计 token、协议
 docs/               架构、引擎契约、交接说明

@@ -18,6 +18,16 @@ dist/
 *.log
 
 # Release artifacts
+/apps/desktop/.tools/
+/apps/desktop/runtime/
+/apps/desktop/src-tauri/target/
+/apps/desktop/src-tauri/gen/
+/apps/desktop/.review/
+/apps/desktop/out/
+/apps/desktop/.cargo/config.toml
+/apps/desktop/engine/learning.js
+/apps/desktop/engine/learning-templates.js
+/apps/desktop/engine/assistant-stream.js
 /out/
 /apps/android/out/
 *.keystore
