@@ -694,6 +694,31 @@ h3 {
   gap: 8px;
   margin-bottom: 10px;
 }
+.skill-shortcuts,
+.skill-shortcuts-rail {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+.skill-shortcuts {
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.skill-shortcuts-rail {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding: 2px;
+  margin: -2px;
+}
+.skill-shortcuts-rail:empty {
+  display: none;
+}
+.skill-shortcuts .attachment {
+  flex: none;
+  max-width: none;
+  white-space: nowrap;
+}
 .attachment,
 .draft-attachment {
   display: flex;

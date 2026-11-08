@@ -106,7 +106,7 @@ function App() {
   const [skillPins, setSkillPins] = useState<string[]>(() => {
     try {
       const stored = JSON.parse(localStorage.getItem("winku-skill-shortcuts") ?? "null");
-      if (Array.isArray(stored)) return stored.filter((value) => typeof value === "string").slice(0, 3);
+      if (Array.isArray(stored)) return [...new Set(stored.filter((value) => typeof value === "string"))];
     } catch { /* An old preference can be replaced by the defaults. */ }
     return ["lecture-notes", "ppt-master"];
   });
@@ -153,6 +153,21 @@ function App() {
   const pref = snapshot.preferences ?? {},
     mode = snapshot.modes?.find((m) => m.id === pref.modeId);
   const skillsEnabled = (session?.mode ?? mode)?.skills !== false;
+  const skillRail = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const rail = skillRail.current;
+    if (!rail) return;
+    const scroll = (event: WheelEvent) => {
+      if (event.ctrlKey || event.deltaX || !event.deltaY) return;
+      const remaining = rail.scrollWidth - rail.clientWidth - rail.scrollLeft;
+      if (event.deltaY > 0 ? remaining <= 1 : rail.scrollLeft <= 1) return;
+      const scale = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? rail.clientWidth : 1;
+      event.preventDefault();
+      rail.scrollLeft += event.deltaY * scale;
+    };
+    rail.addEventListener("wheel", scroll, { passive: false });
+    return () => rail.removeEventListener("wheel", scroll);
+  }, [skillsEnabled, ready, page]);
   const availableSkills = [...new Map([
     ["lecture-notes", t("课堂录音笔记")], ["ppt-master", "PPT Master"],
     ...(snapshot.extensions ?? []).filter((item) => item.type === "skill" && item.enabled && /^[a-z0-9-]+$/.test(item.name))
@@ -981,19 +996,25 @@ function App() {
                     send();
                   }}
                 >
-                  {skillsEnabled && <div className="attachment-list" aria-label={t("技能快捷方式")}>
-                    {skillPins.filter((name) => skillLabels.has(name)).map((name) => (
-                      <button className="attachment" type="button" key={name} aria-pressed={selectedSkill === name}
-                        onClick={() => setSelectedSkill(selectedSkill === name ? "" : name)}>{skillLabels.get(name)}</button>
-                    ))}
-                    <Menu label={t("技能快捷方式")} trigger={<span>{t("更多技能")}</span>}>
+                  {skillsEnabled && <div className="skill-shortcuts" role="group" aria-label={t("技能快捷方式")}>
+                    <div className="skill-shortcuts-rail" ref={skillRail}>
+                      {skillPins.filter((name) => skillLabels.has(name)).map((name) => (
+                        <button className="attachment" type="button" key={name} aria-pressed={selectedSkill === name}
+                          onClick={() => setSelectedSkill(selectedSkill === name ? "" : name)}>{skillLabels.get(name)}</button>
+                      ))}
+                      {selectedSkill && skillLabels.has(selectedSkill) && !skillPins.includes(selectedSkill) && (
+                        <button className="attachment" type="button" aria-pressed="true"
+                          onClick={() => setSelectedSkill("")}>{skillLabels.get(selectedSkill)} ×</button>
+                      )}
+                    </div>
+                    <Menu label={t("更多技能")} trigger={t("更多技能")} className="attachment">
                       {availableSkills.map(([name, label]) => (
                         <MenuItem key={name} selected={selectedSkill === name} onClick={() => setSelectedSkill(name)}>{label}</MenuItem>
                       ))}
-                      <div className="a-note">{t("固定快捷方式，最多 3 项")}</div>
+                      <div className="a-note">{t("固定快捷方式")}</div>
                       {availableSkills.map(([name, label]) => (
                         <label key={name} className="a-note">
-                          <input type="checkbox" checked={skillPins.includes(name)} disabled={skillPins.length >= 3 && !skillPins.includes(name)}
+                          <input type="checkbox" checked={skillPins.includes(name)}
                             onChange={() => {
                               const next = skillPins.includes(name) ? skillPins.filter((item) => item !== name) : [...skillPins, name];
                               setSkillPins(next);
@@ -1002,7 +1023,6 @@ function App() {
                         </label>
                       ))}
                     </Menu>
-                    {selectedSkill && !skillPins.includes(selectedSkill) && <button className="attachment" type="button" aria-pressed="true" onClick={() => setSelectedSkill("")}>{skillLabels.get(selectedSkill)} ×</button>}
                   </div>}
                   {files.length > 0 && (
                     <div className="attachment-list">

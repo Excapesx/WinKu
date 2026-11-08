@@ -3,7 +3,7 @@ export const english: Record<string, string> = {
   课堂录音笔记: "Lecture notes from audio",
   技能快捷方式: "Skill shortcuts",
   更多技能: "More skills",
-  "固定快捷方式，最多 3 项": "Pin up to 3 shortcuts",
+  固定快捷方式: "Pin shortcuts",
   " 文件过大，请先拆分。": " is too large. Split it into smaller files.",
   "附件为空。": "The attachment is empty.",
   附件读取失败: "Could not read the attachment",
