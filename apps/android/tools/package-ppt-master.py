@@ -2,6 +2,7 @@
 
 import hashlib
 import io
+import os
 import sys
 from pathlib import Path
 from urllib.request import urlopen
@@ -29,8 +30,13 @@ def android_builder(data):
 def package(out_dir):
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    with urlopen(RELEASE, timeout=60) as response:
-        archive = response.read(32 * 1024 * 1024)
+    release_archive = os.environ.get("WINKU_PPT_MASTER_ARCHIVE")
+    if release_archive:
+        with Path(release_archive).open("rb") as response:
+            archive = response.read(32 * 1024 * 1024)
+    else:
+        with urlopen(RELEASE, timeout=60) as response:
+            archive = response.read(32 * 1024 * 1024)
     if hashlib.sha256(archive).hexdigest() != SHA256:
         raise RuntimeError("PPT Master release failed SHA-256 verification")
 

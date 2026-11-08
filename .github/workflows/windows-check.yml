@@ -35,11 +35,11 @@ jobs:
           npm run prepare:engine
           npx tsc --noEmit
           npm test
-      - name: Prepare the NSIS toolchain
+      - name: Prepare installer dependencies
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Use the GitHub Release API for the assets expected by the locked Tauri CLI.
+          # Use the GitHub Release API for the pinned Tauri and PPT Master assets.
           function Get-VerifiedAsset($url, $path, $sha256) {
             curl.exe --fail --silent --show-error --location --retry 3 --max-time 60 `
               --header 'Accept: application/octet-stream' --header "Authorization: Bearer $env:GH_TOKEN" `
@@ -52,6 +52,9 @@ jobs:
           $plugin = Join-Path $env:RUNNER_TEMP 'nsis_tauri_utils.dll'
           Get-VerifiedAsset 'https://api.github.com/repos/tauri-apps/binary-releases/releases/assets/623832696?download=1' $archive 'ba63dffc4410ee89193e1cb5a41989991bd77c61068da17e3156d136b7b0b3d8'
           Get-VerifiedAsset 'https://api.github.com/repos/tauri-apps/nsis-tauri-utils/releases/assets/345882097?download=1' $plugin '5ba143b5db4a87d32d6e7802e033330aae56cbceabe0d1e3ba41948385ad4709'
+          $pptMaster = Join-Path $env:RUNNER_TEMP 'ppt-master-skill.zip'
+          Get-VerifiedAsset 'https://api.github.com/repos/hugohe3/ppt-master/releases/assets/691128869?download=1' $pptMaster '2819a5b2330fa0dee9819b37395db5da33ae2b159908864225aa60481fe92bdd'
+          "WINKU_PPT_MASTER_ARCHIVE=$pptMaster" >> $env:GITHUB_ENV
           $tauriCache = Join-Path $env:LOCALAPPDATA 'tauri'
           Expand-Archive -LiteralPath $archive -DestinationPath $tauriCache
           $pluginDir = Join-Path $tauriCache 'nsis-3.13/Plugins/x86-unicode/additional'
