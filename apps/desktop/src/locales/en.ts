@@ -1,5 +1,14 @@
 // Interface copy. Conversation and imported content remain in their original language.
 export const english: Record<string, string> = {
+  课堂录音笔记: "Lecture notes from audio",
+  技能快捷方式: "Skill shortcuts",
+  更多技能: "More skills",
+  "固定快捷方式，最多 3 项": "Pin up to 3 shortcuts",
+  " 文件过大，请先拆分。": " is too large. Split it into smaller files.",
+  "附件为空。": "The attachment is empty.",
+  附件读取失败: "Could not read the attachment",
+  剪贴板: "Clipboard",
+  "读取或复制文字，需要询问或完全访问。": "Read or copy text with Ask or Full access.",
   位置: "Location",
   "此技能由内核、插件或工作区提供，请在来源处管理。":
     "These skills come from the engine, plugins or workspace. Manage them at their source.",

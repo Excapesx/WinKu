@@ -45,6 +45,9 @@ export function registerWindowsTools(ctx, config) {
     "windows_input",
     "windows_open_settings",
     "windows_notify",
+    "clipboard_get",
+    "clipboard_set",
+    "ppt_export",
     "write",
     "edit",
     "pwsh",
@@ -86,6 +89,18 @@ export function registerWindowsTools(ctx, config) {
       },
       execute: async (args, exec) => execute(args, exec.signal),
     });
+  if (tools.clipboard && !readOnly) {
+    add("clipboard_get", "Read text currently on the Windows clipboard. Use only when requested.", {}, [],
+      async (_args, signal) => JSON.parse(await powershell(
+        "$text=[string](Get-Clipboard -Raw); ConvertTo-Json -Compress @{text=$text.Substring(0,[Math]::Min(12000,$text.Length))}", {}, signal,
+      )));
+    add("clipboard_set", "Copy text to the Windows clipboard. Replaces the current contents.",
+      { text: { type: "string" } }, ["text"], async ({ text }, signal) => {
+        if (Buffer.byteLength(text) > 4000) throw Error("剪贴板文字超过 4000 字节。");
+        await powershell("Set-Clipboard -Value ([string]$winkuArgs.text)", { text }, signal);
+        return { copied: true };
+      });
+  }
   if (tools.screen) {
     add(
       "windows_screen_tree",

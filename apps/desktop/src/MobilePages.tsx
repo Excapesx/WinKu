@@ -43,6 +43,7 @@ const tools = () =>
     ["input", t("电脑操作"), t("点击、键盘输入与打开系统设置。")],
     ["shell", "PowerShell", t("执行命令，需要询问或完全访问。")],
     ["notifications", t("通知"), t("发送桌面气泡通知。")],
+    ["clipboard", t("剪贴板"), t("读取或复制文字，需要询问或完全访问。")],
   ] as const;
 type Props = {
   snapshot: Snapshot;

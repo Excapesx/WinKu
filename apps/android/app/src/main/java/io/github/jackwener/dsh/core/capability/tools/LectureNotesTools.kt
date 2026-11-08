@@ -99,6 +99,8 @@ private fun transcribe(file: File, model: File, start: Int, end: Int, checkActiv
         )))
         try {
             val text = StringBuilder()
+            val window = FloatArray(512)
+            var pending = 0
             fun consume() {
                 while (!vad.empty()) {
                     checkActive()
@@ -115,8 +117,22 @@ private fun transcribe(file: File, model: File, start: Int, end: Int, checkActiv
                 }
             }
             val decodedEnd = decodeRecording(file, start * SECOND_US, end * SECOND_US, checkActive) {
-                vad.acceptWaveform(it)
-                consume()
+                var offset = 0
+                while (offset < it.size) {
+                    val length = minOf(window.size - pending, it.size - offset)
+                    it.copyInto(window, pending, offset, offset + length)
+                    pending += length
+                    offset += length
+                    if (pending == window.size) {
+                        vad.acceptWaveform(window)
+                        consume()
+                        pending = 0
+                    }
+                }
+            }
+            if (pending > 0) {
+                window.fill(0f, pending)
+                vad.acceptWaveform(window)
             }
             vad.flush()
             consume()

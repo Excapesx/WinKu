@@ -19,6 +19,7 @@ export const defaults = {
     input: false,
     shell: false,
     notifications: false,
+    clipboard: false,
   },
   dailyLimit: 0,
   sessionLimit: 0,

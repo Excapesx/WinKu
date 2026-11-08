@@ -34,12 +34,17 @@ def transcribe(file, cache, start, end):
     lines = []
     cursor = start * rate
     end_sample = end * rate
+    pending = np.empty(0, dtype=np.float32)
 
     def feed(samples):
+        nonlocal pending
         window = config.silero_vad.window_size
-        for offset in range(0, len(samples), window):
-            vad.accept_waveform(samples[offset:offset + window])
+        pending = np.concatenate((pending, samples))
+        end = len(pending) // window * window
+        for offset in range(0, end, window):
+            vad.accept_waveform(pending[offset:offset + window])
             consume()
+        pending = pending[end:]
 
     def consume():
         while not vad.empty():
@@ -81,6 +86,8 @@ def transcribe(file, cache, start, end):
         if cursor < end_sample:
             for frame in resample.resample(None):
                 accept(frame)
+    if pending.size:
+        feed(np.zeros(config.silero_vad.window_size - len(pending), dtype=np.float32))
     vad.flush()
     consume()
     if not lines:
