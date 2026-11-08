@@ -93,7 +93,7 @@ export class EngineClient {
           mode: readOnly
             ? "read-only"
             : prefs.access === "full"
-              ? "full-access"
+              ? "danger-full-access"
               : "workspace-write",
           workspaceRoot: workspace,
         },
