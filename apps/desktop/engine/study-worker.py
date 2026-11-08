@@ -49,12 +49,12 @@ def transcribe(file, cache, start, end):
     def consume():
         while not vad.empty():
             speech = vad.front
-            vad.pop()
             stream = recognizer.create_stream()
             stream.accept_waveform(rate, speech.samples)
+            second = start + speech.start // rate
+            vad.pop()
             recognizer.decode_stream(stream)
             text = simplify.convert(stream.result.text.strip())
-            second = start + speech.start // rate
             if text:
                 lines.append(f"[{second // 60:02d}:{second % 60:02d}] {text}")
 

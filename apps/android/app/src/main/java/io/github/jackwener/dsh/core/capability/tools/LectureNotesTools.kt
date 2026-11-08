@@ -105,10 +105,10 @@ private fun transcribe(file: File, model: File, start: Int, end: Int, checkActiv
                 while (!vad.empty()) {
                     checkActive()
                     val speech = vad.front()
-                    vad.pop()
                     val stream = recognizer.createStream()
                     try {
                         stream.acceptWaveform(speech.samples, SPEECH_RATE)
+                        vad.pop()
                         recognizer.decode(stream)
                         val line = recognizer.getResult(stream).text.trim()
                         val time = start + speech.start / SPEECH_RATE
