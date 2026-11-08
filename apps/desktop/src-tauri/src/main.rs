@@ -90,13 +90,45 @@ fn credential(id: &str) -> Result<keyring::Entry, String> {
 }
 #[tauri::command]
 async fn desktop_request(
+    window: tauri::WebviewWindow,
     backend: tauri::State<'_, Arc<Backend>>,
     method: String,
     mut params: Value,
 ) -> Result<Value, String> {
+    let owner = window.hwnd().map_err(|e|e.to_string())?.0 as isize;
     let backend = backend.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
         match method.as_str() {
+            "presentation.open" | "presentation.save" => {
+                let file = backend.call("presentation.file", params)?;
+                let source = file.get("path").and_then(Value::as_str).ok_or("PPT 文件不可用")?;
+                if method == "presentation.open" {
+                    open::that_detached(source).map_err(|_|"无法打开 PPT，请安装 PowerPoint、WPS 或使用另存为。".to_string())?;
+                    return Ok(json!({"opened":true}));
+                }
+                use windows_sys::Win32::UI::Controls::Dialogs::{GetSaveFileNameW,CommDlgExtendedError,OPENFILENAMEW,OFN_OVERWRITEPROMPT,OFN_PATHMUSTEXIST,OFN_NOCHANGEDIR};
+                let name=file.get("name").and_then(Value::as_str).ok_or("PPT 文件名无效")?;
+                let mut filename=vec![0u16;32768];
+                for (i,c) in name.encode_utf16().take(300).enumerate(){filename[i]=c;}
+                let filter:Vec<u16>="PowerPoint (*.pptx)\0*.pptx\0\0".encode_utf16().collect();
+                let extension:Vec<u16>="pptx\0".encode_utf16().collect();
+                let title:Vec<u16>="保存 PowerPoint\0".encode_utf16().collect();
+                let mut dialog:OPENFILENAMEW=unsafe{std::mem::zeroed()};
+                dialog.lStructSize=std::mem::size_of::<OPENFILENAMEW>() as u32;
+                dialog.hwndOwner=owner as _; dialog.lpstrFile=filename.as_mut_ptr(); dialog.nMaxFile=filename.len() as u32;
+                dialog.lpstrFilter=filter.as_ptr(); dialog.lpstrDefExt=extension.as_ptr(); dialog.lpstrTitle=title.as_ptr();
+                dialog.Flags=OFN_OVERWRITEPROMPT|OFN_PATHMUSTEXIST|OFN_NOCHANGEDIR;
+                if unsafe{GetSaveFileNameW(&mut dialog)}==0 {
+                    let code=unsafe{CommDlgExtendedError()};
+                    if code==0{return Ok(json!({"cancelled":true}));}
+                    return Err(format!("无法显示保存窗口（{code}）"));
+                }
+                let length=filename.iter().position(|x|*x==0).unwrap_or(filename.len());
+                let destination=std::path::PathBuf::from(String::from_utf16_lossy(&filename[..length]));
+                if !destination.extension().is_some_and(|x|x.eq_ignore_ascii_case("pptx")){return Err("请保存为 .pptx 文件".into());}
+                std::fs::copy(source,&destination).map_err(|e|format!("保存失败：{e}"))?;
+                return Ok(json!({"saved":true}));
+            }
             "state" | "provider.select" | "session.delete" | "artifact.save" | "stop"
             | "question.answer" | "prompt.polish.cancel" | "preferences.save" | "session.update" | "queue.remove"
             | "mode.save" | "mode.delete" | "extension.toggle"

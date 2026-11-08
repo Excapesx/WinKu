@@ -48,6 +48,7 @@ export function registerWindowsTools(ctx, config) {
     "write",
     "edit",
     "pwsh",
+    "ppt_export",
   ]);
   ctx.on("tools/pre-execute", async (exec, next) => {
     if (!mutation.has(exec.name) && !exec.name.startsWith("mcp__"))

@@ -6,6 +6,7 @@ import {
   existsSync,
   readdirSync,
   rmSync,
+  statSync,
 } from "node:fs";
 import { join } from "node:path";
 import { randomUUID, createHash } from "node:crypto";
@@ -16,6 +17,7 @@ import { Features } from "./features.mjs";
 import { Extensions } from "./extensions.mjs";
 import { createServer } from "node:http";
 import { modelOf } from "@snnh/dsh-llm-service-lite";
+import { presentationFile } from "./presentations.mjs";
 
 export class DesktopHost {
   constructor(home, notify = () => {}) {
@@ -111,11 +113,14 @@ export class DesktopHost {
                 "automation.toggle",
                 "automation.delete",
                 "automation.list",
+                "presentation.publish",
               ].includes(method)
             )
               throw Error("不支持的命令");
             const result =
-              method === "automation.list"
+              method === "presentation.publish"
+                ? this.recordPresentation(params)
+                : method === "automation.list"
                 ? this.state.automations
                 : await this.features.handle(method, params);
             res.writeHead(200, { "content-type": "application/json" });
@@ -158,6 +163,17 @@ export class DesktopHost {
       }
     }
     return this.engine;
+  }
+  recordPresentation({sessionId, file}) {
+    const active = this.active;
+    if (!active || active.cancelled || active.session.id !== sessionId) throw Error("PPT 所属会话已结束。");
+    const path = presentationFile(join(this.home, "engine", "workspace"), file);
+    const value = {id:file.id, name:file.name, pages:file.pages, bytes:statSync(path).size};
+    if (!Number.isInteger(value.pages) || value.pages < 1 || value.pages > 30) throw Error("PPT 页数无效。");
+    active.answer.presentations ??= [];
+    if (!active.answer.presentations.some(x=>x.id===value.id)) active.answer.presentations.push(value);
+    this.publish(true);
+    return value;
   }
   ask(message) {
     const token = randomUUID();
@@ -588,6 +604,12 @@ export class DesktopHost {
     }
   }
   async handle(method, p = {}) {
+    if (method === "presentation.file") {
+      const session = this.state.sessions.find(s=>s.id===p.sessionId);
+      const file = session?.messages.flatMap(m=>m.presentations ?? []).find(f=>f.id===p.id);
+      if (!file) throw Error("PPT 文件不存在或不属于此会话。");
+      return {path:presentationFile(join(this.home,"engine","workspace"),file), name:file.name};
+    }
     const extensionResult = await this.extensions.handle(method, p);
     if (extensionResult !== undefined) return extensionResult;
     const extra = await this.features.handle(method, p);

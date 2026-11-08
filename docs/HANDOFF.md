@@ -189,3 +189,13 @@ iOS 的测试路径（没有 Mac 也能走）：Expo Go 扫码 → PWA → EAS B
 调试原生窗口用 `WINKU_TEST_DATA_DIR` 隔离。最新 Debug 支持 `WINKU_TEST_HIDDEN=1` 隐藏 QA 窗口，避免与用户正在操作的桌面混淆；仅 Debug 生效。用户已安装且正在运行的 `C:\Users\Administrator\Desktop\WinKu\winku.exe` 不能关闭或覆盖。不要自动运行 NSIS 安装到用户现有目录。Cargo workers 保持 2，无需 Android 构建/模拟器。字体许可 `apps/desktop/src/fonts/OFL.txt`，前端许可证中已收录。
 
 测试默认串行执行，Cargo 保持 2 个 worker。插件管理时到期自动化暂缓，管理完成后继续调度。最新 NSIS 包已通过完整性检查，解出的 7 个宿主/扩展资源与源码 SHA256 一致，内置 pnpm 存在；随包 Node v24.21.0 的真实 dsh 模拟接口收发通过。已替换旧交付包 `apps/desktop/out/WinKu-v1.0-Windows-x64-setup.exe`，校验值见同目录 `SHA256SUMS.txt`。没有执行安装器覆盖用户的已安装实例；QA 专用凭据已删除。后续发布仍需重复运行时和包内资源校验。
+
+## 11. Windows 完全访问启动与 PPT（2026-11-08）
+
+用户截图的 `workingDirectory` 缺失是连带错误：启动日志首个失败项是 `sandbox-policy`，桌面误把完全访问写成 `full-access`，当前 dsh 的枚举值必须为 `danger-full-access`。`engine/client.mjs` 已修复；不要靠关闭安全插件来绕过此问题。新增回归实际启动只读、询问、完全访问三个组合，之前只有策略单测，没有覆盖完全访问的实际 SDK 启动。
+
+桌面新增 `engine/presentations.mjs` + `ppt_export`，使用随包 PptxGenJS 生成可编辑标题、要点、双栏、柱状/折线图和备注。模型先确认提纲，除非用户明确直接生成；无需 Python/npm/Office 安装。不是安卓 PPT Master 的 SVG/插图流水线移植，Office 附件解析仍未增加。工具必须满足文件能力、写权限和模式限制；询问模式在导出前实际等待授权，只读不暴露导出工具。
+
+结果通过带令牌的宿主通道绑定当前回答，文件位于隔离工作区 `presentations/<uuid>/`。前端只拿已登记的文件 ID；原生“打开/另存为”从宿主解析所属会话文件，不接受模型或前端任意路径。另存为使用 Windows 原生保存对话框、覆盖确认，取消不报错。文件元数据随聊天持久化，重开历史仍可打开。
+
+21 项串行测试、TypeScript、前端、Debug/Release Rust 构建通过；真实 Tauri 验证文件卡、系统保存窗口、重开历史和 760px 深浅色布局，WPS 已打开生成的演示文件。测试仅调用本机模拟模型接口，不用用户付费 Key。随包 Node v24.21.0/实际 dsh 在完全访问模式成功生成 2 页 PPT，含可编辑正文与备注。QA 凭据和自有测试窗口已清理，用户正在运行的已安装 WinKu 与 WPS 未关闭或覆盖。

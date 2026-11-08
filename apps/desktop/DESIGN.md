@@ -323,6 +323,8 @@ The current mode editor includes name, Android icon choice, prompt, inherited/re
 
 ### Learning Cards and Reading Content
 
+Generated presentations appear beneath the assistant text as an R20 file row with the existing surface/border tokens, a file icon, wrapping filename and page count, and 40px Open file / Save as actions. The row wraps at narrow widths, retains native save cancellation, and disables duplicate actions while the native request is pending. Only files actually produced and registered for that conversation appear; model-written paths do not become file actions.
+
 Learning bodies directly reuse Android function plots, charts, diagrams, quizzes, formulas, code, tables, HTML, markdown and explanations. Type-specific icons, formula-aware titles, scoped base surfaces and footer follow-ups preserve the shared vocabulary. Artifact state persists. Desktop expansion uses an inset dialog and shared renderer. Code copy/wrap, equation overflow and content colors stay local. Attachment filename chips open optional source readers.
 
 Reported validation for this implementation: 19 serial tests, TypeScript checks, frontend build and debug Rust checks passed. Actual isolated Tauri screenshots are recorded under `.review/completion-*.png`. The independent verdict resolved all six scored fixes; the scope and external-market limits remain.

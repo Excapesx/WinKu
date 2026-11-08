@@ -915,3 +915,10 @@ textarea {
 .a-row-label-button>svg {flex:none;color:var(--muted)}
 .a-checkbox-row {display:flex;align-items:flex-start;gap:10px;margin:12px 0;font-size:13px;line-height:20px}
 .a-checkbox-row input {flex:none;margin-top:3px;accent-color:var(--brand)}
+.presentation-results {display:grid;gap:8px;margin-top:16px}
+.presentation-result {display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:16px;border:1px solid var(--border);border-radius:20px;background:var(--surface)}
+.presentation-result>svg {flex:none;width:24px;height:24px;color:var(--brand)}
+.presentation-info {flex:1;min-width:160px;overflow-wrap:anywhere}
+.presentation-info strong {display:block;font-size:15px;font-weight:600}
+.presentation-info small {display:block;font-size:12px;color:var(--muted);margin-top:4px}
+.presentation-result .a-outline-button {width:auto;min-height:40px;margin:0;flex:none}

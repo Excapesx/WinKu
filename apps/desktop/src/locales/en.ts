@@ -1,5 +1,10 @@
 // Interface copy. Conversation and imported content remain in their original language.
 export const english: Record<string, string> = {
+  "PPT 已保存。":"PowerPoint saved.",
+  " 页 · 可编辑 PowerPoint":" slides · Editable PowerPoint",
+  "打开文件":"Open file",
+  "另存为":"Save as",
+  "无法打开 PPT，请安装 PowerPoint、WPS 或使用另存为。":"Could not open the presentation. Install PowerPoint or WPS, or choose Save as.",
   位置: "Location",
   "此技能由内核、插件或工作区提供，请在来源处管理。":
     "These skills come from the engine, plugins or workspace. Manage them at their source.",

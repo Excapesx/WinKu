@@ -45,6 +45,20 @@ import "./mobile-parity.css";
 const Teaching = lazy(() =>
   import("./Teaching").then((m) => ({ default: m.Teaching })),
 );
+function PresentationFiles({files,sessionId,onNotice}:{files:NonNullable<import("./api").Message["presentations"]>;sessionId:string;onNotice:(v:string)=>void}) {
+  const [pending,setPending]=useState("");
+  const act=async(id:string,action:string)=>{
+    setPending(id);
+    try{const result=await request("presentation."+action,{sessionId,id});if(result.saved)onNotice(t("PPT 已保存。"));}
+    catch(e){onNotice(t(String(e)));}finally{setPending("");}
+  };
+  return <div className="presentation-results">{files.map(file=><div className="presentation-result" key={file.id}>
+    <FileText aria-hidden="true"/>
+    <div className="presentation-info"><strong>{file.name}</strong><small>{file.pages}{t(" 页 · 可编辑 PowerPoint")}</small></div>
+    <button className="a-outline-button" disabled={!!pending} onClick={()=>act(file.id,"open")}>{t("打开文件")}</button>
+    <button className="a-outline-button" disabled={!!pending} onClick={()=>act(file.id,"save")}>{pending===file.id?t("正在处理…"):t("另存为")}</button>
+  </div>)}</div>;
+}
 function Brand() {
   return (
     <svg
@@ -767,6 +781,7 @@ function App() {
                             />
                           </Suspense>
                         )}
+                        {!!message.presentations?.length && <PresentationFiles files={message.presentations} sessionId={session.id} onNotice={setNotice}/>}
                         {message.error && (
                           <div className="answer-error" role="alert">
                             <strong>{t("回答未完成")}</strong>

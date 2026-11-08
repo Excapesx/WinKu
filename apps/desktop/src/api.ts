@@ -27,6 +27,7 @@ export type Message = {
   interrupted?: boolean;
   pending?: boolean;
   attachments?: Attachment[];
+  presentations?: {id:string; name:string; pages:number; bytes:number}[];
 };
 export type Session = {
   id: string;

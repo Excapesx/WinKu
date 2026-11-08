@@ -3,6 +3,11 @@ import { learningPrompt } from "./learning.js";
 import { registerWindowsTools } from "./windows-tools.mjs";
 import { createHash } from "node:crypto";
 import * as mcp from "@deepseek-ai/dsh-mcp-client";
+import {
+  createPresentation,
+  presentationPrompt,
+  presentationSchema,
+} from "./presentations.mjs";
 export const name = "winku-desktop";
 export const inject = ["systemPrompt", "tools"];
 export async function apply(ctx, config = {}) {
@@ -84,6 +89,39 @@ export async function apply(ctx, config = {}) {
     schema: {},
     render: (_args, value) => [{ type: "text", text: JSON.stringify(value) }],
   };
+  ctx.systemPrompt.section({
+    name: "winku:presentations",
+    order: 65,
+    text: presentationPrompt,
+  });
+  if (
+    config.preferences?.tools?.files &&
+    config.preferences.access !== "read-only" &&
+    config.preferences.engineTools?.files_write !== false
+  ) {
+    ctx.tools.register({
+      name: "ppt_export",
+      description:
+        "生成可编辑的 PowerPoint 文件，包含正文、图表和讲稿备注，并在对话中提供打开/另存为按钮。先确认提纲，除非用户要求直接生成。",
+      parameters: presentationSchema,
+      output,
+      execute: async (args, exec) => {
+        const file = await createPresentation(
+          args,
+          config.workspace,
+          exec.signal,
+        );
+        await rpc("presentation.publish", {
+          sessionId: exec.agent?.session.id,
+          file,
+        });
+        return {
+          ...file,
+          message: "PPT 已生成，可在对话文件卡片中打开或另存为。",
+        };
+      },
+    });
+  }
   ctx.tools.register({
     name: "automation_list",
     description: "列出当前 Windows WinKu 自动化任务与执行时间。",
