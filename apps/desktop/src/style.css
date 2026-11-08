@@ -82,11 +82,36 @@ h3 {
   }
 }
 .app {
+  --sidebar-default: 300px;
+  --sidebar-column: min(var(--sidebar-size, var(--sidebar-default)), 480px, 48vw);
   display: grid;
   grid-template-rows: minmax(0, 1fr);
-  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-column) minmax(0, 1fr);
   height: 100%;
+  position: relative;
   transition: grid-template-columns 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sidebar-resizer {
+  position: absolute;
+  inset-block: 0;
+  left: var(--sidebar-column);
+  width: 12px;
+  transform: translateX(-50%);
+  z-index: 2;
+  cursor: ew-resize;
+  touch-action: none;
+  transition: left 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sidebar-resizer:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -3px;
+}
+.sidebar-resizing,
+.sidebar-resizing .sidebar-resizer {
+  transition: none;
+}
+.sidebar-resizing {
+  user-select: none;
 }
 .sidebar {
   min-height: 0;
@@ -274,7 +299,7 @@ h3 {
   width: 100%;
 }
 .sidebar-collapsed {
-  grid-template-columns: 0 minmax(0, 1fr);
+  --sidebar-column: 0px;
 }
 .sidebar-collapsed .sidebar {
   padding: 0;
@@ -433,6 +458,7 @@ h3 {
   margin-bottom: 30px;
 }
 .message.user {
+  position: relative;
   margin-left: auto;
   background: var(--bubble);
   padding: 10px 16px;
@@ -446,6 +472,20 @@ h3 {
   overflow-wrap: anywhere;
   font-size: 14px;
   line-height: 22px;
+}
+.user-copy {
+  position: absolute;
+  right: calc(100% + 4px);
+  bottom: 0;
+}
+.user-copy .icon-button {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+}
+.user-copy .icon-button svg {
+  width: 14px;
+  height: 14px;
 }
 .message.assistant {
   font-size: 15px;
@@ -922,12 +962,6 @@ h3 {
   flex: none;
 }
 @media (max-width: 1050px) {
-  .app {
-    grid-template-columns: 210px minmax(0, 1fr);
-  }
-  .sidebar-collapsed {
-    grid-template-columns: 0 minmax(0, 1fr);
-  }
   .input-hint {
     display: none;
   }
@@ -953,12 +987,6 @@ h3 {
   }
 }
 @media (max-width: 800px) {
-  .app {
-    grid-template-columns: 190px minmax(0, 1fr);
-  }
-  .sidebar-collapsed {
-    grid-template-columns: 0 minmax(0, 1fr);
-  }
   .messages {
     padding: 12px 22px 0;
   }

@@ -30,9 +30,6 @@ select,
 textarea {
   accent-color: var(--brand);
 }
-.app {
-  grid-template-columns: 300px minmax(0, 1fr);
-}
 .sidebar {
   padding: 12px 14px 14px;
   gap: 0;
@@ -43,9 +40,6 @@ textarea {
   margin-bottom: 0;
   gap: 8px;
   font-size: 18px;
-}
-.brand > .a-icon-button {
-  margin-left: auto;
 }
 .brand .platform {
   font-size: 11px;
@@ -147,9 +141,6 @@ textarea {
 .sidebar-bottom {
   border: 0;
   padding-top: 8px;
-}
-.sidebar-collapsed {
-  grid-template-columns: 0 minmax(0, 1fr);
 }
 .topbar,
 .a-topbar {
@@ -405,10 +396,11 @@ textarea {
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
-.a-row-main:hover {
+.a-row-main:hover:not(:disabled),
+.a-row-label-button:hover:not(:disabled) {
   background: transparent;
 }
-.a-row:has(button.a-row-main):hover {
+.a-row:has(button:is(.a-row-main, .a-row-label-button):not(:disabled)):hover {
   background: var(--hover);
 }
 .a-row-content {
@@ -712,10 +704,7 @@ textarea {
 }
 @media (max-width: 1000px) {
   .app {
-    grid-template-columns: 280px minmax(0, 1fr);
-  }
-  .sidebar-collapsed {
-    grid-template-columns: 0 minmax(0, 1fr);
+    --sidebar-default: 280px;
   }
   .composer-zone {
     padding-left: 14px;
@@ -730,10 +719,7 @@ textarea {
 }
 @media (max-width: 760px) {
   .app {
-    grid-template-columns: 260px minmax(0, 1fr);
-  }
-  .sidebar-collapsed {
-    grid-template-columns: 0 minmax(0, 1fr);
+    --sidebar-default: 260px;
   }
   .composer-toolbar {
     gap: 5px;

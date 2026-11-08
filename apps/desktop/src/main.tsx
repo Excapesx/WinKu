@@ -3,7 +3,6 @@ import React, { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Plus,
-  PanelLeft,
   Settings,
   Search,
   Sun,
@@ -20,7 +19,6 @@ import {
   ChevronLeft,
   ArrowRight,
   LoaderCircle,
-  MessageCirclePlus,
   LayoutGrid,
   ChevronDown,
 } from "lucide-react";
@@ -45,6 +43,10 @@ import "./mobile-parity.css";
 const Teaching = lazy(() =>
   import("./Teaching").then((m) => ({ default: m.Teaching })),
 );
+const sidebarMinimum = 176;
+const sidebarHideBelow = 116;
+const sidebarMaximum = () => Math.floor(Math.min(480, innerWidth * 0.48));
+
 function Brand() {
   return (
     <svg
@@ -121,6 +123,17 @@ function App() {
     [query, setQuery] = useState(""),
     [collapsed, setCollapsed] = useState(false),
     [deleting, setDeleting] = useState<string | null>(null);
+  const [sidebarWidth, setSidebarWidth] = useState<number>();
+  const [dragWidth, setDragWidth] = useState<number>();
+  const sidebar = useRef<HTMLElement>(null);
+  const sidebarDrag = useRef<{ pointer: number; x: number; width: number } | null>(null);
+  const sidebarHidden = dragWidth === undefined ? collapsed : dragWidth < sidebarHideBelow;
+  const openWidth = dragWidth === undefined ? sidebarWidth : Math.max(sidebarMinimum, dragWidth);
+  function resizeSidebar(width: number) {
+    setCollapsed(width < sidebarHideBelow);
+    if (width >= sidebarHideBelow)
+      setSidebarWidth(Math.min(sidebarMaximum(), Math.max(sidebarMinimum, width)));
+  }
   const [dark, setDark] = useState(() =>
       localStorage.getItem("winku-theme")
         ? localStorage.getItem("winku-theme") === "dark"
@@ -448,17 +461,15 @@ function App() {
     }
   }
   return (
-    <div className={"app " + (collapsed ? "sidebar-collapsed" : "")}>
-      <aside className="sidebar" aria-label={t("主导航")}>
+    <div
+      className={`app${sidebarHidden ? " sidebar-collapsed" : ""}${dragWidth !== undefined ? " sidebar-resizing" : ""}`}
+      style={openWidth === undefined ? undefined : { "--sidebar-size": `${openWidth}px` } as React.CSSProperties}
+    >
+      <aside ref={sidebar} className="sidebar" aria-label={t("主导航")}>
         <div className="brand">
           <Brand />
           <span>WinKu</span>
           <span className="platform">AGENT</span>
-          <AButton
-            label={t("收起侧栏")}
-            icon="panel_left_outline"
-            onClick={() => setCollapsed(true)}
-          />
         </div>
         <button className="new-chat" onClick={newChat}>
           <AIcon name="new_chat_outline" size={20} />
@@ -611,6 +622,47 @@ function App() {
           </button>
         </div>
       </aside>
+      <div
+        className="sidebar-resizer"
+        role="separator"
+        aria-label={t("调整侧栏宽度")}
+        aria-orientation="vertical"
+        aria-valuemin={0}
+        aria-valuemax={sidebarMaximum()}
+        aria-valuenow={sidebarHidden ? 0 : Math.min(sidebarMaximum(), Math.round(openWidth ?? sidebar.current?.getBoundingClientRect().width ?? 300))}
+        tabIndex={0}
+        onPointerDown={(e) => {
+          if (e.button !== 0 || sidebarDrag.current) return;
+          const width = sidebar.current?.getBoundingClientRect().width ?? 0;
+          sidebarDrag.current = { pointer: e.pointerId, x: e.clientX, width };
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setDragWidth(width);
+        }}
+        onPointerMove={(e) => {
+          const drag = sidebarDrag.current;
+          if (drag?.pointer === e.pointerId)
+            setDragWidth(drag.width + e.clientX - drag.x);
+        }}
+        onPointerUp={(e) => {
+          const drag = sidebarDrag.current;
+          if (drag?.pointer !== e.pointerId) return;
+          sidebarDrag.current = null;
+          if (e.clientX !== drag.x) resizeSidebar(drag.width + e.clientX - drag.x);
+          setDragWidth(undefined);
+        }}
+        onLostPointerCapture={(e) => {
+          if (sidebarDrag.current?.pointer !== e.pointerId) return;
+          sidebarDrag.current = null;
+          setDragWidth(undefined);
+        }}
+        onKeyDown={(e) => {
+          const width = sidebar.current?.getBoundingClientRect().width ?? 0;
+          if (e.key === "ArrowLeft") resizeSidebar(width <= sidebarMinimum ? 0 : width - 16);
+          else if (e.key === "ArrowRight") resizeSidebar(width === 0 ? sidebarMinimum : width + 16);
+          else return;
+          e.preventDefault();
+        }}
+      />
       <main className="workspace">
         {(page === "chat" || page === "tools") && (
           <header className="topbar">
@@ -628,11 +680,6 @@ function App() {
                   onClick={() => setPage("trajectory")}
                 />
               )}
-              <AButton
-                label={t("新会话")}
-                icon="new_chat_outline"
-                onClick={newChat}
-              />
             </div>
           </header>
         )}
@@ -768,6 +815,16 @@ function App() {
                         {message.role === "user" ? (
                           <div className="user-text">
                             {message.text}
+                            {message.text && !message.pending && (
+                              <div className="user-copy">
+                                <IconButton
+                                  label={t("复制提示词")}
+                                  onClick={() => copy(message.id, message.text)}
+                                >
+                                  {copied === message.id ? <Check /> : <Copy />}
+                                </IconButton>
+                              </div>
+                            )}
                             {message.pending && (
                               <small className="a-note">
                                 {t("等待助手接收…")}
