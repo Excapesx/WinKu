@@ -1043,3 +1043,19 @@ h3 {
     scroll-behavior: auto !important;
   }
 }
+.sidebar-bottom { display: flex; align-items: center; gap: 8px; }
+.sidebar-bottom > .nav-row { flex: 1; min-width: 0; }
+.update-indicator {
+  display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px;
+  border: 0; border-radius: 12px; background: transparent; color: var(--primary);
+  cursor: pointer; transition: background-color 150ms, transform 150ms;
+}
+.update-indicator:hover { background: var(--soft); }
+.update-indicator:active { transform: scale(.96); }
+.update-indicator:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.update-progress { width: 100%; accent-color: var(--primary); }
+button.update-action { width: auto; flex: 0 0 auto; min-width: 96px; white-space: nowrap; }
+.update-notes { white-space: pre-wrap; max-height: 240px; overflow: auto; font-size: 14px; }
+.update-spin { animation: update-spin 1.2s linear infinite; }
+@keyframes update-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .update-spin { animation: none; } .update-indicator { transition: none; } }

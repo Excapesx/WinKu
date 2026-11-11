@@ -55,6 +55,8 @@ import io.github.jackwener.dsh.core.designsystem.Spinner
 import io.github.jackwener.dsh.core.designsystem.Wordmark
 import io.github.jackwener.dsh.core.designsystem.pressable
 import io.github.jackwener.dsh.core.session.RowStatus
+import io.github.jackwener.dsh.core.designsystem.findActivity
+import io.github.jackwener.dsh.core.update.UpdateState
 import kotlinx.coroutines.delay
 
 private enum class ArchiveFilter { Hide, All, Only }
@@ -78,6 +80,8 @@ fun SessionDrawer(
     onMute: (String, Boolean) -> Unit,
     onArchive: (String, Boolean) -> Unit,
     onDelete: (String) -> Unit,
+    updateState: UpdateState = UpdateState.None,
+    onUpdate: (android.app.Activity) -> Unit = {},
 ) {
     val c = Dsh.colors
     var searching by remember { mutableStateOf(false) }
@@ -138,7 +142,21 @@ fun SessionDrawer(
                     style = DshType.xs13m, color = c.link)
             }
         }
-        PanelEntry(R.drawable.dsw_settings_outline, stringResource(R.string.settings)) { onSettings(null) }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f)) {
+                PanelEntry(R.drawable.dsw_settings_outline, stringResource(R.string.settings)) { onSettings(null) }
+            }
+            if (updateState.manifest != null) {
+                val context = LocalContext.current
+                val working = updateState is UpdateState.Downloading || updateState is UpdateState.Verifying || updateState is UpdateState.Installing
+                Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) {
+                    IconBtn(R.drawable.dsw_download_outline,
+                        { context.findActivity()?.let(onUpdate) }, size = 44.dp, iconSize = 20.dp, tint = c.link,
+                        contentDescription = stringResource(R.string.upd_sidebar_download, updateState.manifest!!.versionName))
+                    if (working) Spinner(28.dp, c.link)
+                }
+            }
+        }
     }
 }
 

@@ -163,6 +163,7 @@ class HomeViewModel @Inject constructor(
     private val preferences: SettingsRepository,
     private val agentScreen: AgentScreen,
     extensions: ExtensionsRepository,
+    val updater: io.github.jackwener.dsh.core.update.AppUpdater,
 ) : ConversationController(store, engine, preferences) {
     val shortcutSkills = io.github.jackwener.dsh.feature.extensions.SkillsState(extensions.client, viewModelScope)
 

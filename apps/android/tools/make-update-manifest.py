@@ -55,8 +55,10 @@ def find_tool(name, explicit, env):
         bt = sdk / "build-tools"
         if bt.is_dir():
             for v in sorted(bt.iterdir(), key=lambda p: [int(x) if x.isdigit() else 0 for x in re.split(r"[.-]", p.name)], reverse=True):
-                if (v / name).is_file():
-                    return str(v / name)
+                names = [name, name + ".exe", name + ".bat"] if os.name == "nt" else [name]
+                for candidate in names:
+                    if (v / candidate).is_file():
+                        return str(v / candidate)
     die(f"{name} not found: pass --{name} or set ${env} / ANDROID_HOME")
 
 

@@ -116,6 +116,7 @@ class AppUpdater @Inject constructor(
     private var download: Job? = null
     private var host = WeakReference<Activity>(null)
     private var started = false
+    private var installAfterDownload = false
 
     val installedVersionCode: Long get() = BuildConfig.VERSION_CODE.toLong()
 
@@ -183,7 +184,7 @@ class AppUpdater @Inject constructor(
                 if (cur is UpdateState.Downloading || cur is UpdateState.Verifying) cancelDownload()
                 _state.value = UpdateState.Available(m, signerOk(m))
             }
-            if (manual || UpdatePolicy.promptDue(prefs.getLong(KEY_SNOOZED, 0L), System.currentTimeMillis())) {
+            if (manual) {
                 _prompt.value = true
                 if (!manual && !AppVisibility.isForeground) notifyFound(m)
             }
@@ -221,6 +222,18 @@ class AppUpdater @Inject constructor(
     }
 
     // ── download ──
+    /** Sidebar action: one tap downloads; a foreground idle app then opens the system installer. */
+    fun quickUpdate(activity: Activity) {
+        host = WeakReference(activity)
+        _prompt.value = true
+        when (val current = _state.value) {
+            is UpdateState.Ready -> if (!agentBusy()) install(activity, stopRuns = false)
+            is UpdateState.Available -> if (current.signerOk) { installAfterDownload = true; startDownload() }
+            is UpdateState.Failed -> { installAfterDownload = true; startDownload() }
+            else -> Unit
+        }
+    }
+
     fun startDownload() {
         val cur = _state.value
         val m = cur.manifest ?: return
@@ -249,6 +262,11 @@ class AppUpdater @Inject constructor(
                 }
                 _state.value = UpdateState.Ready(m, file)
                 _prompt.value = true
+                val activity = host.get()?.takeUnless { it.isFinishing || it.isDestroyed }
+                if (installAfterDownload && !agentBusy() && AppVisibility.isForeground && activity != null) {
+                    installAfterDownload = false
+                    install(activity, stopRuns = false)
+                }
             } catch (e: CancellationException) {
                 // 取消 goes back to the offer; skip() / a newer release have set their own state already.
                 if (_state.value.let { it is UpdateState.Downloading || it is UpdateState.Verifying }) _state.value = UpdateState.Available(m, true)
@@ -270,7 +288,7 @@ class AppUpdater @Inject constructor(
     }
 
     /** 取消: stops the transfer; the part stays, so 更新 later resumes it. */
-    fun cancelDownload() { download?.cancel(); download = null }
+    fun cancelDownload() { installAfterDownload = false; download?.cancel(); download = null }
 
     // ── install ──
     /** A conversation or automation run is in progress (installing ends it: the process is replaced). */

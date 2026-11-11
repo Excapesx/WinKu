@@ -48,8 +48,8 @@ data class UpdateManifest(
          * jsDelivr CDNs the engine falls back to, js/packages/plugin-extensions/fetch-sources.js).
          */
         val SOURCES = listOf(
-            "https://github.com/$REPO/releases/latest/download/update.json",
             "https://raw.githubusercontent.com/$REPO/main/$MANIFEST_PATH",
+            "https://github.com/$REPO/releases/latest/download/update-android.json",
             "https://cdn.jsdelivr.net/gh/$REPO@main/$MANIFEST_PATH",
             "https://fastly.jsdelivr.net/gh/$REPO@main/$MANIFEST_PATH",
             "https://gcore.jsdelivr.net/gh/$REPO@main/$MANIFEST_PATH",

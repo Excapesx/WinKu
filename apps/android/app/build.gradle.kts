@@ -54,8 +54,8 @@ android {
         applicationId = "io.github.jackwener.dsh"
         minSdk = 29
         targetSdk = 36
-        versionCode = 28
-        versionName = "1.0"
+        versionCode = 29
+        versionName = "1.0.1"
         ndk { abiFilters += if (learningPreview) "x86_64" else "arm64-v8a" }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "LEARNING_PREVIEW", learningPreview.toString())

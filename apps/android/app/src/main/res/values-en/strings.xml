@@ -840,6 +840,8 @@
     <string name="upd_signer_mismatch">This WinKu is signed differently from the official release (e.g. a self-built one), so it cannot update in the app. Download it from GitHub instead.</string>
     <string name="upd_open_releases">Open download page</string>
     <string name="upd_check">Check for updates</string>
+    <string name="upd_sidebar_download">Download and install WinKu %1$s</string>
+    <string name="upd_sidebar_hint">Use the green download icon at the bottom of the sidebar to update</string>
     <string name="upd_checking">Checking…</string>
     <string name="upd_auto">Check for updates automatically</string>
     <string name="upd_auto_desc">Checks GitHub for a new release in the background on start, at most once a day</string>

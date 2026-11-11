@@ -84,8 +84,10 @@ class UpdateManifestTest {
         assertFalse(UpdateManifest.SOURCES.any { it.contains("jackwener/DSH-Android") })
     }
 
-    @Test fun sourcesStartWithTheReleaseAssetAndAreHttps() {
-        assertEquals("https://github.com/Excapesx/WinKu/releases/latest/download/update.json", UpdateManifest.SOURCES.first())
+    @Test fun sourcesUsePlatformSpecificManifestsAndAreHttps() {
+        assertEquals("https://raw.githubusercontent.com/Excapesx/WinKu/main/apps/android/update/latest.json", UpdateManifest.SOURCES.first())
+        assertFalse(UpdateManifest.SOURCES.any { it.endsWith("/releases/latest/download/update.json") })
+        assertTrue(UpdateManifest.SOURCES.any { it.endsWith("/releases/latest/download/update-android.json") })
         assertTrue(UpdateManifest.SOURCES.all { it.startsWith("https://") })
         assertTrue(UpdateManifest.SOURCES.any { it.startsWith("https://cdn.jsdelivr.net/gh/Excapesx/WinKu@main/apps/android/update/latest.json") })
     }

@@ -235,6 +235,7 @@ fn open_external(url: String) -> Result<(), String> {
 }
 fn main() {
     tauri::Builder::default()
+      .plugin(tauri_plugin_updater::Builder::new().build())
       .invoke_handler(tauri::generate_handler![desktop_request, open_external])
       .setup(|app| {
         let resources = app.path().resource_dir()?;

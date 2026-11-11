@@ -69,6 +69,7 @@ fun HomeScreen(vm: HomeViewModel, onSettings: (String?) -> Unit, onAutomation: (
     val sessions by vm.sessions.collectAsStateWithLifecycle()
     val status by vm.rowStatus.collectAsStateWithLifecycle()
     val currentId by vm.currentId.collectAsStateWithLifecycle()
+    val updateState by vm.updater.state.collectAsStateWithLifecycle()
     // Transient layers close before Back leaves home (BackHandlerAllowlistTest): the open drawer.
     BackHandler(drawer.isOpen) { scope.launch { drawer.close() } }
     // Back in front with a conversation open (e.g. from the launcher after a background run): it is seen now.
@@ -88,6 +89,8 @@ fun HomeScreen(vm: HomeViewModel, onSettings: (String?) -> Unit, onAutomation: (
                     onSettings = { section -> scope.launch { drawer.close() }; onSettings(section) },
                     onClose = { scope.launch { drawer.close() } },
                     onRename = vm::rename, onPin = vm::pin, onMute = vm::mute, onArchive = vm::archive, onDelete = vm::delete,
+                    updateState = updateState,
+                    onUpdate = vm.updater::quickUpdate,
                 )
             }
         },

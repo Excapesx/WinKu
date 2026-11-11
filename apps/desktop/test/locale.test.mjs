@@ -39,6 +39,7 @@ test("system, Chinese and English selection; interface catalog coverage and pres
     "ExtensionsPage.tsx",
     "Teaching.tsx",
     "attachments.ts",
+    "Updates.tsx",
   ]) {
     const sf = ts.createSourceFile(
       file,

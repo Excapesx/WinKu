@@ -193,9 +193,13 @@ fun UpdateSettingsRows(updater: AppUpdater, autoCheck: Boolean, onAutoCheck: (Bo
             checking -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Spinner(); Text(stringResource(R.string.upd_checking), style = DshType.xs13, color = c.labelTertiary)
             }
-            state != UpdateState.None -> DButton(stringResource(R.string.upd_view), updater::showPrompt, size = BtnSize.Sm)
             else -> DButton(stringResource(R.string.upd_check), updater::checkNow, variant = BtnVariant.Outline, size = BtnSize.Sm)
         }
     })
+    state.manifest?.let { manifest ->
+        SettingsRow(stringResource(R.string.upd_title, manifest.versionName), stringResource(R.string.upd_sidebar_hint), trailing = {
+            DButton(stringResource(R.string.upd_view), updater::showPrompt, size = BtnSize.Sm)
+        })
+    }
     SettingsRow(stringResource(R.string.upd_auto), stringResource(R.string.upd_auto_desc), trailing = { DSwitch(autoCheck, onAutoCheck) })
 }

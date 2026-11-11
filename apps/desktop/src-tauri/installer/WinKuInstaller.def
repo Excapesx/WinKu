@@ -1,0 +1,7 @@
+LIBRARY WinKuInstaller
+EXPORTS
+  Initialize
+  Page
+  Place
+  Failure
+  Cancelled

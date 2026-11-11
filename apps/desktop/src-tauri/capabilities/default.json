@@ -1,1 +1,1 @@
-{"identifier":"main-window","description":"Local WinKu window events only","windows":["main"],"permissions":["core:event:default"]}
+{"identifier":"main-window","description":"Local WinKu window events and signed application updates","windows":["main"],"permissions":["core:event:default","core:app:allow-version","updater:default"]}

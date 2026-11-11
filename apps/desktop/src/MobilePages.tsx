@@ -1,5 +1,6 @@
 import { t } from "./i18n";
 import { ExtensionsPage } from "./ExtensionsPage";
+import { UpdateSettings } from "./Updates";
 import React, { useEffect, useState, lazy, Suspense } from "react";
 import {
   AIcon,
@@ -495,8 +496,8 @@ export function SettingsHub({
   if (current === "about")
     content = (
       <>
+        <UpdateSettings />
         <Card>
-          <Row title="WinKu" description="v1.0 · Windows" />
           <Row
             title={t("开源项目")}
             description="github.com/Excapesx/WinKu"

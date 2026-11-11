@@ -842,6 +842,8 @@
     <string name="upd_signer_mismatch">当前安装的 WinKu 与正式版签名不同（例如自行构建的版本），无法在应用内更新，请到 GitHub 下载安装。</string>
     <string name="upd_open_releases">打开下载页</string>
     <string name="upd_check">检查更新</string>
+    <string name="upd_sidebar_download">下载并安装 WinKu %1$s</string>
+    <string name="upd_sidebar_hint">侧栏底部的绿色下载图标可直接下载更新</string>
     <string name="upd_checking">正在检查…</string>
     <string name="upd_auto">自动检查更新</string>
     <string name="upd_auto_desc">启动时在后台检查 GitHub 上的新版本，每天最多一次</string>

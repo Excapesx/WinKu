@@ -857,6 +857,8 @@ S = [
 ("upd_signer_mismatch", "当前安装的 WinKu 与正式版签名不同（例如自行构建的版本），无法在应用内更新，请到 GitHub 下载安装。", "This WinKu is signed differently from the official release (e.g. a self-built one), so it cannot update in the app. Download it from GitHub instead."),
 ("upd_open_releases", "打开下载页", "Open download page"),
 ("upd_check", "检查更新", "Check for updates"),
+("upd_sidebar_download", "下载并安装 WinKu %1$s", "Download and install WinKu %1$s"),
+("upd_sidebar_hint", "侧栏底部的绿色下载图标可直接下载更新", "Use the green download icon at the bottom of the sidebar to update"),
 ("upd_checking", "正在检查…", "Checking…"),
 ("upd_auto", "自动检查更新", "Check for updates automatically"),
 ("upd_auto_desc", "启动时在后台检查 GitHub 上的新版本，每天最多一次", "Checks GitHub for a new release in the background on start, at most once a day"),

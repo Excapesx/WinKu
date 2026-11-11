@@ -27,6 +27,7 @@ import {
 import { androidMark } from "./android-brand";
 import { AIcon, AButton, Menu, MenuItem, Dialog, RiskDialog } from "./MobileUI";
 import { SettingsHub, AutomationPage, TrajectoryPage } from "./MobilePages";
+import { UpdateIndicator } from "./Updates";
 import {
   empty,
   request,
@@ -637,6 +638,7 @@ function App() {
             <AIcon name="settings_outline" size={20} />
             {t("设置")}
           </button>
+          <UpdateIndicator busy={snapshot.busy} />
         </div>
       </aside>
       <div
