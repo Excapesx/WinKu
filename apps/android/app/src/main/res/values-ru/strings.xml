@@ -70,6 +70,7 @@
     <string name="composer_hint">Напиши сообщение или создай задачу, / — вызов команд</string>
     <string name="composer_hint_hero">Опиши, что должен сделать телефон, / — вызов команд</string>
     <string name="plus_hint">Добавить файл или вызвать команду</string>
+    <string name="composer_this_device">Это устройство</string>
     <string name="menu_add">Добавить</string>
     <string name="menu_commands">Команды</string>
     <string name="menu_image">Изображение</string>

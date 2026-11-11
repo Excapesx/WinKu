@@ -213,6 +213,35 @@ textarea {
   gap: 10px;
   min-height: 36px;
 }
+.composer-destinations {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 8px -14px -10px;
+  padding: 5px 14px;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 27px 27px;
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+.composer-destination {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.composer-destination.primary {
+  color: var(--foreground);
+}
+.composer-destination:not(:disabled):hover,
+.composer-destination[aria-expanded="true"] {
+  background: var(--hover);
+  color: var(--foreground);
+}
 .composer-toolbar > .a-icon-button {
   width: 30px;
   height: 30px;
@@ -223,8 +252,7 @@ textarea {
   width: 20px;
   height: 20px;
 }
-.permission-chip,
-.mode-chip {
+.permission-chip {
   background: transparent;
   display: inline-flex;
   align-items: center;
@@ -246,9 +274,6 @@ textarea {
 .permission-chip.full {
   color: var(--error);
   background: color-mix(in srgb, var(--error) 12%, transparent);
-}
-.mode-chip {
-  padding: 0 2px;
 }
 .polish-button {
   width: 34px;
@@ -360,7 +385,7 @@ textarea {
 .a-row {
   padding: 0 16px;
 }
-.a-row + .a-row .a-row-main {
+.a-settings-card > .a-row + .a-row {
   border-top: 1px solid var(--border);
 }
 .a-row-main {
@@ -726,10 +751,6 @@ textarea {
   }
   .composer-model {
     max-width: 95px;
-  }
-  .mode-chip {
-    display: inline-flex;
-    gap: 1px;
   }
   .a-page {
     padding-left: 10px;

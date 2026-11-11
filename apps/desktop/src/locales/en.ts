@@ -121,6 +121,7 @@ export const english: Record<string, string> = {
   只读: "Read only",
   询问: "Ask before acting",
   完全访问: "Full access",
+  此计算机: "This computer",
   "正在连接模型…": "Connecting to model…",
   "每次最多添加 4 个附件。": "Attach up to 4 files per message.",
   "复制失败，请选中文字手动复制。":

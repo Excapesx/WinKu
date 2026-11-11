@@ -75,6 +75,7 @@ import io.github.jackwener.dsh.core.designsystem.DMenu
 import io.github.jackwener.dsh.core.designsystem.Dsh
 import io.github.jackwener.dsh.core.designsystem.DshType
 import io.github.jackwener.dsh.core.designsystem.Fmt
+import io.github.jackwener.dsh.core.designsystem.HDivider
 import io.github.jackwener.dsh.core.designsystem.Hairline
 import io.github.jackwener.dsh.core.designsystem.IconBtn
 import io.github.jackwener.dsh.core.designsystem.MenuDivider
@@ -399,7 +400,6 @@ fun Composer(
                     }
                 }
             }
-            if (showChips && mode != null) ModeChip(mode, modes, modeLocked, narrow, onMode, onManageModes, modeOpen, { modeOpen = it }, settled)
             // The context ring and model chip take only the space left, so Send always stays on screen.
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End)) {
             if (showChips && contextTokens > 0) ContextRing(contextTokens, model.contextWindow, model.contextSource)
@@ -473,6 +473,26 @@ fun Composer(
                 else onSend()
             }, onStop)
         }
+        }
+        if (showChips) {
+            HDivider()
+            Row(
+                Modifier.fillMaxWidth().background(c.selector.copy(alpha = 0.45f)).padding(horizontal = 10.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                if (mode != null) ModeChip(mode, modes, modeLocked, onMode, onManageModes, modeOpen, { modeOpen = it }, settled)
+                Row(
+                    Modifier.heightIn(min = 40.dp).clip(Radius.sm)
+                        .pressable({ if (settled()) pickFile.launch(arrayOf("*/*")) }, Radius.sm)
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    DIcon(R.drawable.dsw_paperclip_outline, size = 15.dp, tint = c.labelSecondary)
+                    Text(stringResource(R.string.composer_this_device), style = DshType.xs13m, color = c.labelSecondary)
+                }
+            }
         }
     }
     if (confirmFull) RiskConfirmDialog(

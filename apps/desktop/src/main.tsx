@@ -20,6 +20,8 @@ import {
   ArrowRight,
   LoaderCircle,
   LayoutGrid,
+  Folder,
+  Laptop,
   ChevronDown,
 } from "lucide-react";
 import { androidMark } from "./android-brand";
@@ -1143,43 +1145,6 @@ function App() {
                         {t("权限与无障碍")}
                       </MenuItem>
                     </Menu>
-                    <Menu
-                      label={t("会话模式")}
-                      className="mode-chip"
-                      trigger={
-                        <>
-                          <AIcon name="sparkle" size={20} />
-                          <AIcon name="chevron_down_outline" size={10} />
-                        </>
-                      }
-                    >
-                      {(snapshot.modes ?? []).map((m) => (
-                        <MenuItem
-                          key={m.id}
-                          selected={m.id === (session?.mode?.id ?? pref.modeId)}
-                          onClick={() =>
-                            session?.mode
-                              ? setNotice(
-                                  t(
-                                    "会话开始后模式固定；新建会话可选择其他模式。",
-                                  ),
-                                )
-                              : act("preferences.save", { modeId: m.id })
-                          }
-                          description={m.prompt.slice(0, 70)}
-                        >
-                          {m.builtin ? t(m.name) : m.name}
-                        </MenuItem>
-                      ))}
-                      <MenuItem
-                        onClick={() => {
-                          setSettingsSection("modes");
-                          setPage("settings");
-                        }}
-                      >
-                        {t("管理模式")}
-                      </MenuItem>
-                    </Menu>
                     <button
                       className={
                         "polish-button " + (polishing ? "polishing" : "")
@@ -1313,6 +1278,55 @@ function App() {
                         )}
                       </button>
                     )}
+                  </div>
+                  <div className="composer-destinations">
+                    <Menu
+                      label={t("会话模式")}
+                      className="composer-destination primary"
+                      trigger={
+                        <>
+                          <Folder size={15} />
+                          <span>WinKu</span>
+                          <AIcon name="chevron_down_outline" size={10} />
+                        </>
+                      }
+                    >
+                      {(snapshot.modes ?? []).map((m) => (
+                        <MenuItem
+                          key={m.id}
+                          selected={m.id === (session?.mode?.id ?? pref.modeId)}
+                          onClick={() =>
+                            session?.mode
+                              ? setNotice(
+                                  t(
+                                    "会话开始后模式固定；新建会话可选择其他模式。",
+                                  ),
+                                )
+                              : act("preferences.save", { modeId: m.id })
+                          }
+                          description={m.prompt.slice(0, 70)}
+                        >
+                          {m.builtin ? t(m.name) : m.name}
+                        </MenuItem>
+                      ))}
+                      <MenuItem
+                        onClick={() => {
+                          setSettingsSection("modes");
+                          setPage("settings");
+                        }}
+                      >
+                        {t("管理模式")}
+                      </MenuItem>
+                    </Menu>
+                    <button
+                      type="button"
+                      className="composer-destination"
+                      disabled={attaching || files.length >= 4}
+                      onClick={() => picker.current?.click()}
+                    >
+                      <Laptop size={15} />
+                      <span>{t("此计算机")}</span>
+                    </button>
                   </div>
                 </form>
                 {undo && draft === undo.after && (

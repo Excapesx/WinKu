@@ -498,7 +498,7 @@ fun SettingsRow(
 ) {
     val c = Dsh.colors
     Column {
-        if (divider) Box(Modifier.padding(start = 16.dp).fillMaxWidth().height(Hairline).background(c.borderL2))
+        if (divider) HDivider()
         val base = Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier).padding(horizontal = 16.dp, vertical = 12.dp)
         if (stacked) Column(base, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

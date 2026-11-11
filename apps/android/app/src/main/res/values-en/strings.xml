@@ -70,6 +70,7 @@
     <string name="composer_hint">Message or run a task, / commands</string>
     <string name="composer_hint_hero">Describe what you want your phone to do, / commands</string>
     <string name="plus_hint">Add files or run commands</string>
+    <string name="composer_this_device">This device</string>
     <string name="menu_add">Add</string>
     <string name="menu_commands">Commands</string>
     <string name="menu_image">Image</string>

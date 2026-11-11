@@ -60,6 +60,7 @@ S = [
 ("composer_hint", "发消息或创建任务，/ 调用指令", "Message or run a task, / commands"),
 ("composer_hint_hero", "描述你想让手机做的事，/ 调用指令", "Describe what you want your phone to do, / commands"),
 ("plus_hint", "添加文件或调用指令", "Add files or run commands"),
+("composer_this_device", "此设备", "This device"),
 ("menu_add", "添加", "Add"),
 ("menu_commands", "指令", "Commands"),
 ("menu_image", "图片", "Image"),

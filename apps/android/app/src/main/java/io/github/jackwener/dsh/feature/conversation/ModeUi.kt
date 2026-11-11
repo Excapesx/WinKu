@@ -2,10 +2,8 @@ package io.github.jackwener.dsh.feature.conversation
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,7 +15,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.jackwener.dsh.R
 import io.github.jackwener.dsh.core.designsystem.Chevron
@@ -69,7 +66,6 @@ fun ModeChip(
     mode: SessionMode,
     modes: List<SessionMode>,
     locked: Boolean,
-    narrow: Boolean,
     onMode: (String) -> Unit,
     onManage: (() -> Unit)?,
     open: Boolean,
@@ -80,15 +76,17 @@ fun ModeChip(
     val label = ModeUi.name(mode)
     val desc = stringResource(R.string.mode_chip_desc, label)
     Box {
-        Row(Modifier.heightIn(min = 28.dp).widthIn(max = 140.dp).clip(Radius.sm).pressable({ if (settled()) onOpen(true) }, Radius.sm)
-            .semantics(mergeDescendants = true) { contentDescription = desc }.padding(start = 6.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            DIcon(ModeUi.icon(mode), size = 14.dp, tint = c.labelSecondary)
-            // The default mode stays icon-only so the toolbar looks as before for most conversations.
-            if (!narrow && !mode.isDefault) {
-                Spacer(Modifier.width(4.dp))
-                Text(label, Modifier.weight(1f, fill = false), style = DshType.xs13m, color = c.labelSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-            if (!locked) Chevron(Modifier.padding(start = 2.dp), size = 12.dp)
+        Row(
+            Modifier.heightIn(min = 40.dp).clip(Radius.sm)
+                .pressable({ if (settled()) onOpen(true) }, Radius.sm)
+                .semantics(mergeDescendants = true) { contentDescription = "WinKu · $desc" }
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            DIcon(R.drawable.dsw_folder_open_outline, size = 15.dp, tint = c.labelPrimary)
+            Text("WinKu", style = DshType.xs13m, color = c.labelPrimary, maxLines = 1)
+            if (!locked) Chevron(size = 12.dp)
         }
         DMenu(open, { onOpen(false) }) {
             MenuSectionTitle(stringResource(R.string.mode_menu_title))
