@@ -26,7 +26,12 @@ if ($LASTEXITCODE -ne 0) { throw 'Icon generation failed' }
 Copy-Item -LiteralPath .tools/generated-icons/icon.ico -Destination src-tauri/icons/icon.ico -Force
 Copy-Item -LiteralPath .tools/generated-icons/128x128.png -Destination src-tauri/icons/icon.png -Force
 if ($env:TAURI_SIGNING_PRIVATE_KEY) { npx tauri build --bundles nsis }
-else { npx tauri build --bundles nsis --config '{"bundle":{"createUpdaterArtifacts":false}}' }
+else {
+  $validationConfig = Join-Path (Get-Location) '.tools/validation-updater.json'
+  New-Item -ItemType Directory -Force (Split-Path $validationConfig -Parent) | Out-Null
+  [IO.File]::WriteAllText($validationConfig, '{"bundle":{"createUpdaterArtifacts":false}}', [Text.UTF8Encoding]::new($false))
+  npx tauri build --bundles nsis --config $validationConfig
+}
 if ($LASTEXITCODE -ne 0) { throw 'Desktop packaging failed' }
 New-Item -ItemType Directory -Force out | Out-Null
 $packageVersion = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
