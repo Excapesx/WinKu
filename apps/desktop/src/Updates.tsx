@@ -44,8 +44,8 @@ export function UpdateIndicator({ busy }: { busy: boolean }) {
   }
   async function activate() {
     setOpen(true);
-    if (s.phase === "ready") await install();
-    else if (!working(s.phase)) await appUpdates.download();
+    setConfirmInstall(false);
+    if (s.phase !== "ready" && !working(s.phase)) await appUpdates.download();
   }
   // A background check never interrupts a conversation with a modal.
   const visible = !!s.version;
@@ -59,7 +59,7 @@ export function UpdateIndicator({ busy }: { busy: boolean }) {
       {s.notes && <p className="update-notes">{s.notes}</p>}
       {s.phase === "ready" && <p>{t(confirmInstall ? "仍有任务运行，更新会中断任务。确定现在安装？" : "安装将关闭 WinKu，完成后重新打开。聊天和配置会保留。")}</p>}
       <div className="dialog-actions">
-        <UpdateButton variant="outline" onClick={() => setOpen(false)}>{t("稍后")}</UpdateButton>
+        <UpdateButton variant="outline" onClick={() => { setOpen(false); setConfirmInstall(false); }}>{t("稍后")}</UpdateButton>
         {s.phase === "ready" ? <UpdateButton onClick={install}>{t(confirmInstall ? "结束任务并安装" : "重启并安装")}</UpdateButton>
           : !working(s.phase) && <UpdateButton onClick={() => appUpdates.download()}>{t("下载更新")}</UpdateButton>}
       </div>
