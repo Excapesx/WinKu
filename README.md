@@ -1,20 +1,69 @@
-# WinKu
+<p align="center">
+  <a href="https://winku.top/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/winku-header-dark.svg">
+      <source media="(prefers-color-scheme: light)" srcset="docs/assets/readme/winku-header-light.svg">
+      <img src="docs/assets/readme/winku-header-light.svg" alt="WinKu · 大学学习的多模型 Agent" width="100%">
+    </picture>
+  </a>
+</p>
 
-> **状态：测试版（WIP）** — Android 与 Windows x64 已有可运行版本，其余平台仍在规划中。
-> 接口、目录、数据格式都还会变。
+<p align="center">
+  在手机和电脑上，用自己的模型，把课程问题、编程思路和竞赛准备逐步弄清楚。
+</p>
 
-> **来源**：Android 端衍生自 [jackwener/DSH-Android](https://github.com/jackwener/DSH-Android)（Apache-2.0），
-> 并非从零编写。详见文末 [来源声明](#来源声明)。
+<p align="center">
+  <a href="https://winku.top/"><img src="https://img.shields.io/badge/官网-winku.top-0E8A4A?style=flat-square" alt="官网 winku.top"></a>
+  <a href="https://github.com/Excapesx/WinKu/releases"><img src="https://img.shields.io/badge/版本-v1.0_测试版-555555?style=flat-square" alt="v1.0 测试版"></a>
+  <a href="#下载与安装"><img src="https://img.shields.io/badge/平台-Windows_%7C_Android-555555?style=flat-square" alt="Windows 与 Android"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache--2.0-555555?style=flat-square" alt="Apache-2.0 许可"></a>
+</p>
 
-面向大学生的个性化移动端 AI Agent。
+<p align="center">
+  <a href="https://winku.top/"><b>官方网站</b></a> ·
+  <a href="#下载与安装"><b>下载客户端</b></a> ·
+  <a href="#快速开始">开始使用</a> ·
+  <a href="https://github.com/Excapesx/WinKu/issues">反馈问题</a> ·
+  <a href="#来源声明">开源与致谢</a>
+</p>
 
-WinKu 希望围绕大学生的课程学习、学科竞赛和个人成长，将 AI 能力与内置 Skills、任务流程和移动端交互结合，
-让每个人都能拥有理解自己目标与学习节奏的智能伙伴。
+---
+
+## 关于 WinKu
+
+WinKu 是面向大学学习、编程与项目实践的多模型 AI Agent 客户端。Android 与 Windows 内置 dsh 引擎，将模型对话、学习内容渲染和设备工具放在同一个工作空间中；你可以连接自己的模型服务，并按任务使用 Skills 与 MCP 扩展。
+
+| 学习与理解 | 编程与实践 | 模型与工具 |
+|---|---|---|
+| 公式、代码、图表与交互测验，让讲解更容易跟上 | 结合代码与文件材料分析问题，辅助课程项目和竞赛准备 | 支持 Chat Completions、Responses 与 Anthropic Messages，按需连接扩展并授权工具 |
+
+> **当前为 v1.0 测试版。** 首次使用需要配置模型服务与 API Key，模型费用与额度由服务商决定。Android 和 Windows 分别保存本机的会话与配置，暂不支持云端同步。
+>
+> **开源来源：** Android 端衍生自 [jackwener/DSH-Android](https://github.com/jackwener/DSH-Android)（Apache-2.0），底层沿用开源 dsh 引擎。感谢原作者及所有贡献者，详见[来源声明](#来源声明)。
+
+## 下载与安装
+
+| 平台 | 当前版本 | 安装包 | 发布说明与校验值 |
+|---|---|---|---|
+| **Windows** | v1.0 · x64 | [下载 Windows 安装程序](https://github.com/Excapesx/WinKu/releases/download/v1.0-windows-20261108-6d0f69c/WinKu-v1.0-Windows-x64-setup.exe) | [Windows 发布页](https://github.com/Excapesx/WinKu/releases/tag/v1.0-windows-20261108-6d0f69c) |
+| **Android** | v1.0 · arm64 · Android 10+ | [下载 Android APK](https://github.com/Excapesx/WinKu/releases/download/v1.0/WinKu-v1.0-arm64.apk) | [Android 发布页](https://github.com/Excapesx/WinKu/releases/tag/v1.0) |
+| iOS | 敬请期待 | — | 尚未发布 |
+| macOS | 敬请期待 | — | 尚未发布 |
+| Linux | 敬请期待 | — | 尚未发布 |
+
+安装包由 GitHub Releases 提供；若下载较慢，可先查看[官网下载页](https://winku.top/#download)与[全部发布版本](https://github.com/Excapesx/WinKu/releases)。其他平台暂无确定的上线日期。
+
+## 快速开始
+
+1. **安装客户端**：下载与你的系统和架构对应的安装包。
+2. **连接模型**：在「设置 → 模型服务」填写服务商地址、模型名称与 API Key，并选择要使用的模型。
+3. **提出问题**：描述课程问题、编程任务或项目目标，按需要添加文件、选择 Skill 或配置 MCP 扩展。
+
+设备操作需按需授权；模型可能遗漏条件或产生错误，关键计算、代码与引用请核对。
 
 ## 项目愿景
 
-以移动端为主要入口，在大学生的真实任务中持续提升个性化体验与任务完成能力，
-逐步成为能够替代并超越 GPT、Claude 等主流通用 Agent 体验的学生专属助手。
+围绕大学生的课程学习、学科竞赛和项目实践，逐步完善知识讲解、资料整理与任务执行体验，让手机和电脑都能成为随时可用的学习工作空间。
 
 ## 规划方向
 
@@ -90,7 +139,7 @@ docs/               架构、引擎契约、交接说明
 
 `apps/android/` 里是完整的 Gradle 工程，进去之后和普通 Android 项目一样。
 
-## 快速开始（Android）
+## 从源码构建（Android）
 
 前置依赖包括 JDK 21、Android SDK（compileSdk 37.2）、Python 3.12 和 Node（重打引擎包时使用）。Gradle 构建时会验证并打包 [PPT Master v6.8.0](https://github.com/hugohe3/ppt-master/releases/tag/v6.8.0) 的导出器。
 
