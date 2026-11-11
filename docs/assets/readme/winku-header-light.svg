@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="340" viewBox="0 0 1200 340" role="img" aria-labelledby="title desc">
+<title id="title">WinKu · 大学学习的多模型 Agent</title>
+<desc id="desc">WinKu 品牌封面，绿色 W 标志。Android 与 Windows 客户端。</desc>
+<rect width="1200" height="340" rx="24" fill="#F7F8F7"/>
+<rect x="1" y="1" width="1198" height="338" rx="23" fill="none" stroke="#DCE2DF"/>
+<g transform="translate(52 56)"><path d="M18 30 34 72 50 46 66 72 82 30" fill="none" stroke="#0E8A4A" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g font-family="Segoe UI,Arial,Microsoft YaHei,sans-serif">
+<text x="168" y="130" font-size="72" font-weight="650" fill="#17171A">WinKu</text>
+<text x="64" y="204" font-size="32" font-weight="500" fill="#17171A">大学学习的多模型 Agent</text>
+<text x="65" y="248" font-size="19" fill="#53585B">把问题逐步弄清楚，让思路继续向前。</text>
+<path d="M65 288H1135" stroke="#DCE2DF"/>
+<text x="65" y="318" font-size="15" fill="#53585B">Android · Windows</text>
+<text x="1135" y="318" text-anchor="end" font-size="15" fill="#53585B">winku.top</text>
+<g transform="translate(800 60)">
+<rect width="335" height="186" rx="16" fill="#EDF3EF" stroke="#DCE2DF"/>
+<path d="M20 38H315" stroke="#DCE2DF"/>
+<circle cx="20" cy="19" r="4" fill="#0E8A4A"/>
+<text x="35" y="24" font-size="13" fill="#53585B">WinKu / workspace</text>
+<text x="24" y="80" font-size="21" fill="#17171A">理解一个概念</text>
+<text x="24" y="119" font-size="21" fill="#17171A">读懂一段代码</text>
+<text x="24" y="158" font-size="21" fill="#17171A">推进一个项目</text>
+<path d="m280 73 9 7-9 7m0 24 9 7-9 7m0 24 9 7-9 7" fill="none" stroke="#0E8A4A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g></svg>
