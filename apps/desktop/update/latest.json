@@ -1,0 +1,13 @@
+{
+  "version": "1.0.1",
+  "notes": "# WinKu v1.0.1\n\n- Android 与 Windows 在发现新版时于侧栏底部显示绿色下载图标。\n- 设置 → 关于支持手动检查新版本，并可开关每日自动检查。\n- 下载显示进度，失败可重试；更新包校验通过后才允许安装。\n- 安装前提示运行中的任务，覆盖更新保留聊天、配置和密钥。\n- Windows 首次接入签名更新，旧版用户需手动安装本版一次，后续可在应用内更新。\n",
+  "pub_date": "2026-11-11T10:37:42.777Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRRXVsL0d1Vk03VXU2S1pHcGd5UXh3aTBMMEk2aWVBOTA2bUU2bDhTQ2lvZjZ3Um5kRkJKU0lOTFdtejVoREpRL052Q0FlNWI0emE3ZXZsQjBPMFk3UUxibC9kUE5ySXdnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0MzkzNDI2CWZpbGU6V2luS3VfMS4wLjFfeDY0LXNldHVwLmV4ZQl2ZXJzaW9uOjEuMC4xClFPSlY2WVhHbEdtQkJpQUEramM4aU9YTlVGZmlCVDFEeXBuL2xucFI1UDlaZGhZVmx1Z2VmOG9idGJBV21qL0RIWThMWS9YYUNHZ21RUlNKQXlxSEJnPT0K",
+      "url": "https://github.com/Excapesx/WinKu/releases/download/v1.0.1/WinKu-v1.0.1-Windows-x64-setup.exe"
+    }
+  },
+  "size": 186636540,
+  "sha256": "aed3c72757e65157ad4ba43e20b2cd3bc0bdcf0826f267346453e2dbe26f0bb5"
+}

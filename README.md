@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://winku.top/"><img src="https://img.shields.io/badge/官网-winku.top-0E8A4A?style=flat-square" alt="官网 winku.top"></a>
-  <a href="https://github.com/Excapesx/WinKu/releases"><img src="https://img.shields.io/badge/版本-v1.0_测试版-555555?style=flat-square" alt="v1.0 测试版"></a>
+  <a href="https://github.com/Excapesx/WinKu/releases"><img src="https://img.shields.io/badge/版本-v1.0.1_测试版-555555?style=flat-square" alt="v1.0.1 测试版"></a>
   <a href="#下载与安装"><img src="https://img.shields.io/badge/平台-Windows_%7C_Android-555555?style=flat-square" alt="Windows 与 Android"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache--2.0-555555?style=flat-square" alt="Apache-2.0 许可"></a>
 </p>
@@ -37,7 +37,7 @@ WinKu 是面向大学学习、编程与项目实践的多模型 AI Agent 客户�
 |---|---|---|
 | 公式、代码、图表与交互测验，让讲解更容易跟上 | 结合代码与文件材料分析问题，辅助课程项目和竞赛准备 | 支持 Chat Completions、Responses 与 Anthropic Messages，按需连接扩展并授权工具 |
 
-> **当前为 v1.0 测试版。** 首次使用需要配置模型服务与 API Key，模型费用与额度由服务商决定。Android 和 Windows 分别保存本机的会话与配置，暂不支持云端同步。
+> **当前为 v1.0.1 测试版。** 首次使用需要配置模型服务与 API Key，模型费用与额度由服务商决定。Android 和 Windows 分别保存本机的会话与配置，暂不支持云端同步。
 >
 > **开源来源：** Android 端衍生自 [jackwener/DSH-Android](https://github.com/jackwener/DSH-Android)（Apache-2.0），底层沿用开源 dsh 引擎。感谢原作者及所有贡献者，详见[来源声明](#来源声明)。
 
@@ -45,13 +45,19 @@ WinKu 是面向大学学习、编程与项目实践的多模型 AI Agent 客户�
 
 | 平台 | 当前版本 | 安装包 | 发布说明与校验值 |
 |---|---|---|---|
-| **Windows** | v1.0 · x64 | [下载 Windows 安装程序](https://github.com/Excapesx/WinKu/releases/download/v1.0-windows-20261108-6d0f69c/WinKu-v1.0-Windows-x64-setup.exe) | [Windows 发布页](https://github.com/Excapesx/WinKu/releases/tag/v1.0-windows-20261108-6d0f69c) |
-| **Android** | v1.0 · arm64 · Android 10+ | [下载 Android APK](https://github.com/Excapesx/WinKu/releases/download/v1.0/WinKu-v1.0-arm64.apk) | [Android 发布页](https://github.com/Excapesx/WinKu/releases/tag/v1.0) |
+| **Windows** | v1.0.1 · x64 | [下载 Windows 安装程序](https://github.com/Excapesx/WinKu/releases/download/v1.0.1/WinKu-v1.0.1-Windows-x64-setup.exe) | [发布页与校验值](https://github.com/Excapesx/WinKu/releases/tag/v1.0.1) |
+| **Android** | v1.0.1 · arm64 · Android 10+ | [下载 Android APK](https://github.com/Excapesx/WinKu/releases/download/v1.0.1/WinKu-v1.0.1-arm64.apk) | [发布页与校验值](https://github.com/Excapesx/WinKu/releases/tag/v1.0.1) |
 | iOS | 敬请期待 | — | 尚未发布 |
 | macOS | 敬请期待 | — | 尚未发布 |
 | Linux | 敬请期待 | — | 尚未发布 |
 
 安装包由 GitHub Releases 提供；若下载较慢，可先查看[官网下载页](https://winku.top/#download)与[全部发布版本](https://github.com/Excapesx/WinKu/releases)。其他平台暂无确定的上线日期。
+
+### 应用内更新
+
+发现新版本时，两端会在侧栏底部「设置」右侧显示绿色下载图标；点击即可下载，校验通过后安装。也可前往「设置 → 关于 → 检查更新」主动检测，并开关每日后台检查。
+
+Windows v1.0 需手动覆盖安装 v1.0.1 一次，之后可在软件内更新。Android 可能要求确认安装权限。覆盖安装保留本机聊天、配置与密钥；网络或校验失败时可重试，也可在发布页手动下载。发布维护说明见 [APP-UPDATES.md](docs/APP-UPDATES.md)。
 
 ## 快速开始
 
